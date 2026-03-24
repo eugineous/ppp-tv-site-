@@ -3,6 +3,7 @@
 export interface Env {
   PPP_TV_KV: KVNamespace;
   WORKER_SECRET: string;
+  VERCEL_URL?: string;
 }
 
 // ─── CORS helpers ─────────────────────────────────────────────────────────────
@@ -176,6 +177,22 @@ export default {
       .slice(0, 2000);
 
     await saveArticles(env, merged);
+
+    // Trigger Vercel ISR revalidation so homepage refreshes immediately
+    if (env.VERCEL_URL) {
+      try {
+        await fetch(`${env.VERCEL_URL}/api/revalidate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.WORKER_SECRET}`,
+          },
+          body: JSON.stringify({ path: '/' }),
+        });
+      } catch {
+        // non-critical — revalidation will happen on next ISR cycle anyway
+      }
+    }
   },
 
   async fetch(req: Request, env: Env): Promise<Response> {

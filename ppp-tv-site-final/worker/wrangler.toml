@@ -13,3 +13,4 @@ crons = ["*/15 * * * *"]
 
 [vars]
 WORKER_SECRET = "ppptv-secret-2026"
+VERCEL_URL = "https://ppp-tv-site-final.vercel.app"
