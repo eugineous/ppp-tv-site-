@@ -1,4 +1,4 @@
-import type { NextConfig } from 'next';
+/** @type {import('next').NextConfig} */
 
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
@@ -6,7 +6,7 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
 ];
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   compress: true,
   images: {
     remotePatterns: [
@@ -26,4 +26,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
