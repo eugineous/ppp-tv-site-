@@ -13,8 +13,11 @@ export default function Top10Row({ articles }: Props) {
     <section className="cat-row" aria-label="Top 10 in Kenya Today">
       <div className="cat-row-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div className="cat-row-accent" style={{ background: '#FF007A' }} />
-          <span className="cat-row-title">Top 10 in Kenya Today</span>
+          <div className="cat-row-accent" style={{ background: '#FFE600' }} />
+          <div>
+            <span className="cat-row-title" style={{ color: '#fff' }}>Top 10 in Kenya</span>
+            <span style={{ display: 'block', fontSize: '.6rem', fontWeight: 700, color: '#FFE600', letterSpacing: '.08em', textTransform: 'uppercase', marginTop: '1px' }}>Most Viewed Today</span>
+          </div>
         </div>
       </div>
 
@@ -47,10 +50,10 @@ export default function Top10Row({ articles }: Props) {
                 <div className="row-card-overlay" />
 
                 {/* Top accent */}
-                <div className="row-card-top-accent" style={{ background: '#FF007A' }} />
+                <div className="row-card-top-accent" style={{ background: '#FFE600' }} />
 
                 {/* Rank badge */}
-                <span className="row-card-cat-badge" style={{ background: '#FF007A' }}>#{i + 1}</span>
+                <span className="row-card-cat-badge" style={{ background: '#FFE600', color: '#000' }}>#{i + 1}</span>
 
                 {/* Play icon on hover */}
                 <div className="row-card-play">
@@ -75,11 +78,11 @@ export default function Top10Row({ articles }: Props) {
                   </div>
                 )}
                 <div className="card-preview-body">
-                  <div style={{ fontSize: '.6rem', fontWeight: 900, color: '#FF007A', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '4px' }}>#{i + 1} in Kenya Today</div>
+                  <div style={{ fontSize: '.6rem', fontWeight: 900, color: '#FFE600', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: '4px' }}>#{i + 1} Most Viewed</div>
                   <div className="card-preview-title">{article.title}</div>
                   {article.excerpt && <div className="card-preview-excerpt">{article.excerpt}</div>}
                   <div className="card-preview-meta">{timeAgo(article.publishedAt)}</div>
-                  <a href={`/news/${article.slug}`} className="card-preview-btn" style={{ background: '#FF007A' }}>Read Now</a>
+                  <a href={`/news/${article.slug}`} className="card-preview-btn" style={{ background: '#FFE600', color: '#000' }}>Read Now</a>
                 </div>
               </div>
             )}

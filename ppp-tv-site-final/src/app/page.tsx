@@ -25,14 +25,31 @@ function groupByCategory(articles: Article[]): Record<string, Article[]> {
 }
 
 export default async function HomePage() {
-  const [allArticles, trending] = await Promise.all([
-    fetchArticles({ sort: 'recent', limit: 100 }),
+  const [allArticles, trendingRaw] = await Promise.all([
+    fetchArticles({ sort: 'recent', limit: 120 }),
     fetchTrending(),
   ]);
 
   const heroArticles = allArticles.slice(0, 5);
+
+  // ── Trending Now = most recently published (last 12, sorted by date desc)
+  const trending = allArticles
+    .slice()
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, 12);
+
+  // ── Top 10 in Kenya = highest view/engagement score, excluding articles already in Trending
+  const trendingSlugSet = new Set(trending.map(a => a.slug));
+  const byViews = (trendingRaw.length >= 5 ? trendingRaw : allArticles)
+    .slice()
+    .sort((a, b) => ((b.views ?? 0) + (b.trendingScore ?? 0)) - ((a.views ?? 0) + (a.trendingScore ?? 0)));
+  // Remove overlap — if top10 candidates are all in trending, fall back to oldest articles (different content)
+  const top10Candidates = byViews.filter(a => !trendingSlugSet.has(a.slug));
+  const top10 = top10Candidates.length >= 5
+    ? top10Candidates.slice(0, 10)
+    : allArticles.filter(a => !trendingSlugSet.has(a.slug)).slice(-10).reverse(); // oldest 10 not in trending
+
   const grouped = groupByCategory(allArticles.slice(5));
-  const top10 = trending.length >= 10 ? trending.slice(0, 10) : allArticles.slice(0, 10);
 
   return (
     <div className="netflix-home">
@@ -40,10 +57,10 @@ export default async function HomePage() {
 
       <div className="rows-section">
         {trending.length > 0 && (
-          <CategoryRow label="🔥 Trending Now" articles={trending.slice(0, 12)} seeAllHref="/?sort=trending" accentColor="#FF007A" />
+          <CategoryRow label="🔥 Trending Now" articles={trending} seeAllHref="/?sort=trending" accentColor="#FF007A" />
         )}
 
-        {top10.length >= 5 && (
+        {top10.length >= 3 && (
           <Top10Row articles={top10} />
         )}
 
