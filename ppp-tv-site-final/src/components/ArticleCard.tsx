@@ -4,9 +4,14 @@ import { timeAgo } from '@/lib/utils';
 import type { Article } from '@/types';
 
 const CAT_COLORS: Record<string, string> = {
-  News: '#FF007A', Entertainment: '#a855f7', Sports: '#3b82f6',
-  Music: '#f59e0b', Lifestyle: '#14b8a6', Technology: '#06b6d4',
-  Events: '#10b981', Celebrity: '#FF007A',
+  News: '#FF007A',          // hot pink
+  Entertainment: '#BF00FF', // electric violet
+  Sports: '#00CFFF',        // electric cyan
+  Music: '#FF6B00',         // hot orange
+  Lifestyle: '#00FF94',     // neon green
+  Technology: '#FFE600',    // electric yellow
+  Events: '#FF007A',
+  Celebrity: '#FF007A',
 };
 
 interface ArticleCardProps {

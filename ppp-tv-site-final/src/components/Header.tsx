@@ -1,91 +1,126 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 
 const MobileMenu = dynamic(() => import('./MobileMenu'), { ssr: false });
 
-
 const NAV = [
-  { label: 'Home', href: '/' },
-  { label: 'Top 10', href: '/?sort=trending' },
-  { label: 'Trending', href: '/?cat=trending' },
-  { label: 'What to Watch', href: '/shows' },
-  { label: 'News', href: '/?cat=News' },
+  { label: 'Home',          href: '/' },
+  { label: 'Shows',         href: '/shows' },
+  { label: 'News',          href: '/?cat=News' },
   { label: 'Entertainment', href: '/?cat=Entertainment' },
-  { label: 'Sports', href: '/?cat=Sports' },
-  { label: 'Music', href: '/?cat=Music' },
-  { label: 'Live', href: '/live' },
+  { label: 'Sports',        href: '/?cat=Sports' },
+  { label: 'Music',         href: '/?cat=Music' },
+  { label: 'New & Popular', href: '/?sort=trending' },
+  { label: 'My List',       href: '/saved' },
+  { label: '🔴 Live',       href: '/live' },
 ];
 
 export default function Header() {
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled]     = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery]           = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 10);
+    const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
+  useEffect(() => {
+    if (searchOpen) inputRef.current?.focus();
+  }, [searchOpen]);
+
   return (
     <>
-      {/* Top bar — Netflix red strip with logo + nav */}
       <header
-        className="fixed top-0 left-0 right-0 z-50 transition-colors duration-300"
-        style={{ background: scrolled ? '#000' : 'rgba(0,0,0,0.92)' }}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+        style={{
+          background: scrolled
+            ? 'rgba(0,0,0,0.97)'
+            : 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%)',
+          borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : 'none',
+        }}
       >
-        {/* Red accent line */}
-        <div style={{ height: 3, background: '#E50914' }} />
-
-        <div className="flex items-center justify-between px-4 md:px-8 h-14 gap-4">
+        <div className="flex items-center px-4 md:px-10 h-[68px] gap-6">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-            <span className="font-bebas text-[#E50914] text-3xl tracking-widest leading-none">PPP</span>
-            <span className="font-bebas text-white text-3xl tracking-widest leading-none">TV</span>
+          <Link href="/" className="flex-shrink-0 flex items-center gap-1 mr-2">
+            <span style={{ fontFamily: "'Bebas Neue', Impact, sans-serif", color: '#FF007A', fontSize: '2rem', letterSpacing: '.12em', lineHeight: 1 }}>PPP</span>
+            <span style={{ fontFamily: "'Bebas Neue', Impact, sans-serif", color: '#fff', fontSize: '2rem', letterSpacing: '.12em', lineHeight: 1 }}>TV</span>
           </Link>
 
-          {/* Desktop nav — scrollable */}
-          <nav className="hidden md:flex items-center gap-0 overflow-x-auto scrollbar-hide flex-1 mx-4" aria-label="Main navigation">
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1 flex-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }} aria-label="Main navigation">
             {NAV.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="flex-shrink-0 px-3 py-1 text-[13px] font-medium text-[#ccc] hover:text-white transition-colors whitespace-nowrap"
+                className="flex-shrink-0 px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors duration-150"
+                style={{ color: 'rgba(255,255,255,0.75)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          {/* Right: search + profile */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {searchOpen ? (
-              <input
-                autoFocus
-                type="search"
-                placeholder="Search…"
-                className="bg-black border border-white/30 text-white text-sm px-3 py-1.5 outline-none w-44 placeholder-gray-500"
-                onBlur={() => setSearchOpen(false)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    window.location.href = `/search?q=${encodeURIComponent((e.target as HTMLInputElement).value)}`;
-                  }
-                }}
-              />
-            ) : (
-              <button onClick={() => setSearchOpen(true)} className="p-2 text-[#ccc] hover:text-white" aria-label="Search">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-            )}
+          {/* Right side */}
+          <div className="flex items-center gap-3 ml-auto flex-shrink-0">
+            {/* Search */}
+            <div className="flex items-center">
+              {searchOpen ? (
+                <div className="flex items-center gap-2 border border-white/40 bg-black/80 px-3 py-1.5 backdrop-blur-sm">
+                  <svg className="w-4 h-4 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    ref={inputRef}
+                    type="search"
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Titles, people, genres"
+                    className="bg-transparent text-white text-sm outline-none w-44 placeholder-gray-500"
+                    onBlur={() => { if (!query) setSearchOpen(false); }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && query.trim()) {
+                        window.location.href = `/search?q=${encodeURIComponent(query.trim())}`;
+                      }
+                      if (e.key === 'Escape') { setSearchOpen(false); setQuery(''); }
+                    }}
+                  />
+                </div>
+              ) : (
+                <button onClick={() => setSearchOpen(true)} className="p-2 transition-colors" style={{ color: 'rgba(255,255,255,0.8)' }} aria-label="Search"
+                  onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              )}
+            </div>
 
-            <Link href="/saved" className="hidden sm:flex w-8 h-8 rounded bg-[#E50914] items-center justify-center text-white text-xs font-bold" aria-label="My list">
+            {/* Bell */}
+            <button className="hidden sm:flex p-2 transition-colors relative" style={{ color: 'rgba(255,255,255,0.8)' }} aria-label="Notifications"
+              onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}>
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+              </svg>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: '#FF007A' }} />
+            </button>
+
+            {/* Profile avatar */}
+            <Link href="/saved" className="hidden sm:flex w-8 h-8 rounded items-center justify-center text-white text-xs font-black flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #FF007A 0%, #ff4db2 100%)' }} aria-label="My list">
               P
             </Link>
 
+            {/* Mobile hamburger */}
             <MobileMenu />
           </div>
         </div>

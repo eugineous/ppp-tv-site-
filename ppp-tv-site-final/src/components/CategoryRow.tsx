@@ -2,9 +2,14 @@ import ArticleCard from './ArticleCard';
 import type { Article } from '@/types';
 
 const CAT_COLORS: Record<string, string> = {
-  News: '#FF007A', Entertainment: '#a855f7', Sports: '#3b82f6',
-  Music: '#f59e0b', Lifestyle: '#14b8a6', Technology: '#06b6d4',
-  Events: '#10b981', Celebrity: '#FF007A',
+  News: '#FF007A',
+  Entertainment: '#BF00FF',
+  Sports: '#00CFFF',
+  Music: '#FF6B00',
+  Lifestyle: '#00FF94',
+  Technology: '#FFE600',
+  Events: '#FF007A',
+  Celebrity: '#FF007A',
 };
 
 interface CategoryRowProps {

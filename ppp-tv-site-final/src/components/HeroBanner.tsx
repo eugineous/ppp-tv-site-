@@ -93,10 +93,11 @@ export default function HeroBanner({ articles }: HeroBannerProps) {
 
         <div className="hero-actions">
           <Link href={`/news/${article.slug}`} className="hero-btn-primary">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            Read Now
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Play
           </Link>
           <Link href={`/news/${article.slug}`} className="hero-btn-secondary">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
             More Info
           </Link>
         </div>
