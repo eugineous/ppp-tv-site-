@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Bebas_Neue, DM_Sans } from 'next/font/google';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import MobileMenu from '@/components/MobileMenu';
+import Header from '@/components/Header';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import './globals.css';
 
@@ -32,23 +32,6 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } },
 };
 
-const NAV_LINKS = [
-  { href: '/events',  label: 'Events'  },
-  { href: '/video',   label: 'Video'   },
-  { href: '/live',    label: '🔴 Live' },
-  { href: '/contact', label: 'Contact' },
-];
-
-const SHOWS_LINKS = [
-  { href: '/shows',                  label: 'All Shows'        },
-  { href: '/shows/urban-news',       label: 'Urban News'       },
-  { href: '/shows/juu-ya-game',      label: 'Juu ya Game'      },
-  { href: '/shows/campus-xposure',   label: 'Campus Xposure'   },
-  { href: '/shows/top-15-countdown', label: 'Top 15 Countdown' },
-  { href: '/shows/gospel-10',        label: 'Gospel 10'        },
-  { href: '/schedule',               label: 'Schedule'         },
-];
-
 const SOCIALS = [
   { href: 'https://www.instagram.com/ppptvke',   label: 'Instagram', d: 'M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z' },
   { href: 'https://twitter.com/PPPTV_ke',        label: 'X',         d: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z' },
@@ -67,68 +50,6 @@ const FOOTER_COLS = [
     links: [['About Us','/about'],['Hosts & On-Air','/hosts'],['The Team','/staff'],['Contact & Ads','/contact'],['Saved Articles','/saved'],['Search','/search'],['Privacy Policy','/privacy'],['Terms of Use','/terms'],['StarTimes Ch. 430','https://www.startimes.com']] as [string,string][],
   },
 ];
-
-function Chevron() {
-  return (
-    <svg className="w-2.5 h-2.5 opacity-50 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20">
-      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd"/>
-    </svg>
-  );
-}
-
-function DropdownMenu({ links }: { links: { href: string; label: string }[] }) {
-  return (
-    <div className="absolute top-full left-0 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50"
-      style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', borderTop: '2px solid #FF007A' }}>
-      {links.map(l => (
-        <a key={l.href} href={l.href}
-          className="block px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-gray-400 hover:text-white hover:bg-[#FF007A] transition-colors whitespace-nowrap">
-          {l.label}
-        </a>
-      ))}
-    </div>
-  );
-}
-
-function SiteHeader() {
-  return (
-    <header className="sticky top-0 z-50 w-full" style={{ background: '#000', borderBottom: '3px solid #FF007A' }}>
-      <div className="max-w-[1400px] mx-auto px-3 sm:px-5 flex items-center h-16 gap-2 sm:gap-3">
-        <a href="/" className="flex items-center shrink-0 mr-2" aria-label="PPP TV Kenya Home">
-          <Image src="/icon.png" alt="PPP TV Kenya" width={52} height={52} priority style={{ objectFit: 'contain' }} />
-        </a>
-        <nav className="hidden sm:flex items-center overflow-x-auto no-scrollbar flex-1" aria-label="Main navigation">
-          <div className="relative group shrink-0">
-            <a href="/shows" className="px-3 h-16 flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-gray-300 hover:text-white hover:bg-[#FF007A] transition-colors whitespace-nowrap">
-              Shows <Chevron />
-            </a>
-            <DropdownMenu links={SHOWS_LINKS} />
-          </div>
-          <div className="relative group shrink-0">
-            <a href="/hosts" className="px-3 h-16 flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-gray-300 hover:text-white hover:bg-[#FF007A] transition-colors whitespace-nowrap">
-              People <Chevron />
-            </a>
-            <DropdownMenu links={[{ href: '/hosts', label: 'Hosts & On-Air' }, { href: '/staff', label: 'The Team' }]} />
-          </div>
-          {NAV_LINKS.map(l => (
-            <a key={l.href} href={l.href}
-              className="shrink-0 px-3 h-16 flex items-center text-[11px] font-black uppercase tracking-wider text-gray-400 hover:text-white hover:bg-[#FF007A] transition-colors whitespace-nowrap">
-              {l.label}
-            </a>
-          ))}
-        </nav>
-        <div className="flex items-center gap-1 ml-auto sm:ml-0">
-          <a href="/search" className="w-9 h-9 hidden sm:flex items-center justify-center text-gray-500 hover:text-white transition-colors" aria-label="Search">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-          </a>
-          <MobileMenu />
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function SiteFooter() {
   return (
@@ -199,8 +120,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="anonymous" />
       </head>
       <body className={`min-h-screen flex flex-col bg-black ${bebasNeue.variable} ${dmSans.variable}`}>
-        <SiteHeader />
-        <main className="flex-grow pb-14 sm:pb-0">{children}</main>
+        <Header />
+        <main className="flex-grow pt-[68px] pb-14 sm:pb-0">{children}</main>
         <RecentlyViewed />
         <NewsletterBar />
         <SiteFooter />

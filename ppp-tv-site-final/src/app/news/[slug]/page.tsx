@@ -12,6 +12,17 @@ interface Props {
   params: { slug: string };
 }
 
+const CAT_COLORS: Record<string, string> = {
+  News: '#FF007A',
+  Entertainment: '#BF00FF',
+  Sports: '#00CFFF',
+  Music: '#FF6B00',
+  Lifestyle: '#00FF94',
+  Technology: '#FFE600',
+  Events: '#00CFFF',
+  Celebrity: '#FF007A',
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = await fetchArticleBySlug(params.slug);
   if (!article) return { title: 'Article Not Found' };
@@ -32,19 +43,24 @@ export default async function ArticlePage({ params }: Props) {
   const article = await fetchArticleBySlug(params.slug);
   if (!article) notFound();
 
+  const accent = CAT_COLORS[article.category] ?? '#FF007A';
+
   return (
-    <article className="max-w-3xl mx-auto px-4 py-8">
+    <article className="max-w-3xl mx-auto px-4 py-10">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-gray-500 mb-6" aria-label="Breadcrumb">
+      <nav className="flex items-center gap-2 text-xs text-gray-600 mb-6" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-gray-300 transition-colors">Home</Link>
         <span aria-hidden="true">/</span>
-        <Link href={`/?cat=${article.category}`} className="hover:text-gray-300 transition-colors">{article.category}</Link>
+        <Link href={`/?cat=${article.category}`} className="hover:text-gray-300 transition-colors" style={{ color: accent }}>{article.category}</Link>
         <span aria-hidden="true">/</span>
-        <span className="text-gray-400 truncate max-w-[200px]">{article.title}</span>
+        <span className="text-gray-500 truncate max-w-[200px]">{article.title}</span>
       </nav>
 
       {/* Category badge */}
-      <span className="inline-block mb-3 px-3 py-1 bg-brand-pink text-white text-xs font-bold uppercase tracking-widest rounded">
+      <span
+        className="inline-block mb-4 px-3 py-1 text-black text-[10px] font-black uppercase tracking-widest"
+        style={{ background: accent }}
+      >
         {article.category}
       </span>
 
@@ -54,14 +70,14 @@ export default async function ArticlePage({ params }: Props) {
       </h1>
 
       {/* Meta */}
-      <div className="flex items-center gap-3 text-sm text-gray-400 mb-6 flex-wrap">
+      <div className="flex items-center gap-3 text-sm text-gray-500 mb-8 flex-wrap">
         <span>{formatDate(article.publishedAt)}</span>
         <span aria-hidden="true">·</span>
         <a
           href={article.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-brand-pink transition-colors"
+          className="hover:text-white transition-colors"
         >
           {article.sourceName}
         </a>
@@ -69,7 +85,7 @@ export default async function ArticlePage({ params }: Props) {
 
       {/* Hero image */}
       {article.imageUrl && (
-        <div className="relative aspect-video rounded-xl overflow-hidden mb-8 bg-white/5">
+        <div className="relative aspect-video overflow-hidden mb-8 bg-white/5">
           <Image
             src={article.imageUrl}
             alt={article.title}
@@ -83,7 +99,7 @@ export default async function ArticlePage({ params }: Props) {
 
       {/* Excerpt */}
       {article.excerpt && (
-        <p className="text-lg text-gray-300 leading-relaxed mb-6 border-l-4 border-brand-pink pl-4">
+        <p className="text-lg text-gray-300 leading-relaxed mb-6 pl-4" style={{ borderLeft: `4px solid ${accent}` }}>
           {article.excerpt}
         </p>
       )}
@@ -96,12 +112,13 @@ export default async function ArticlePage({ params }: Props) {
         />
       ) : (
         <div className="text-center py-12">
-          <p className="text-gray-400 mb-4">Read the full story on the original source.</p>
+          <p className="text-gray-500 mb-6">Read the full story on the original source.</p>
           <a
             href={article.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block px-6 py-3 bg-brand-pink text-white font-semibold rounded-lg hover:bg-pink-600 transition-colors"
+            className="inline-block px-8 py-3 text-black font-black text-sm uppercase tracking-widest transition-opacity hover:opacity-80"
+            style={{ background: accent }}
           >
             Read Full Article →
           </a>
@@ -110,9 +127,9 @@ export default async function ArticlePage({ params }: Props) {
 
       {/* Tags */}
       {article.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-white/10">
+        <div className="flex flex-wrap gap-2 mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           {article.tags.map((tag) => (
-            <span key={tag} className="px-3 py-1 bg-white/10 text-xs text-gray-300 rounded-full">
+            <span key={tag} className="px-3 py-1 text-xs text-gray-400" style={{ background: 'rgba(255,255,255,0.06)' }}>
               #{tag}
             </span>
           ))}

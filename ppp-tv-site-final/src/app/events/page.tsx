@@ -14,22 +14,19 @@ export default async function EventsPage() {
   const articles = await fetchArticles({ category: 'Events', sort: 'recent', limit: 24 });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8 pb-6 border-b border-cyan-500/30">
-        <span className="inline-block px-3 py-1 bg-cyan-500/20 text-cyan-400 text-xs font-bold uppercase tracking-widest rounded mb-3">
-          Events
-        </span>
-        <h1 className="font-bebas text-4xl text-white tracking-wide">Kenya &amp; Africa Events</h1>
-        <p className="text-gray-400 text-sm mt-1">Concerts, festivals, sports events and more.</p>
+    <div className="max-w-7xl mx-auto px-4 py-10">
+      <div className="mb-10">
+        <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#00CFFF' }}>Events</span>
+        <h1 className="font-bebas text-5xl text-white tracking-wide mt-1">Kenya &amp; Africa Events</h1>
+        <p className="text-gray-500 text-sm mt-1">Concerts, festivals, sports events and more.</p>
       </div>
 
       {articles.length > 0 ? (
         <>
-          <SectionLabel label="Latest Events" accentColor="bg-cyan-500" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {articles.map((article, i) => (
-              <ArticleCard key={article.slug} article={article} />
+          <SectionLabel label="Latest Events" color="#00CFFF" />
+          <div className="cat-row-scroll">
+            {articles.map((article) => (
+              <ArticleCard key={article.slug} article={article} accentColor="#00CFFF" />
             ))}
           </div>
         </>
