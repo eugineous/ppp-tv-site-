@@ -1,3 +1,4 @@
+﻿// v2
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
@@ -5,7 +6,7 @@ import { shows, SHOW_LOGOS } from '@/data/shows';
 
 export const metadata: Metadata = {
   title: 'Shows | PPP TV Kenya',
-  description: 'All PPP TV Kenya shows — news, entertainment, sports, music and more.',
+  description: 'All PPP TV Kenya shows â€” news, entertainment, sports, music and more.',
 };
 
 const R2 = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev';
@@ -92,7 +93,7 @@ export default function ShowsPage() {
                 </div>
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center z-20 pb-4"
                   style={{ background: `linear-gradient(to top,${accent}55 0%,transparent 60%)` }}>
-                  <span className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-black" style={{ background: accent }}>Watch Now →</span>
+                  <span className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-black" style={{ background: accent }}>Watch Now â†’</span>
                 </div>
               </Link>
             );
@@ -127,7 +128,7 @@ export default function ShowsPage() {
                   <span className="block font-bebas text-xl text-white leading-tight group-hover:opacity-80 transition-opacity">{show.name}</span>
                   <span className="block text-[10px] text-gray-500 mt-0.5 line-clamp-1">{show.tagline}</span>
                 </div>
-                <span className="pr-4 text-xl opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ color: accent }}>›</span>
+                <span className="pr-4 text-xl opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ color: accent }}>â€º</span>
               </Link>
             );
           })}
@@ -164,7 +165,7 @@ export default function ShowsPage() {
                           ? <Link href={`/shows/${show.slug}`}
                               className="text-xs font-bold transition-opacity hover:opacity-70 whitespace-nowrap block"
                               style={{ color: accent ?? '#FF007A' }}>{show.name}</Link>
-                          : <span className="text-gray-800 text-xs">—</span>
+                          : <span className="text-gray-800 text-xs">â€”</span>
                         }
                       </td>
                     );
