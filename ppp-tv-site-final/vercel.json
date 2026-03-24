@@ -1,0 +1,5 @@
+{
+  "functions": {
+    "src/app/api/newsletter/route.ts": { "maxDuration": 10 }
+  }
+}

@@ -1,0 +1,15 @@
+name = "ppp-tv-worker"
+main = "index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "PPP_TV_KV"
+id = "fe1b676c46534076a2f0616d53c56315"
+preview_id = "c6a4928680514b57a92bced0ef9468b6"
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+WORKER_SECRET = "ppptv-secret-2026"
