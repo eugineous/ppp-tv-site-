@@ -1,10 +1,13 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import type { Metadata } from 'next';
 import { fetchArticleBySlug } from '@/lib/worker';
 import { formatDate, truncate } from '@/lib/utils';
 import ViewRecorder from './ViewRecorder';
+
+const CommentSection = dynamic(() => import('@/components/CommentSection'), { ssr: false });
 
 export const revalidate = 3600;
 
@@ -122,6 +125,9 @@ export default async function ArticlePage({ params }: Props) {
 
       {/* View recorder (client component) */}
       <ViewRecorder slug={params.slug} article={article} />
+
+      {/* Comments */}
+      <CommentSection articleSlug={params.slug} />
     </article>
   );
 }

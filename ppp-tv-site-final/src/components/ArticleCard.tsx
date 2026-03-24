@@ -4,12 +4,13 @@ import { timeAgo } from '@/lib/utils';
 import type { Article } from '@/types';
 
 const CAT_COLORS: Record<string, string> = {
-  News: '#FF007A',          // hot pink
-  Entertainment: '#BF00FF', // electric violet
-  Sports: '#00CFFF',        // electric cyan
-  Music: '#FF6B00',         // hot orange
-  Lifestyle: '#00FF94',     // neon green
-  Technology: '#FFE600',    // electric yellow
+  News: '#FF007A',
+  Entertainment: '#BF00FF',
+  Sports: '#00CFFF',
+  Music: '#FF6B00',
+  Lifestyle: '#00FF94',
+  Technology: '#FFE600',
+  Movies: '#E50914',
   Events: '#FF007A',
   Celebrity: '#FF007A',
 };
@@ -17,37 +18,50 @@ const CAT_COLORS: Record<string, string> = {
 interface ArticleCardProps {
   article: Article;
   accentColor?: string;
+  rank?: number;
 }
 
-export default function ArticleCard({ article, accentColor }: ArticleCardProps) {
+export default function ArticleCard({ article, accentColor, rank }: ArticleCardProps) {
   const [hovered, setHovered] = useState(false);
   const color = accentColor || CAT_COLORS[article.category] || '#FF007A';
 
   return (
-    <div className="row-card-wrap" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+    <div
+      className={`row-card-wrap${rank ? ' top10-wrap' : ''}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {rank && <span className="top10-num">{rank}</span>}
+
       <a href={`/news/${article.slug}`} className="row-card">
+        {/* 16:9 landscape image container */}
         <div className="row-card-img">
-          {article.imageUrl
-            ? <img src={article.imageUrl} alt={article.title} loading="lazy" />
-            : <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span className="display" style={{ fontSize: '2rem', color: 'rgba(255,255,255,.15)' }}>{article.category[0]}</span>
-              </div>
-          }
+          {article.imageUrl ? (
+            <img src={article.imageUrl} alt={article.title} loading="lazy" />
+          ) : (
+            <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span className="display" style={{ fontSize: '2rem', color: 'rgba(255,255,255,.15)' }}>{article.category[0]}</span>
+            </div>
+          )}
+
+          {/* Always-on gradient overlay for title readability */}
           <div className="row-card-overlay" />
           <div className="row-card-top-accent" style={{ background: color }} />
           <span className="row-card-cat-badge" style={{ background: color }}>{article.category}</span>
+
+          {/* Play icon on hover */}
           <div className="row-card-play">
             <svg width="10" height="12" fill="#000" viewBox="0 0 10 12"><path d="M0 0l10 6-10 6z"/></svg>
           </div>
-        </div>
-        <div className="row-card-info">
-          <span className="row-card-cat" style={{ color }}>{article.category}</span>
-          <div className="row-card-title">{article.title}</div>
-          <div className="row-card-meta">{timeAgo(article.publishedAt)}</div>
+
+          {/* Persistent title overlay — always visible at bottom */}
+          <div className="row-card-title-overlay">
+            <div className="row-card-title-text">{article.title}</div>
+          </div>
         </div>
       </a>
 
-      {/* Hover preview */}
+      {/* Hover preview card */}
       {hovered && (
         <div className="card-preview">
           {article.imageUrl && (
@@ -60,7 +74,7 @@ export default function ArticleCard({ article, accentColor }: ArticleCardProps) 
           <div className="card-preview-body">
             <div className="card-preview-title">{article.title}</div>
             {article.excerpt && <div className="card-preview-excerpt">{article.excerpt}</div>}
-            <div className="card-preview-meta">{timeAgo(article.publishedAt)}{article.sourceName ? ` · ${article.sourceName}` : ''}</div>
+            <div className="card-preview-meta">{timeAgo(article.publishedAt)}</div>
             <a href={`/news/${article.slug}`} className="card-preview-btn" style={{ background: color }}>Read Now</a>
           </div>
         </div>
