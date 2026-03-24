@@ -8,8 +8,6 @@ export const metadata: Metadata = {
   description: 'All PPP TV Kenya shows — news, entertainment, sports, music and more.',
 };
 
-const R2 = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev';
-
 const CAT_COLOR: Record<string, string> = {
   News: '#FF007A', Entertainment: '#BF00FF', Sports: '#00CFFF',
   Music: '#FF6B00', Lifestyle: '#00FF94', Technology: '#FFE600', Community: '#FF007A',
@@ -70,7 +68,7 @@ export default function ShowsPage() {
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '.75rem 1rem' }}>
                   <span style={{ display: 'block', fontSize: '.55rem', fontWeight: 900, letterSpacing: '.12em', textTransform: 'uppercase', color: accent, marginBottom: '2px' }}>{show.category}</span>
                   <span style={{ display: 'block', fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.3rem', color: '#fff', lineHeight: 1.1 }}>{show.name}</span>
-                  <span style={{ display: 'block', fontSize: '.68rem', color: '#aaa', marginTop: '3px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>{show.tagline}</span>
+                  <span style={{ fontSize: '.68rem', color: '#aaa', marginTop: '3px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>{show.tagline}</span>
                 </div>
                 {/* Hover glow */}
                 <div style={{ position: 'absolute', inset: 0, border: `2px solid ${accent}`, opacity: 0, transition: 'opacity .2s', borderRadius: '4px' }} className="group-hover:opacity-100" />
