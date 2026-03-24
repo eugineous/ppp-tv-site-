@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 
 const MobileMenu = dynamic(() => import('./MobileMenu'), { ssr: false });
 
+
 const NAV = [
   { label: 'Home', href: '/' },
   { label: 'Top 10', href: '/?sort=trending' },
@@ -20,7 +21,6 @@ const NAV = [
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
@@ -86,16 +86,10 @@ export default function Header() {
               P
             </Link>
 
-            <button className="md:hidden p-2 text-[#ccc] hover:text-white" onClick={() => setMobileOpen(true)} aria-label="Menu">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            <MobileMenu />
           </div>
         </div>
       </header>
-
-      {mobileOpen && <MobileMenu onClose={() => setMobileOpen(false)} />}
     </>
   );
 }
