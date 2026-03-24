@@ -14,49 +14,52 @@ export default function SavedPage() {
   useEffect(() => {
     async function load() {
       const slugs = getBookmarks();
-      if (slugs.length === 0) { setLoading(false); return; }
+      if (!slugs.length) { setLoading(false); return; }
       const results = await Promise.allSettled(slugs.map(fetchArticleBySlug));
-      const loaded = results
-        .filter((r): r is PromiseFulfilledResult<Article | null> => r.status === 'fulfilled')
-        .map((r) => r.value)
-        .filter((a): a is Article => a !== null);
-      setArticles(loaded);
+      setArticles(results.filter((r): r is PromiseFulfilledResult<Article> => r.status === 'fulfilled' && r.value !== null).map(r => r.value));
       setLoading(false);
     }
     load();
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="font-bebas text-5xl text-white tracking-wide mb-1">Saved Articles</h1>
-      <p className="text-gray-500 text-sm mb-10">Your bookmarked stories, stored locally on this device.</p>
+    <div style={{ background: '#000', minHeight: '100vh' }}>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#FF007A', borderTopColor: 'transparent' }} aria-label="Loading…" />
+      {/* ── MY LIST HEADER — Netflix "My List" era ── */}
+      <div style={{ background: 'linear-gradient(180deg,#141414 0%,#000 100%)', padding: '3rem 2rem 2rem', borderBottom: '1px solid #111' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <p style={{ fontSize: '.6rem', fontWeight: 900, letterSpacing: '.3em', textTransform: 'uppercase', color: '#FF007A', marginBottom: '.4rem' }}>Your Collection</p>
+          <h1 style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', color: '#fff', letterSpacing: '.02em', lineHeight: 1, marginBottom: '.5rem' }}>My List</h1>
+          <p style={{ color: '#555', fontSize: '.85rem' }}>Bookmarked stories, saved on this device.</p>
         </div>
-      ) : articles.length > 0 ? (
-        <div className="cat-row-scroll">
-          {articles.map((article) => (
-            <ArticleCard key={article.slug} article={article} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20">
-          <svg className="w-12 h-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#333' }} aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-          <p className="text-gray-400 text-lg mb-2">No saved articles yet</p>
-          <p className="text-gray-600 text-sm mb-8">Tap the bookmark icon on any article to save it here.</p>
-          <Link
-            href="/"
-            className="inline-block px-8 py-3 text-white font-bold text-sm uppercase tracking-widest transition-opacity hover:opacity-80"
-            style={{ background: '#FF007A' }}
-          >
-            Browse News
-          </Link>
-        </div>
-      )}
+      </div>
+
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2.5rem 2rem 4rem' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem 0' }}>
+            <div style={{ width: '28px', height: '28px', border: '2px solid #FF007A', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+          </div>
+        ) : articles.length > 0 ? (
+          <>
+            <p style={{ fontSize: '.72rem', color: '#555', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>{articles.length} saved article{articles.length !== 1 ? 's' : ''}</p>
+            <div className="cat-row-scroll">
+              {articles.map(article => <ArticleCard key={article.slug} article={article} />)}
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+            {/* Bookmark icon */}
+            <svg style={{ width: '48px', height: '48px', margin: '0 auto 1.5rem', color: '#222' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+            <p style={{ color: '#555', fontSize: '1.1rem', marginBottom: '.5rem' }}>Your list is empty</p>
+            <p style={{ color: '#333', fontSize: '.85rem', marginBottom: '2rem' }}>Tap the bookmark icon on any article to save it here.</p>
+            <Link href="/" style={{ display: 'inline-block', padding: '.7rem 2rem', background: '#FF007A', color: '#fff', fontSize: '.75rem', fontWeight: 900, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+              Browse News
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

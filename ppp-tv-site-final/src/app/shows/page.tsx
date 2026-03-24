@@ -5,166 +5,140 @@ import { shows, SHOW_LOGOS } from '@/data/shows';
 
 export const metadata: Metadata = {
   title: 'Shows | PPP TV Kenya',
-  description: 'All PPP TV Kenya shows - news, entertainment, sports, music and more.',
+  description: 'All PPP TV Kenya shows — news, entertainment, sports, music and more.',
 };
 
 const R2 = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev';
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 const CAT_COLOR: Record<string, string> = {
-  News:          '#FF007A',
-  Entertainment: '#BF00FF',
-  Sports:        '#00CFFF',
-  Music:         '#FF6B00',
-  Lifestyle:     '#00FF94',
-  Technology:    '#FFE600',
-  Community:     '#FF007A',
-};
-
-const SHOW_BG: Record<string, string> = {
-  'urban-news':     R2 + '/SHOWS/urban-news-bg.jpg',
-  'campus-xposure': R2 + '/SHOWS/campus-rave-bg.jpg',
+  News: '#FF007A', Entertainment: '#BF00FF', Sports: '#00CFFF',
+  Music: '#FF6B00', Lifestyle: '#00FF94', Technology: '#FFE600', Community: '#FF007A',
 };
 
 const SHOW_GRADIENT: Record<string, string> = {
-  'urban-news':            'linear-gradient(160deg,#3d0020 0%,#1a0010 60%,#000 100%)',
-  'juu-ya-game':           'linear-gradient(160deg,#003d5c 0%,#001a2e 60%,#000 100%)',
-  'campus-xposure':        'linear-gradient(160deg,#3d3d00 0%,#1a1a00 60%,#000 100%)',
-  'gospel-10':             'linear-gradient(160deg,#3d0070 0%,#1a0030 60%,#000 100%)',
-  'top-15-countdown':      'linear-gradient(160deg,#3d1800 0%,#1a0a00 60%,#000 100%)',
-  'kenyan-drive-show':     'linear-gradient(160deg,#003d3d 0%,#001a1a 60%,#000 100%)',
-  'bongo-quiz':            'linear-gradient(160deg,#3d0000 0%,#1a0000 60%,#000 100%)',
-  'tushinde-charity-show': 'linear-gradient(160deg,#003d20 0%,#001a10 60%,#000 100%)',
+  'urban-news':            'linear-gradient(135deg,#3d0020 0%,#000 100%)',
+  'juu-ya-game':           'linear-gradient(135deg,#003d5c 0%,#000 100%)',
+  'campus-xposure':        'linear-gradient(135deg,#3d3d00 0%,#000 100%)',
+  'gospel-10':             'linear-gradient(135deg,#3d0070 0%,#000 100%)',
+  'top-15-countdown':      'linear-gradient(135deg,#3d1800 0%,#000 100%)',
+  'kenyan-drive-show':     'linear-gradient(135deg,#003d3d 0%,#000 100%)',
+  'bongo-quiz':            'linear-gradient(135deg,#3d0000 0%,#000 100%)',
+  'tushinde-charity-show': 'linear-gradient(135deg,#003d20 0%,#000 100%)',
 };
 
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as const;
+
 export default function ShowsPage() {
-  const featured = shows.filter((s) => s.featured);
+  const featured = shows.filter(s => s.featured);
+  const all = shows;
 
   return (
     <div style={{ background: '#000', minHeight: '100vh' }}>
 
-      {/* Hero */}
-      <div className="relative w-full overflow-hidden" style={{ height: '320px' }}>
-        <Image src={R2 + '/SHOWS/urban-news-bg2.jpg'} alt="PPP TV Shows" fill
-          style={{ objectFit: 'cover', objectPosition: 'center top' }} priority />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.4) 60%,transparent 100%)' }} />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top,#000 0%,transparent 50%)' }} />
-        <div className="absolute bottom-0 left-0 px-6 pb-10 max-w-xl">
-          <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: '#FF007A' }}>PPP TV Kenya</p>
-          <h1 className="font-bebas text-7xl text-white tracking-wide leading-none mb-2">Our Shows</h1>
-          <p className="text-gray-300 text-sm">Kenya&apos;s best entertainment, news, sports and music.</p>
+      {/* ── BILLBOARD HEADER — Netflix "Browse" era ── */}
+      <div style={{ background: 'linear-gradient(180deg,#141414 0%,#000 100%)', borderBottom: '1px solid #1a1a1a', padding: '3rem 2rem 2rem' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <p style={{ fontSize: '.65rem', fontWeight: 900, letterSpacing: '.3em', textTransform: 'uppercase', color: '#FF007A', marginBottom: '.5rem' }}>PPP TV Kenya</p>
+          <h1 style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(3rem,8vw,6rem)', color: '#fff', letterSpacing: '.02em', lineHeight: 1, marginBottom: '.75rem' }}>Shows</h1>
+          <p style={{ color: '#888', fontSize: '.9rem', maxWidth: '480px' }}>Kenya&apos;s best entertainment, news, sports and music — all in one place.</p>
         </div>
       </div>
 
-      {/* Featured poster grid */}
-      <div className="max-w-7xl mx-auto px-4 pt-10 pb-16">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="w-1 h-7 flex-shrink-0" style={{ background: '#FF007A' }} />
-          <h2 className="font-bebas text-3xl text-white tracking-wide">Featured Shows</h2>
+      {/* ── FEATURED — wide 16:9 banner cards ── */}
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2.5rem 2rem 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+          <div style={{ width: '4px', height: '22px', background: '#FF007A', borderRadius: '2px' }} />
+          <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.4rem', color: '#fff', letterSpacing: '.04em', textTransform: 'uppercase' }}>Featured Shows</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {featured.map((show) => {
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '12px' }}>
+          {featured.map(show => {
             const accent = CAT_COLOR[show.category] ?? '#FF007A';
-            const bg = SHOW_BG[show.slug];
-            const gradient = SHOW_GRADIENT[show.slug] ?? 'linear-gradient(160deg,#222 0%,#000 100%)';
+            const gradient = SHOW_GRADIENT[show.slug] ?? 'linear-gradient(135deg,#222 0%,#000 100%)';
             const logo = SHOW_LOGOS[show.slug];
             return (
               <Link key={show.slug} href={'/shows/' + show.slug}
-                className="group block relative overflow-hidden rounded-sm transition-transform duration-300 hover:scale-[1.05] hover:z-10"
-                style={{ aspectRatio: '2/3' }}>
-                {bg
-                  ? <Image src={bg} alt={show.name} fill style={{ objectFit: 'cover', objectPosition: 'center top' }} />
-                  : <div className="absolute inset-0" style={{ background: gradient }} />
-                }
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top,rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.25) 50%,rgba(0,0,0,0.1) 100%)' }} />
-                <div className="absolute top-0 left-0 right-0 h-[3px] z-10" style={{ background: accent }} />
-                <div className="absolute inset-0 flex items-center justify-center z-10 px-4" style={{ paddingBottom: '80px' }}>
-                  {logo
-                    ? <Image src={logo} alt={show.name} width={140} height={70}
-                        style={{ objectFit: 'contain', maxHeight: '70px', width: 'auto', filter: 'brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0,0,0,0.9))' }} />
-                    : <span className="font-bebas text-4xl text-white text-center leading-tight tracking-wide drop-shadow-lg">{show.name}</span>
-                  }
+                style={{ display: 'block', position: 'relative', aspectRatio: '16/9', borderRadius: '4px', overflow: 'hidden', textDecoration: 'none' }}
+                className="group">
+                <div style={{ position: 'absolute', inset: 0, background: gradient }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.2) 60%,transparent 100%)' }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: accent }} />
+                {logo && (
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 1.5rem 2.5rem' }}>
+                    <Image src={logo} alt={show.name} width={160} height={80} style={{ objectFit: 'contain', maxHeight: '70px', width: 'auto', filter: 'brightness(0) invert(1) drop-shadow(0 2px 12px rgba(0,0,0,.9))' }} />
+                  </div>
+                )}
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '.75rem 1rem' }}>
+                  <span style={{ display: 'block', fontSize: '.55rem', fontWeight: 900, letterSpacing: '.12em', textTransform: 'uppercase', color: accent, marginBottom: '2px' }}>{show.category}</span>
+                  <span style={{ display: 'block', fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.3rem', color: '#fff', lineHeight: 1.1 }}>{show.name}</span>
+                  <span style={{ display: 'block', fontSize: '.68rem', color: '#aaa', marginTop: '3px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>{show.tagline}</span>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 z-10 p-3">
-                  <span className="block text-[9px] font-black uppercase tracking-widest mb-0.5" style={{ color: accent }}>{show.category}</span>
-                  <span className="block font-bebas text-xl text-white leading-tight">{show.name}</span>
-                  <span className="block text-[10px] text-gray-400 mt-0.5 line-clamp-2">{show.tagline}</span>
-                </div>
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center z-20 pb-4"
-                  style={{ background: 'linear-gradient(to top,' + accent + '55 0%,transparent 60%)' }}>
-                  <span className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-black" style={{ background: accent }}>Watch Now</span>
-                </div>
+                {/* Hover glow */}
+                <div style={{ position: 'absolute', inset: 0, border: `2px solid ${accent}`, opacity: 0, transition: 'opacity .2s', borderRadius: '4px' }} className="group-hover:opacity-100" />
               </Link>
             );
           })}
         </div>
       </div>
 
-      {/* All shows list */}
-      <div className="max-w-7xl mx-auto px-4 pb-16">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="w-1 h-7 flex-shrink-0" style={{ background: '#BF00FF' }} />
-          <h2 className="font-bebas text-3xl text-white tracking-wide">All Shows</h2>
+      {/* ── ALL SHOWS — horizontal list rows ── */}
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2.5rem 2rem 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+          <div style={{ width: '4px', height: '22px', background: '#BF00FF', borderRadius: '2px' }} />
+          <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.4rem', color: '#fff', letterSpacing: '.04em', textTransform: 'uppercase' }}>All Shows</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {shows.map((show) => {
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: '8px' }}>
+          {all.map(show => {
             const accent = CAT_COLOR[show.category] ?? '#FF007A';
             const logo = SHOW_LOGOS[show.slug];
             const gradient = SHOW_GRADIENT[show.slug] ?? 'linear-gradient(135deg,#111 0%,#000 100%)';
             return (
               <Link key={show.slug} href={'/shows/' + show.slug}
-                className="group flex items-center transition-all hover:scale-[1.02] rounded-sm overflow-hidden"
-                style={{ background: '#0d0d0d', borderLeft: '3px solid ' + accent }}>
-                <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: '72px', height: '72px', background: gradient }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 0, background: '#0d0d0d', borderLeft: `3px solid ${accent}`, textDecoration: 'none', transition: 'background .15s' }}
+                className="group hover:bg-white/5">
+                <div style={{ flexShrink: 0, width: '64px', height: '64px', background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {logo
-                    ? <Image src={logo} alt={show.name} width={50} height={50}
-                        style={{ objectFit: 'contain', width: '50px', height: '50px', filter: 'brightness(0) invert(1)' }} />
-                    : <span className="font-bebas text-2xl text-white">{show.name[0]}</span>
+                    ? <Image src={logo} alt={show.name} width={44} height={44} style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+                    : <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.5rem', color: '#fff' }}>{show.name[0]}</span>
                   }
                 </div>
-                <div className="min-w-0 py-3 px-3 flex-1">
-                  <span className="block text-[9px] font-black uppercase tracking-widest" style={{ color: accent }}>{show.category}</span>
-                  <span className="block font-bebas text-xl text-white leading-tight group-hover:opacity-80 transition-opacity">{show.name}</span>
-                  <span className="block text-[10px] text-gray-500 mt-0.5 line-clamp-1">{show.tagline}</span>
+                <div style={{ padding: '.75rem 1rem', flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: '.55rem', fontWeight: 900, letterSpacing: '.1em', textTransform: 'uppercase', color: accent }}>{show.category}</span>
+                  <span style={{ display: 'block', fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.1rem', color: '#fff', lineHeight: 1.2 }}>{show.name}</span>
+                  <span style={{ display: 'block', fontSize: '.65rem', color: '#555', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{show.tagline}</span>
                 </div>
-                <span className="pr-4 text-xl opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ color: accent }}>›</span>
+                <span style={{ paddingRight: '1rem', color: accent, fontSize: '1.2rem', opacity: 0, transition: 'opacity .15s' }} className="group-hover:opacity-100">›</span>
               </Link>
             );
           })}
         </div>
       </div>
 
-      {/* Weekly schedule */}
-      <div className="max-w-7xl mx-auto px-4 pb-20">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="w-1 h-7 flex-shrink-0" style={{ background: '#00CFFF' }} />
-          <h2 className="font-bebas text-3xl text-white tracking-wide">Weekly Schedule</h2>
+      {/* ── SCHEDULE TABLE ── */}
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2.5rem 2rem 4rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+          <div style={{ width: '4px', height: '22px', background: '#00CFFF', borderRadius: '2px' }} />
+          <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.4rem', color: '#fff', letterSpacing: '.04em', textTransform: 'uppercase' }}>Weekly Schedule</span>
         </div>
-        <div className="overflow-x-auto rounded-sm" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
-          <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: '600px' }}>
+        <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,.06)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px', fontSize: '.8rem' }}>
             <thead>
-              <tr style={{ background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 w-16">Time</th>
-                {DAYS.map((day) => (
-                  <th key={day} className="text-left px-3 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600">{day}</th>
-                ))}
+              <tr style={{ background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+                <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: '.6rem', fontWeight: 900, letterSpacing: '.12em', textTransform: 'uppercase', color: '#444', width: '60px' }}>Time</th>
+                {DAYS.map(d => <th key={d} style={{ textAlign: 'left', padding: '10px 12px', fontSize: '.6rem', fontWeight: 900, letterSpacing: '.12em', textTransform: 'uppercase', color: '#444' }}>{d}</th>)}
               </tr>
             </thead>
             <tbody>
               {['07:00','09:00','11:00','14:00','16:00','17:00','18:00','19:00','20:00'].map((time, i) => (
-                <tr key={time} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}
-                  className="hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-3 text-xs text-gray-700 font-mono whitespace-nowrap">{time}</td>
-                  {DAYS.map((day) => {
-                    const show = shows.find((s) => s.schedule.some((slot) => slot.day === day && slot.startTime === time));
+                <tr key={time} style={{ borderBottom: '1px solid rgba(255,255,255,.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,.01)' }}>
+                  <td style={{ padding: '10px 16px', color: '#555', fontFamily: 'monospace', whiteSpace: 'nowrap', fontSize: '.72rem' }}>{time}</td>
+                  {DAYS.map(day => {
+                    const show = shows.find(s => s.schedule.some(sl => sl.day === day && sl.startTime === time));
                     const accent = show ? (CAT_COLOR[show.category] ?? '#FF007A') : null;
                     return (
-                      <td key={day} className="px-3 py-3">
+                      <td key={day} style={{ padding: '10px 12px' }}>
                         {show
-                          ? <Link href={'/shows/' + show.slug}
-                              className="text-xs font-bold transition-opacity hover:opacity-70 whitespace-nowrap block"
-                              style={{ color: accent ?? '#FF007A' }}>{show.name}</Link>
-                          : <span className="text-gray-800 text-xs">-</span>
+                          ? <Link href={'/shows/' + show.slug} style={{ color: accent ?? '#FF007A', fontWeight: 700, fontSize: '.72rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>{show.name}</Link>
+                          : <span style={{ color: '#222', fontSize: '.72rem' }}>—</span>
                         }
                       </td>
                     );
@@ -175,7 +149,6 @@ export default function ShowsPage() {
           </table>
         </div>
       </div>
-
     </div>
   );
 }

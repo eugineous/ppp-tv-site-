@@ -5,88 +5,94 @@ import { shows } from '@/data/shows';
 const OnAirStrip = dynamic(() => import('@/components/OnAirStrip'), { ssr: false });
 
 export const metadata: Metadata = {
-  title: 'Watch Live',
+  title: 'Watch Live | PPP TV Kenya',
   description: 'Watch PPP TV Kenya live on YouTube — StarTimes Channel 430.',
 };
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
-
-const CAT_COLOR: Record<string, string> = {
-  News: '#FF007A',
-  Entertainment: '#BF00FF',
-  Sports: '#00CFFF',
-  Music: '#FF6B00',
-  Lifestyle: '#00FF94',
-  Technology: '#FFE600',
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as const;
+const CAT_COLOR: Record<string,string> = {
+  News:'#FF007A', Entertainment:'#BF00FF', Sports:'#00CFFF',
+  Music:'#FF6B00', Lifestyle:'#00FF94', Technology:'#FFE600',
 };
 
 export default function LivePage() {
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <OnAirStrip />
+  const todayIdx = new Date().getDay(); // 0=Sun
+  const dayMap: Record<number, typeof DAYS[number]> = { 1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat',0:'Sun' };
+  const today = dayMap[todayIdx] ?? 'Mon';
+  const todaySlots = shows.flatMap(show =>
+    show.schedule.filter(sl => sl.day === today).map(sl => ({ show, slot: sl }))
+  ).sort((a,b) => a.slot.startTime.localeCompare(b.slot.startTime));
 
-      <div className="mt-6 lg:grid lg:grid-cols-[1fr_300px] lg:gap-8">
-        {/* Live embed */}
+  return (
+    <div style={{ background: '#000', minHeight: '100vh' }}>
+
+      {/* ── CINEMATIC HEADER ── */}
+      <div style={{ position: 'relative', width: '100%', height: '220px', overflow: 'hidden', background: 'linear-gradient(135deg,#1a0010 0%,#000 60%)' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 30% 50%,rgba(255,0,122,.18) 0%,transparent 70%)' }} />
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '2rem 2.5rem' }}>
+          <OnAirStrip />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '1rem' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', animation: 'pulse 1.4s ease-in-out infinite' }} />
+            <h1 style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(2.5rem,6vw,4.5rem)', color: '#fff', letterSpacing: '.02em', lineHeight: 1 }}>Live Now</h1>
+          </div>
+          <p style={{ color: '#888', fontSize: '.85rem', marginTop: '.4rem' }}>PPP TV Kenya · StarTimes Channel 430 · YouTube</p>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT ── */}
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem 4rem', display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
+
+        {/* Player */}
         <div>
-          <h1 className="font-bebas text-5xl text-white tracking-wide mb-4">Watch Live</h1>
-          <div className="relative aspect-video overflow-hidden bg-black">
+          <div style={{ position: 'relative', aspectRatio: '16/9', background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
             <iframe
               src="https://www.youtube.com/embed/live_stream?channel=PPPTVKENYA"
               title="PPP TV Kenya Live Stream"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              className="absolute inset-0 w-full h-full"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
             />
           </div>
-          <div className="mt-4 flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-sm text-red-400">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" aria-hidden="true" />
-              Live on YouTube
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '.8rem', color: '#ef4444', fontWeight: 700 }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+              LIVE
             </span>
-            <a
-              href="https://www.youtube.com/@PPPTVKENYA"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-gray-500 hover:text-white transition-colors"
-            >
+            <a href="https://www.youtube.com/@PPPTVKENYA" target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: '.8rem', color: '#555', textDecoration: 'none', fontWeight: 600 }}>
               Open in YouTube →
+            </a>
+            <a href="https://www.youtube.com/@PPPTVKENYA" target="_blank" rel="noopener noreferrer"
+              style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '.5rem 1.2rem', background: '#FF0000', color: '#fff', fontSize: '.72rem', fontWeight: 900, letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
+              Subscribe
             </a>
           </div>
         </div>
 
-        {/* Sidebar: today's schedule */}
-        <aside className="mt-8 lg:mt-0" aria-label="Upcoming shows">
-          <h2 className="font-bebas text-2xl text-white tracking-wide mb-4">Today&apos;s Schedule</h2>
-          <div className="space-y-1">
-            {shows.flatMap((show) =>
-              show.schedule
-                .filter((slot) => {
-                  const today = DAYS[new Date().getDay()];
-                  return slot.day === today;
-                })
-                .map((slot, i) => {
-                  const accent = CAT_COLOR[show.category] ?? '#FF007A';
-                  return (
-                    <div key={`${show.slug}-${i}`} className="flex items-center gap-3 px-4 py-3" style={{ background: '#111', borderLeft: `3px solid ${accent}` }}>
-                      <span className="text-xs font-mono text-gray-500 w-20 flex-shrink-0">
-                        {slot.startTime} – {slot.endTime}
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-white">{show.name}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: accent }}>{show.category}</p>
-                      </div>
-                    </div>
-                  );
-                })
-            )}
+        {/* Today's schedule — card grid */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+            <div style={{ width: '4px', height: '20px', background: '#FF007A', borderRadius: '2px' }} />
+            <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.3rem', color: '#fff', letterSpacing: '.04em', textTransform: 'uppercase' }}>Today&apos;s Schedule</span>
           </div>
-          <a
-            href="/schedule"
-            className="block mt-4 text-center text-sm text-gray-500 hover:text-white transition-colors"
-          >
-            Full Weekly Schedule →
-          </a>
-        </aside>
+          {todaySlots.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '8px' }}>
+              {todaySlots.map(({ show, slot }, i) => {
+                const accent = CAT_COLOR[show.category] ?? '#FF007A';
+                return (
+                  <div key={i} style={{ background: '#0d0d0d', borderLeft: `3px solid ${accent}`, padding: '.85rem 1rem' }}>
+                    <span style={{ display: 'block', fontFamily: 'monospace', fontSize: '.7rem', color: '#555', marginBottom: '4px' }}>{slot.startTime} – {slot.endTime}</span>
+                    <span style={{ display: 'block', fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.1rem', color: '#fff', lineHeight: 1.2 }}>{show.name}</span>
+                    <span style={{ display: 'block', fontSize: '.6rem', fontWeight: 900, letterSpacing: '.1em', textTransform: 'uppercase', color: accent, marginTop: '3px' }}>{show.category}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p style={{ color: '#444', fontSize: '.85rem' }}>No shows scheduled today.</p>
+          )}
+          <a href="/schedule" style={{ display: 'inline-block', marginTop: '1rem', fontSize: '.75rem', color: '#555', textDecoration: 'none', fontWeight: 600 }}>Full Weekly Schedule →</a>
+        </div>
       </div>
     </div>
   );

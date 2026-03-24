@@ -3,53 +3,67 @@ import type { Metadata } from 'next';
 import { getShowsForDay } from '@/lib/schedule';
 
 export const metadata: Metadata = {
-  title: 'Schedule',
-  description: 'PPP TV Kenya weekly broadcast schedule.',
+  title: 'Schedule | PPP TV Kenya',
+  description: 'PPP TV Kenya weekly broadcast schedule — all times East Africa Time.',
 };
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as const;
+const DAY_FULL: Record<string,string> = { Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday' };
+const CAT_COLOR: Record<string,string> = {
+  News:'#FF007A', Entertainment:'#BF00FF', Sports:'#00CFFF',
+  Music:'#FF6B00', Lifestyle:'#00FF94', Technology:'#FFE600', Community:'#FF007A',
+};
+const DAY_ACCENT = ['#FF007A','#BF00FF','#00CFFF','#FF6B00','#00FF94','#FFE600','#FF007A'];
 
 export default function SchedulePage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="font-bebas text-4xl text-white tracking-wide mb-2">Broadcast Schedule</h1>
-      <p className="text-gray-400 text-sm mb-8">All times are East Africa Time (EAT, UTC+3).</p>
+    <div style={{ background: '#000', minHeight: '100vh' }}>
 
-      <div className="space-y-8">
-        {DAYS.map((day) => {
-          const slots = getShowsForDay(day);
-          return (
-            <section key={day} aria-label={`${day} schedule`}>
-              <h2 className="font-bebas text-2xl text-white tracking-wide mb-3 flex items-center gap-3">
-                <span className="w-1 h-6 rounded-full bg-brand-pink" aria-hidden="true" />
-                {day === 'Mon' ? 'Monday' : day === 'Tue' ? 'Tuesday' : day === 'Wed' ? 'Wednesday' : day === 'Thu' ? 'Thursday' : day === 'Fri' ? 'Friday' : day === 'Sat' ? 'Saturday' : 'Sunday'}
-              </h2>
-              {slots.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {slots.map(({ show, slot }, i) => (
-                    <Link
-                      key={i}
-                      href={`/shows/${show.slug}`}
-                      className="group flex items-center gap-4 bg-[#111] rounded-xl px-4 py-3 hover:ring-1 hover:ring-brand-pink/50 transition-all"
-                    >
-                      <span className="text-xs font-mono text-gray-400 w-24 flex-shrink-0">
-                        {slot.startTime} – {slot.endTime}
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold text-white group-hover:text-brand-pink transition-colors">
-                          {show.name}
-                        </p>
-                        <p className="text-xs text-gray-500">{show.category}</p>
-                      </div>
-                    </Link>
-                  ))}
+      {/* ── HEADER — EPG / TV Guide era ── */}
+      <div style={{ background: 'linear-gradient(180deg,#0a0a0a 0%,#000 100%)', borderBottom: '1px solid #111', padding: '3rem 2rem 2rem' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <p style={{ fontSize: '.6rem', fontWeight: 900, letterSpacing: '.3em', textTransform: 'uppercase', color: '#00CFFF', marginBottom: '.4rem' }}>East Africa Time · UTC+3</p>
+          <h1 style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', color: '#fff', letterSpacing: '.02em', lineHeight: 1, marginBottom: '.5rem' }}>Broadcast Schedule</h1>
+          <p style={{ color: '#555', fontSize: '.85rem' }}>Full weekly programming guide for PPP TV Kenya.</p>
+        </div>
+      </div>
+
+      {/* ── DAY COLUMNS ── */}
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 2rem 4rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '1.5rem' }}>
+          {DAYS.map((day, di) => {
+            const slots = getShowsForDay(day);
+            const accent = DAY_ACCENT[di];
+            return (
+              <section key={day} aria-label={`${DAY_FULL[day]} schedule`}>
+                {/* Day header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', paddingBottom: '10px', borderBottom: `2px solid ${accent}` }}>
+                  <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.5rem', color: '#fff', letterSpacing: '.04em' }}>{DAY_FULL[day]}</span>
                 </div>
-              ) : (
-                <p className="text-sm text-gray-600 pl-4">No shows scheduled</p>
-              )}
-            </section>
-          );
-        })}
+                {slots.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {slots.map(({ show, slot }, i) => {
+                      const ca = CAT_COLOR[show.category] ?? '#FF007A';
+                      return (
+                        <Link key={i} href={`/shows/${show.slug}`}
+                          style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#0d0d0d', borderLeft: `3px solid ${ca}`, padding: '.65rem .85rem', textDecoration: 'none', transition: 'background .15s' }}
+                          className="hover:bg-white/5">
+                          <span style={{ fontFamily: 'monospace', fontSize: '.68rem', color: '#444', flexShrink: 0, width: '80px' }}>{slot.startTime}–{slot.endTime}</span>
+                          <div style={{ minWidth: 0 }}>
+                            <span style={{ display: 'block', fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1rem', color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{show.name}</span>
+                            <span style={{ display: 'block', fontSize: '.55rem', fontWeight: 900, letterSpacing: '.1em', textTransform: 'uppercase', color: ca, marginTop: '2px' }}>{show.category}</span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ color: '#333', fontSize: '.8rem', padding: '.5rem 0' }}>No shows scheduled</p>
+                )}
+              </section>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

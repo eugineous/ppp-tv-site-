@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
 import { getStaffByDepartment } from '@/data/staff';
-import SectionLabel from '@/components/SectionLabel';
 
 export const metadata: Metadata = {
-  title: 'Our Team',
+  title: 'Our Team | PPP TV Kenya',
   description: 'Meet the PPP TV Kenya team — on-air talent and behind-the-scenes crew.',
 };
 
@@ -12,47 +11,63 @@ export default function StaffPage() {
   const behind = getStaffByDepartment('behind-the-scenes');
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="font-bebas text-4xl text-white tracking-wide mb-2">Our Team</h1>
-      <p className="text-gray-400 text-sm mb-8">The people who make PPP TV Kenya happen every day.</p>
+    <div style={{ background: '#000', minHeight: '100vh' }}>
 
-      {/* On-Air Talent */}
-      <section className="mb-10" aria-label="On-air talent">
-        <SectionLabel label="On-Air Talent" accentColor="bg-brand-pink" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {onAir.map((member) => (
-            <div key={member.slug} className="bg-[#111] rounded-xl p-5 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-brand-pink/20 flex items-center justify-center flex-shrink-0">
-                <span className="font-bebas text-xl text-white">{member.initials}</span>
-              </div>
-              <div>
-                <p className="font-semibold text-white">{member.name}</p>
-                <p className="text-xs text-brand-pink mb-2">{member.role}</p>
-                <p className="text-xs text-gray-400 leading-relaxed">{member.bio}</p>
-              </div>
-            </div>
-          ))}
+      {/* ── HEADER — Netflix "About" era dark masthead ── */}
+      <div style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#000 100%)', borderBottom: '1px solid #111', padding: '3.5rem 2rem 2.5rem' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <p style={{ fontSize: '.6rem', fontWeight: 900, letterSpacing: '.3em', textTransform: 'uppercase', color: '#00CFFF', marginBottom: '.4rem' }}>PPP TV Kenya</p>
+          <h1 style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', color: '#fff', letterSpacing: '.02em', lineHeight: 1, marginBottom: '.5rem' }}>Our Team</h1>
+          <p style={{ color: '#555', fontSize: '.85rem' }}>The people who make PPP TV Kenya happen every day.</p>
         </div>
-      </section>
+      </div>
 
-      {/* Behind the Scenes */}
-      <section aria-label="Behind the scenes team">
-        <SectionLabel label="Behind the Scenes" accentColor="bg-cyan-500" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {behind.map((member) => (
-            <div key={member.slug} className="bg-[#111] rounded-xl p-5 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
-                <span className="font-bebas text-xl text-white">{member.initials}</span>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2.5rem 2rem 4rem' }}>
+
+        {/* ── ON-AIR TALENT ── */}
+        <div style={{ marginBottom: '3rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+            <div style={{ width: '4px', height: '22px', background: '#FF007A', borderRadius: '2px' }} />
+            <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.4rem', color: '#fff', letterSpacing: '.04em', textTransform: 'uppercase' }}>On-Air Talent</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '10px' }}>
+            {onAir.map(member => (
+              <div key={member.slug} style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', background: '#0d0d0d', borderLeft: '3px solid #FF007A', padding: '1.1rem 1.2rem' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,0,122,.15)', border: '1px solid rgba(255,0,122,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.1rem', color: '#fff' }}>{member.initials}</span>
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <span style={{ display: 'block', fontWeight: 800, color: '#fff', fontSize: '.9rem', marginBottom: '2px' }}>{member.name}</span>
+                  <span style={{ display: 'block', fontSize: '.6rem', fontWeight: 900, letterSpacing: '.1em', textTransform: 'uppercase', color: '#FF007A', marginBottom: '6px' }}>{member.role}</span>
+                  <p style={{ fontSize: '.75rem', color: '#666', lineHeight: 1.6 }}>{member.bio}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-white">{member.name}</p>
-                <p className="text-xs text-cyan-400 mb-2">{member.role}</p>
-                <p className="text-xs text-gray-400 leading-relaxed">{member.bio}</p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </section>
+
+        {/* ── BEHIND THE SCENES ── */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+            <div style={{ width: '4px', height: '22px', background: '#00CFFF', borderRadius: '2px' }} />
+            <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.4rem', color: '#fff', letterSpacing: '.04em', textTransform: 'uppercase' }}>Behind the Scenes</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '10px' }}>
+            {behind.map(member => (
+              <div key={member.slug} style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', background: '#0d0d0d', borderLeft: '3px solid #00CFFF', padding: '1.1rem 1.2rem' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(0,207,255,.12)', border: '1px solid rgba(0,207,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.1rem', color: '#fff' }}>{member.initials}</span>
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <span style={{ display: 'block', fontWeight: 800, color: '#fff', fontSize: '.9rem', marginBottom: '2px' }}>{member.name}</span>
+                  <span style={{ display: 'block', fontSize: '.6rem', fontWeight: 900, letterSpacing: '.1em', textTransform: 'uppercase', color: '#00CFFF', marginBottom: '6px' }}>{member.role}</span>
+                  <p style={{ fontSize: '.75rem', color: '#666', lineHeight: 1.6 }}>{member.bio}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
