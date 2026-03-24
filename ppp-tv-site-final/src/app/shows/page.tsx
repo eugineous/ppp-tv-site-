@@ -2,7 +2,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { shows, getFeaturedShows, SHOW_LOGOS } from '@/data/shows';
-import SectionLabel from '@/components/SectionLabel';
 
 export const metadata: Metadata = {
   title: 'Shows',
@@ -12,116 +11,176 @@ export const metadata: Metadata = {
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 const CAT_COLOR: Record<string, string> = {
-  News: '#FF007A',
+  News:          '#FF007A',
   Entertainment: '#BF00FF',
-  Sports: '#00CFFF',
-  Music: '#FF6B00',
-  Lifestyle: '#00FF94',
-  Technology: '#FFE600',
+  Sports:        '#00CFFF',
+  Music:         '#FF6B00',
+  Lifestyle:     '#00FF94',
+  Technology:    '#FFE600',
+  Community:     '#FF007A',
+};
+
+// Gradient backgrounds per show for the poster cards
+const SHOW_GRADIENT: Record<string, string> = {
+  'urban-news':             'linear-gradient(135deg, #1a0010 0%, #3d0020 50%, #000 100%)',
+  'juu-ya-game':            'linear-gradient(135deg, #001a2e 0%, #003d5c 50%, #000 100%)',
+  'campus-xposure':         'linear-gradient(135deg, #1a1a00 0%, #3d3d00 50%, #000 100%)',
+  'gospel-10':              'linear-gradient(135deg, #1a0030 0%, #3d0070 50%, #000 100%)',
+  'top-15-countdown':       'linear-gradient(135deg, #1a0a00 0%, #3d1800 50%, #000 100%)',
+  'kenyan-drive-show':      'linear-gradient(135deg, #001a1a 0%, #003d3d 50%, #000 100%)',
+  'bongo-quiz':             'linear-gradient(135deg, #1a0000 0%, #3d0000 50%, #000 100%)',
+  'tushinde-charity-show':  'linear-gradient(135deg, #001a10 0%, #003d20 50%, #000 100%)',
 };
 
 export default function ShowsPage() {
   const featured = getFeaturedShows();
+  const rest = shows.filter((s) => !s.featured);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="font-bebas text-5xl text-white tracking-wide mb-1">Our Shows</h1>
-      <p className="text-gray-500 text-sm mb-10">Kenya&apos;s best entertainment, news, sports and music — all on PPP TV.</p>
+    <div style={{ background: '#000', minHeight: '100vh' }}>
 
-      {/* Featured shows */}
-      {featured.length > 0 && (
-        <section className="mb-12" aria-label="Featured shows">
-          <SectionLabel label="Featured" color="#FF007A" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featured.map((show) => {
-              const accent = CAT_COLOR[show.category] ?? '#FF007A';
-              return (
-                <Link
-                  key={show.slug}
-                  href={`/shows/${show.slug}`}
-                  className="group relative overflow-hidden transition-transform hover:scale-[1.02]"
-                  style={{ background: '#111' }}
-                >
-                  <div className="absolute top-0 left-0 w-1 h-full" style={{ background: accent }} aria-hidden="true" />
-                  <div className="p-6 pl-7">
-                    {SHOW_LOGOS[show.slug] && (
-                      <div className="mb-3">
-                        <Image src={SHOW_LOGOS[show.slug]} alt={show.name} width={120} height={48} style={{ objectFit: 'contain', height: '48px', width: 'auto' }} />
-                      </div>
-                    )}
-                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: accent }}>{show.category}</span>
-                    <h2 className="font-bebas text-2xl text-white mt-1 mb-2 group-hover:opacity-80 transition-opacity">
-                      {show.name}
-                    </h2>
-                    <p className="text-sm text-gray-400 line-clamp-2">{show.description}</p>
-                    <p className="text-xs mt-3 font-medium" style={{ color: accent }}>{show.tagline}</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {/* ── Page header ── */}
+      <div className="max-w-7xl mx-auto px-4 pt-10 pb-6">
+        <h1 className="font-bebas text-6xl text-white tracking-wide mb-1">Shows</h1>
+        <p className="text-gray-500 text-sm">Kenya&apos;s best entertainment, news, sports and music — all on PPP TV.</p>
+      </div>
 
-      {/* All shows */}
-      <section className="mb-12" aria-label="All shows">
-        <SectionLabel label="All Shows" color="#BF00FF" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {shows.map((show) => {
+      {/* ── Featured shows — big poster grid ── */}
+      <div className="max-w-7xl mx-auto px-4 mb-16">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-1 h-7 flex-shrink-0" style={{ background: '#FF007A' }} />
+          <h2 className="font-bebas text-2xl text-white tracking-wide">Featured Shows</h2>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {featured.map((show) => {
             const accent = CAT_COLOR[show.category] ?? '#FF007A';
+            const gradient = SHOW_GRADIENT[show.slug] ?? 'linear-gradient(135deg, #111 0%, #000 100%)';
+            const logo = SHOW_LOGOS[show.slug];
+
             return (
               <Link
                 key={show.slug}
                 href={`/shows/${show.slug}`}
-                className="group transition-transform hover:scale-[1.02]"
-                style={{ background: '#111' }}
+                className="group block relative overflow-hidden transition-transform duration-300 hover:scale-[1.04] hover:z-10"
+                style={{ aspectRatio: '2/3', background: gradient }}
               >
-                <div className="h-1 w-full" style={{ background: accent }} />
-                <div className="p-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: accent }}>{show.category}</span>
-                  <h3 className="font-bebas text-xl text-white mt-1 mb-1 group-hover:opacity-80 transition-opacity">
-                    {show.name}
-                  </h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">{show.tagline}</p>
+                {/* Top accent bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 z-10" style={{ background: accent }} />
+
+                {/* Logo or show name */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-10">
+                  {logo ? (
+                    <Image
+                      src={logo}
+                      alt={show.name}
+                      width={160}
+                      height={80}
+                      style={{ objectFit: 'contain', maxHeight: '80px', width: 'auto', filter: 'brightness(0) invert(1)' }}
+                    />
+                  ) : (
+                    <span className="font-bebas text-3xl text-white text-center leading-tight tracking-wide px-2">
+                      {show.name}
+                    </span>
+                  )}
+                </div>
+
+                {/* Bottom gradient + info */}
+                <div className="absolute bottom-0 left-0 right-0 z-10" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 100%)', padding: '2rem 0.75rem 0.75rem' }}>
+                  <span className="block text-[9px] font-black uppercase tracking-widest mb-0.5" style={{ color: accent }}>{show.category}</span>
+                  <span className="block font-bebas text-lg text-white leading-tight tracking-wide">{show.name}</span>
+                  <span className="block text-[10px] text-gray-400 mt-0.5 line-clamp-1">{show.tagline}</span>
+                </div>
+
+                {/* Hover overlay */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20"
+                  style={{ background: `${accent}22` }}>
+                  <span className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-black" style={{ background: accent }}>
+                    View Show →
+                  </span>
                 </div>
               </Link>
             );
           })}
         </div>
-      </section>
+      </div>
 
-      {/* Broadcast schedule table */}
-      <section aria-label="Broadcast schedule">
-        <SectionLabel label="Weekly Schedule" color="#00CFFF" />
-        <div className="overflow-x-auto border border-white/10">
-          <table className="w-full text-sm">
+      {/* ── All shows ── */}
+      <div className="max-w-7xl mx-auto px-4 mb-16">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-1 h-7 flex-shrink-0" style={{ background: '#BF00FF' }} />
+          <h2 className="font-bebas text-2xl text-white tracking-wide">All Shows</h2>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {shows.map((show) => {
+            const accent = CAT_COLOR[show.category] ?? '#FF007A';
+            const gradient = SHOW_GRADIENT[show.slug] ?? 'linear-gradient(135deg, #111 0%, #000 100%)';
+            const logo = SHOW_LOGOS[show.slug];
+
+            return (
+              <Link
+                key={show.slug}
+                href={`/shows/${show.slug}`}
+                className="group flex items-center gap-3 transition-all hover:scale-[1.02]"
+                style={{ background: '#111', borderLeft: `3px solid ${accent}`, padding: '1rem' }}
+              >
+                {logo ? (
+                  <Image
+                    src={logo}
+                    alt={show.name}
+                    width={48}
+                    height={48}
+                    style={{ objectFit: 'contain', width: '48px', height: '48px', filter: 'brightness(0) invert(1)', flexShrink: 0 }}
+                  />
+                ) : (
+                  <div className="w-12 h-12 flex items-center justify-center flex-shrink-0" style={{ background: `${accent}22` }}>
+                    <span className="font-bebas text-lg text-white">{show.name[0]}</span>
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <span className="block text-[9px] font-black uppercase tracking-widest" style={{ color: accent }}>{show.category}</span>
+                  <span className="block font-bebas text-lg text-white leading-tight group-hover:opacity-80 transition-opacity">{show.name}</span>
+                  <span className="block text-[10px] text-gray-500 mt-0.5 line-clamp-1">{show.tagline}</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Weekly schedule ── */}
+      <div className="max-w-7xl mx-auto px-4 pb-16">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-1 h-7 flex-shrink-0" style={{ background: '#00CFFF' }} />
+          <h2 className="font-bebas text-2xl text-white tracking-wide">Weekly Schedule</h2>
+        </div>
+
+        <div className="overflow-x-auto" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+          <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 w-24">Time</th>
+              <tr style={{ background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 w-20">Time</th>
                 {DAYS.map((day) => (
-                  <th key={day} className="text-left px-3 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">
-                    {day}
-                  </th>
+                  <th key={day} className="text-left px-3 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">{day}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {['07:00', '09:00', '11:00', '14:00', '16:00', '17:00', '18:00', '19:00', '20:00'].map((time) => (
+              {['07:00','09:00','11:00','14:00','16:00','17:00','18:00','19:00','20:00'].map((time) => (
                 <tr key={time} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }} className="hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3 text-xs text-gray-600 font-mono">{time}</td>
                   {DAYS.map((day) => {
-                    const show = shows.find((s) =>
-                      s.schedule.some((slot) => slot.day === day && slot.startTime === time)
-                    );
+                    const show = shows.find((s) => s.schedule.some((slot) => slot.day === day && slot.startTime === time));
                     const accent = show ? (CAT_COLOR[show.category] ?? '#FF007A') : null;
                     return (
                       <td key={day} className="px-3 py-3">
                         {show ? (
-                          <Link href={`/shows/${show.slug}`} className="text-xs font-medium transition-opacity hover:opacity-70" style={{ color: accent ?? '#FF007A' }}>
+                          <Link href={`/shows/${show.slug}`} className="text-xs font-bold transition-opacity hover:opacity-70 whitespace-nowrap" style={{ color: accent ?? '#FF007A' }}>
                             {show.name}
                           </Link>
                         ) : (
-                          <span className="text-gray-700 text-xs">—</span>
+                          <span className="text-gray-800 text-xs">—</span>
                         )}
                       </td>
                     );
@@ -131,7 +190,8 @@ export default function ShowsPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </div>
+
     </div>
   );
 }
