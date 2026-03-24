@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { fetchArticleBySlug, fetchArticles } from '@/lib/worker';
+import { fetchArticleBySlug } from '@/lib/worker';
 import { formatDate, truncate } from '@/lib/utils';
 import ViewRecorder from './ViewRecorder';
 
@@ -73,14 +73,7 @@ export default async function ArticlePage({ params }: Props) {
       <div className="flex items-center gap-3 text-sm text-gray-500 mb-8 flex-wrap">
         <span>{formatDate(article.publishedAt)}</span>
         <span aria-hidden="true">·</span>
-        <a
-          href={article.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-white transition-colors"
-        >
-          {article.sourceName}
-        </a>
+        <span className="text-gray-600">{article.sourceName}</span>
       </div>
 
       {/* Hero image */}
@@ -111,17 +104,8 @@ export default async function ArticlePage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
       ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-6">Read the full story on the original source.</p>
-          <a
-            href={article.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-8 py-3 text-black font-black text-sm uppercase tracking-widest transition-opacity hover:opacity-80"
-            style={{ background: accent }}
-          >
-            Read Full Article →
-          </a>
+        <div className="py-8">
+          <p className="text-gray-500 text-sm">Full story content is being loaded. Check back shortly.</p>
         </div>
       )}
 

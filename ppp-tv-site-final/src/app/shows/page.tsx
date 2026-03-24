@@ -1,4 +1,3 @@
-﻿// v2
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
@@ -6,7 +5,7 @@ import { shows, SHOW_LOGOS } from '@/data/shows';
 
 export const metadata: Metadata = {
   title: 'Shows | PPP TV Kenya',
-  description: 'All PPP TV Kenya shows â€” news, entertainment, sports, music and more.',
+  description: 'All PPP TV Kenya shows - news, entertainment, sports, music and more.',
 };
 
 const R2 = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev';
@@ -23,8 +22,8 @@ const CAT_COLOR: Record<string, string> = {
 };
 
 const SHOW_BG: Record<string, string> = {
-  'urban-news':    `${R2}/SHOWS/urban-news-bg.jpg`,
-  'campus-xposure': `${R2}/SHOWS/campus-rave-bg.jpg`,
+  'urban-news':     R2 + '/SHOWS/urban-news-bg.jpg',
+  'campus-xposure': R2 + '/SHOWS/campus-rave-bg.jpg',
 };
 
 const SHOW_GRADIENT: Record<string, string> = {
@@ -46,7 +45,7 @@ export default function ShowsPage() {
 
       {/* Hero */}
       <div className="relative w-full overflow-hidden" style={{ height: '320px' }}>
-        <Image src={`${R2}/SHOWS/urban-news-bg2.jpg`} alt="PPP TV Shows" fill
+        <Image src={R2 + '/SHOWS/urban-news-bg2.jpg'} alt="PPP TV Shows" fill
           style={{ objectFit: 'cover', objectPosition: 'center top' }} priority />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.4) 60%,transparent 100%)' }} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top,#000 0%,transparent 50%)' }} />
@@ -70,7 +69,7 @@ export default function ShowsPage() {
             const gradient = SHOW_GRADIENT[show.slug] ?? 'linear-gradient(160deg,#222 0%,#000 100%)';
             const logo = SHOW_LOGOS[show.slug];
             return (
-              <Link key={show.slug} href={`/shows/${show.slug}`}
+              <Link key={show.slug} href={'/shows/' + show.slug}
                 className="group block relative overflow-hidden rounded-sm transition-transform duration-300 hover:scale-[1.05] hover:z-10"
                 style={{ aspectRatio: '2/3' }}>
                 {bg
@@ -92,8 +91,8 @@ export default function ShowsPage() {
                   <span className="block text-[10px] text-gray-400 mt-0.5 line-clamp-2">{show.tagline}</span>
                 </div>
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center z-20 pb-4"
-                  style={{ background: `linear-gradient(to top,${accent}55 0%,transparent 60%)` }}>
-                  <span className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-black" style={{ background: accent }}>Watch Now â†’</span>
+                  style={{ background: 'linear-gradient(to top,' + accent + '55 0%,transparent 60%)' }}>
+                  <span className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-black" style={{ background: accent }}>Watch Now</span>
                 </div>
               </Link>
             );
@@ -113,9 +112,9 @@ export default function ShowsPage() {
             const logo = SHOW_LOGOS[show.slug];
             const gradient = SHOW_GRADIENT[show.slug] ?? 'linear-gradient(135deg,#111 0%,#000 100%)';
             return (
-              <Link key={show.slug} href={`/shows/${show.slug}`}
-                className="group flex items-center gap-0 transition-all hover:scale-[1.02] rounded-sm overflow-hidden"
-                style={{ background: '#0d0d0d', borderLeft: `3px solid ${accent}` }}>
+              <Link key={show.slug} href={'/shows/' + show.slug}
+                className="group flex items-center transition-all hover:scale-[1.02] rounded-sm overflow-hidden"
+                style={{ background: '#0d0d0d', borderLeft: '3px solid ' + accent }}>
                 <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: '72px', height: '72px', background: gradient }}>
                   {logo
                     ? <Image src={logo} alt={show.name} width={50} height={50}
@@ -128,7 +127,7 @@ export default function ShowsPage() {
                   <span className="block font-bebas text-xl text-white leading-tight group-hover:opacity-80 transition-opacity">{show.name}</span>
                   <span className="block text-[10px] text-gray-500 mt-0.5 line-clamp-1">{show.tagline}</span>
                 </div>
-                <span className="pr-4 text-xl opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ color: accent }}>â€º</span>
+                <span className="pr-4 text-xl opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ color: accent }}>›</span>
               </Link>
             );
           })}
@@ -162,10 +161,10 @@ export default function ShowsPage() {
                     return (
                       <td key={day} className="px-3 py-3">
                         {show
-                          ? <Link href={`/shows/${show.slug}`}
+                          ? <Link href={'/shows/' + show.slug}
                               className="text-xs font-bold transition-opacity hover:opacity-70 whitespace-nowrap block"
                               style={{ color: accent ?? '#FF007A' }}>{show.name}</Link>
-                          : <span className="text-gray-800 text-xs">â€”</span>
+                          : <span className="text-gray-800 text-xs">-</span>
                         }
                       </td>
                     );
