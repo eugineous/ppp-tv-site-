@@ -1,112 +1,80 @@
 'use client';
+import { useState, useEffect } from 'react';
 
-import Link from 'next/link';
-import { useEffect } from 'react';
-
-interface MobileMenuProps {
-  onClose: () => void;
-}
-
-const MENU_SECTIONS = [
-  {
-    heading: 'News & Content',
-    links: [
-      { label: 'Latest News', href: '/?cat=News' },
-      { label: 'Entertainment', href: '/?cat=Entertainment' },
-      { label: 'Sports', href: '/?cat=Sports' },
-      { label: 'Music', href: '/?cat=Music' },
-      { label: 'Lifestyle', href: '/?cat=Lifestyle' },
-      { label: 'Events', href: '/events' },
-    ],
-  },
-  {
-    heading: 'PPP TV',
-    links: [
-      { label: 'Shows', href: '/shows' },
-      { label: 'Hosts', href: '/hosts' },
-      { label: 'Schedule', href: '/schedule' },
-      { label: 'Video', href: '/video' },
-      { label: 'Live', href: '/live' },
-    ],
-  },
-  {
-    heading: 'More',
-    links: [
-      { label: 'Artists', href: '/artists' },
-      { label: 'About Us', href: '/about' },
-      { label: 'Contact', href: '/contact' },
-      { label: 'Saved', href: '/saved' },
-    ],
-  },
+const mainLinks = [
+  { href: '/shows',   label: 'Shows'   },
+  { href: '/hosts',   label: 'People'  },
+  { href: '/events',  label: 'Events'  },
+  { href: '/video',   label: 'Video'   },
+  { href: '/live',    label: '🔴 Live' },
+  { href: '/contact', label: 'Contact' },
 ];
 
-export default function MobileMenu({ onClose }: MobileMenuProps) {
-  // Lock body scroll while menu is open
+export default function MobileMenu() {
+  const [open, setOpen] = useState(false);
+
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  useEffect(() => {
+    const close = () => setOpen(false);
+    window.addEventListener('popstate', close);
+    return () => window.removeEventListener('popstate', close);
   }, []);
 
   return (
-    <div
-      className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Mobile navigation menu"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-white/10">
-        <Link href="/" className="font-bebas text-2xl text-white tracking-widest" onClick={onClose}>
-          PPP<span className="text-brand-pink">TV</span>
-        </Link>
-        <button
-          onClick={onClose}
-          className="p-2 text-gray-400 hover:text-white transition-colors"
-          aria-label="Close menu"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+    <>
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label={open ? 'Close menu' : 'Open menu'}
+        aria-expanded={open}
+        className="sm:hidden shrink-0 w-9 h-9 flex flex-col items-center justify-center gap-[5px] ml-auto"
+      >
+        <span className="block w-5 h-[2px] bg-white transition-all duration-200"
+          style={{ transform: open ? 'translateY(7px) rotate(45deg)' : 'none' }} />
+        <span className="block w-5 h-[2px] bg-white transition-all duration-200"
+          style={{ opacity: open ? 0 : 1 }} />
+        <span className="block w-5 h-[2px] bg-white transition-all duration-200"
+          style={{ transform: open ? 'translateY(-7px) rotate(-45deg)' : 'none' }} />
+      </button>
 
-      {/* Nav sections */}
-      <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-6" aria-label="Mobile navigation">
-        {MENU_SECTIONS.map((section) => (
-          <div key={section.heading}>
-            <p className="text-xs font-semibold text-brand-pink uppercase tracking-widest mb-3">
-              {section.heading}
-            </p>
-            <ul className="space-y-1">
-              {section.links.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="block py-2.5 px-3 text-base text-gray-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                    onClick={onClose}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+      {open && (
+        <div className="fixed inset-0 z-40 bg-black/70 sm:hidden" onClick={() => setOpen(false)} />
+      )}
+
+      <div
+        className="fixed top-16 left-0 right-0 bottom-0 z-50 overflow-y-auto sm:hidden"
+        style={{
+          background: '#050505',
+          borderTop: '2px solid #FF007A',
+          transform: open ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.25s ease',
+        }}
+      >
+        <nav className="px-4 py-4">
+          <div className="mb-4">
+            {mainLinks.map(l => (
+              <a key={l.href} href={l.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center h-12 text-sm font-black uppercase tracking-widest text-gray-200 hover:text-white hover:pl-2 transition-all"
+                style={{ borderBottom: '1px solid #111' }}>
+                {l.label}
+              </a>
+            ))}
           </div>
-        ))}
-      </nav>
-
-      {/* Bottom search */}
-      <div className="px-4 pb-6 pt-2 border-t border-white/10">
-        <Link
-          href="/search"
-          className="flex items-center gap-3 w-full px-4 py-3 bg-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
-          onClick={onClose}
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          Search articles…
-        </Link>
+          <a href="/search" onClick={() => setOpen(false)}
+            className="mt-4 flex items-center gap-2 w-full px-4 py-3 text-sm font-bold text-white uppercase tracking-widest"
+            style={{ background: '#FF007A', borderRadius: '2px' }}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            Search
+          </a>
+          <p className="text-[10px] text-gray-700 text-center mt-6 pb-4">PPP TV Kenya · StarTimes Channel 430</p>
+        </nav>
       </div>
-    </div>
+    </>
   );
 }

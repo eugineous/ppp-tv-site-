@@ -1,14 +1,11 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 
 export default function BackToTop() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    function onScroll() {
-      setVisible(window.scrollY > 400);
-    }
+    function onScroll() { setVisible(window.scrollY > 400); }
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -18,11 +15,11 @@ export default function BackToTop() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-20 right-4 z-30 p-3 bg-brand-pink text-white rounded-full shadow-lg hover:bg-pink-600 transition-colors md:bottom-6"
       aria-label="Back to top"
-    >
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+      className="fixed bottom-6 right-5 z-50 w-10 h-10 flex items-center justify-center text-white transition-opacity hover:opacity-80"
+      style={{ background: '#FF007A', borderRadius: '2px', boxShadow: '0 4px 20px rgba(255,0,122,.4)' }}>
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/>
       </svg>
     </button>
   );

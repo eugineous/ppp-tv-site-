@@ -1,6 +1,11 @@
-import Link from 'next/link';
 import ArticleCard from './ArticleCard';
 import type { Article } from '@/types';
+
+const CAT_COLORS: Record<string, string> = {
+  News: '#FF007A', Entertainment: '#a855f7', Sports: '#3b82f6',
+  Music: '#f59e0b', Lifestyle: '#14b8a6', Technology: '#06b6d4',
+  Events: '#10b981', Celebrity: '#FF007A',
+};
 
 interface CategoryRowProps {
   label: string;
@@ -9,35 +14,30 @@ interface CategoryRowProps {
   accentColor?: string;
 }
 
-export default function CategoryRow({ label, articles, seeAllHref }: CategoryRowProps) {
+export default function CategoryRow({ label, articles, seeAllHref, accentColor }: CategoryRowProps) {
   if (articles.length === 0) return null;
+  const color = accentColor || CAT_COLORS[articles[0]?.category] || '#FF007A';
 
   return (
-    <section className="mb-8" aria-label={`${label} articles`}>
-      {/* Section header — Netflix style */}
-      <div className="flex items-center justify-between px-[4%] mb-2">
-        <div className="flex items-center gap-3 group">
-          <h2 className="section-title">{label}</h2>
+    <section className="cat-row" aria-label={`${label} articles`}>
+      <div className="cat-row-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="cat-row-accent" style={{ background: color }} />
+          <span className="cat-row-title">{label}</span>
           {seeAllHref && (
-            <Link
-              href={seeAllHref}
-              className="text-[#54b9c5] text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
-            >
+            <a href={seeAllHref} className="cat-row-link" style={{ color }}>
               Explore All
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </Link>
+            </a>
           )}
         </div>
       </div>
 
-      {/* Horizontal scroll row */}
-      <div className="netflix-row">
-        {articles.map((article, i) => (
-          <div key={article.slug} className="flex-shrink-0" style={{ width: 'clamp(160px, 16vw, 260px)' }}>
-            <ArticleCard article={article} priority={i === 0} />
-          </div>
+      <div className="cat-row-scroll">
+        {articles.map((article) => (
+          <ArticleCard key={article.slug} article={article} accentColor={color} />
         ))}
       </div>
     </section>

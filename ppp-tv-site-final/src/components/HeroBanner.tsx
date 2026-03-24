@@ -1,85 +1,133 @@
+'use client';
 import Link from 'next/link';
-import Image from 'next/image';
-import { truncate } from '@/lib/utils';
+import { useState, useEffect, useRef } from 'react';
+import { timeAgo } from '@/lib/utils';
 import type { Article } from '@/types';
 
 interface HeroBannerProps {
-  article: Article;
+  articles: Article[];
 }
 
-export default function HeroBanner({ article }: HeroBannerProps) {
+const INTERVAL = 7000;
+
+export default function HeroBanner({ articles }: HeroBannerProps) {
+  const [idx, setIdx]       = useState(0);
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const items = articles.slice(0, 5);
+
+  function startCycle(startIdx: number) {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (progRef.current)  clearInterval(progRef.current);
+    setProgress(0);
+    const step = 100 / (INTERVAL / 80);
+    progRef.current = setInterval(() => setProgress(p => Math.min(p + step, 100)), 80);
+    timerRef.current = setInterval(() => {
+      setIdx(i => (i + 1) % items.length);
+      setProgress(0);
+    }, INTERVAL);
+  }
+
+  useEffect(() => {
+    startCycle(0);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (progRef.current)  clearInterval(progRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length]);
+
+  function goTo(i: number) {
+    setIdx(i);
+    startCycle(i);
+  }
+
+  const article = items[idx];
+  if (!article) return null;
+
   return (
-    <div className="relative w-full" style={{ height: 'min(85vh, 700px)', minHeight: 400 }}>
-      {/* Background image */}
-      {article.imageUrl ? (
-        <Image
-          src={article.imageUrl}
-          alt={article.title}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black" />
-      )}
+    <div className="hero-section">
+      {/* Progress bar */}
+      <div className="hero-progress-bar">
+        <div className="hero-progress-fill" style={{ width: `${progress}%`, background: '#FF007A' }} />
+      </div>
 
-      {/* Netflix-style gradient overlays */}
-      <div className="absolute inset-0 hero-gradient" aria-hidden="true" />
+      {/* Background slides */}
+      <div className="hero-bg">
+        {items.map((a, i) => (
+          <div key={a.slug} className="hero-bg-slide" style={{ opacity: i === idx ? 1 : 0 }}>
+            {a.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={a.imageUrl} alt={a.title} className="hero-bg-img" />
+            )}
+          </div>
+        ))}
+      </div>
 
-      {/* Bottom fade into page bg */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-32"
-        style={{ background: 'linear-gradient(to top, #141414, transparent)' }}
-        aria-hidden="true"
-      />
+      {/* Gradients */}
+      <div className="hero-gradient-bottom" />
+      <div className="hero-gradient-left" />
 
-      {/* Content — bottom left like Netflix */}
-      <div className="absolute bottom-[15%] left-0 px-[4%] max-w-[600px] fade-up">
-        {/* Category tag */}
-        <div className="flex items-center gap-2 mb-3">
-          <span
-            className="text-xs font-bold uppercase tracking-[0.2em] px-2 py-1"
-            style={{ background: '#E50914', color: '#fff' }}
-          >
+      {/* Content */}
+      <div className="hero-content">
+        <div className="hero-brief">
+          <span style={{ background: '#FF007A', color: '#fff', padding: '2px 8px', borderRadius: '2px', fontSize: '10px', fontWeight: 900, letterSpacing: '.1em', textTransform: 'uppercase' }}>
             {article.category}
           </span>
-          <span className="maturity-badge">18+</span>
+          <span>·</span>
+          <span>{timeAgo(article.publishedAt)}</span>
         </div>
 
-        {/* Title */}
-        <h1 className="display text-5xl sm:text-7xl text-white leading-none mb-4 drop-shadow-2xl">
-          {article.title}
-        </h1>
+        <div className="hero-title">{article.title}</div>
 
-        {/* Excerpt */}
         {article.excerpt && (
-          <p className="text-base sm:text-lg text-[#d2d2d2] mb-6 leading-relaxed max-w-lg line-clamp-3">
-            {truncate(article.excerpt, 200)}
-          </p>
+          <div className="hero-excerpt">{article.excerpt}</div>
         )}
 
-        {/* Buttons */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <Link href={`/news/${article.slug}`} className="btn-netflix btn-netflix-primary">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+        <div className="hero-meta">
+          {article.sourceName && <><span>{article.sourceName}</span><span className="hero-dot">·</span></>}
+          <span>{timeAgo(article.publishedAt)}</span>
+        </div>
+
+        <div className="hero-actions">
+          <Link href={`/news/${article.slug}`} className="hero-btn-primary">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             Read Now
           </Link>
-          <Link href={`/news/${article.slug}`} className="btn-netflix btn-netflix-secondary">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <Link href={`/news/${article.slug}`} className="hero-btn-secondary">
             More Info
           </Link>
         </div>
+
+        {/* Dots */}
+        {items.length > 1 && (
+          <div className="hero-dots">
+            {items.map((_, i) => (
+              <button key={i} onClick={() => goTo(i)} className="hero-dot-btn"
+                style={{ width: i === idx ? 24 : 12, background: i === idx ? '#FF007A' : 'rgba(255,255,255,.3)' }}
+                aria-label={`Go to slide ${i + 1}`} />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Source badge — top right */}
-      <div className="absolute top-[30%] right-[4%] hidden sm:flex items-center gap-2 border-l-4 border-[#E50914] pl-3">
-        <span className="text-sm text-[#d2d2d2] font-medium">{article.sourceName}</span>
-      </div>
+      {/* Thumbnail strip (desktop) */}
+      {items.length > 1 && (
+        <div className="hero-thumbs">
+          {items.filter((_, i) => i !== idx).slice(0, 3).map((a) => (
+            <button key={a.slug} className="hero-thumb-btn"
+              style={{ borderColor: 'transparent' }}
+              onClick={() => goTo(items.indexOf(a))}>
+              {a.imageUrl && <img src={a.imageUrl} alt={a.title} className="hero-thumb-img" />}
+              <div className="hero-thumb-overlay">
+                <span className="hero-thumb-title">{a.title}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
