@@ -102,26 +102,71 @@ body {
 
 /* ── Article body ── */
 .article-body {
-  font-size: 1.08rem;
+  font-size: 1.05rem;
   line-height: 1.9;
-  color: #d4d4d4;
-  max-width: 72ch;
+  color: #d0d0d0;
 }
-.article-body p { margin-bottom: 1.6rem; overflow-wrap: break-word; word-break: break-word; }
-.article-body p:first-child { font-size: 1.18rem; color: #e8e8e8; font-weight: 500; line-height: 1.85; }
+/* Every paragraph gets breathing room */
+.article-body p,
+.article-body .article-p {
+  margin-bottom: 1.6rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  color: #d0d0d0;
+  line-height: 1.9;
+}
+.article-body p:first-of-type {
+  font-size: 1.12rem;
+  color: #e5e5e5;
+  font-weight: 500;
+  line-height: 1.85;
+}
+.article-body img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+  display: block;
+}
+.article-body ul, .article-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.6rem;
+  color: #ccc;
+}
+.article-body li { margin-bottom: .5rem; line-height: 1.75; }
+.article-body a { color: var(--pink); text-decoration: underline; text-underline-offset: 3px; }
+.article-body strong { color: #fff; font-weight: 700; }
 .article-subhead {
   font-family: var(--font-bebas, 'Bebas Neue'), Impact, sans-serif;
   font-size: 1.5rem; color: #fff; letter-spacing: .04em; text-transform: uppercase;
   margin: 2.5rem 0 1rem; padding-bottom: 8px; border-bottom: 2px solid #1a1a1a;
+  display: block;
 }
 .pull-quote {
-  border-left: 4px solid var(--pink); padding: 1rem 1.4rem 1rem 1.8rem; margin: 2rem 0;
-  background: rgba(255,0,122,.05); font-size: 1.18rem; font-style: italic;
-  color: #f0f0f0; line-height: 1.8; overflow-wrap: break-word; word-break: break-word; position: relative;
+  border-left: 4px solid var(--pink);
+  padding: 1.1rem 1.4rem 1.1rem 1.8rem;
+  margin: 2.2rem 0;
+  background: rgba(255,0,122,.06);
+  font-size: 1.15rem;
+  font-style: italic;
+  color: #f0f0f0;
+  line-height: 1.8;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  position: relative;
+  border-radius: 0 4px 4px 0;
 }
 .pull-quote::before {
-  content: '\201C'; position: absolute; top: 0.1rem; left: 0.6rem;
-  font-size: 3.5rem; color: var(--pink); opacity: 0.3; font-style: normal; line-height: 1; pointer-events: none;
+  content: '\201C';
+  position: absolute;
+  top: 0.1rem;
+  left: 0.5rem;
+  font-size: 3.5rem;
+  color: var(--pink);
+  opacity: 0.25;
+  font-style: normal;
+  line-height: 1;
+  pointer-events: none;
 }
 
 /* ── Hover image zoom ── */
@@ -281,10 +326,26 @@ body {
 
 .row-card-info { display: none; }
 
-/* ── Top 10 number overlay ── */
-.top10-wrap { position: relative; }
-.top10-num { position: absolute; bottom: -8px; left: -14px; font-family: var(--font-bebas,'Bebas Neue'),Impact,sans-serif; font-size: clamp(4rem,8vw,7rem); line-height: 1; color: transparent; -webkit-text-stroke: 3px rgba(255,255,255,0.15); z-index: 5; pointer-events: none; user-select: none; }
-@media (min-width: 768px) { .top10-num { font-size: clamp(5rem,9vw,8rem); } }
+/* ── Top 10 number overlay — Netflix-style huge outlined rank ── */
+.top10-wrap { position: relative; padding-left: 28px; }
+.top10-num {
+  position: absolute;
+  bottom: -10px;
+  left: -4px;
+  font-family: var(--font-bebas,'Bebas Neue'),Impact,sans-serif;
+  font-size: clamp(5rem,10vw,8.5rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 3px rgba(255,255,255,0.22);
+  z-index: 5;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -.02em;
+}
+@media (min-width: 768px) {
+  .top10-wrap { padding-left: 36px; }
+  .top10-num { font-size: clamp(6rem,11vw,9.5rem); -webkit-text-stroke: 4px rgba(255,255,255,0.22); }
+}
 
 /* ── Netflix hover preview card ── */
 .card-preview { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); width: clamp(240px,28vw,300px); background: #141414; border: 1px solid #2a2a2a; border-radius: 6px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.04); z-index: 100; animation: previewIn .18s ease forwards; pointer-events: none; }

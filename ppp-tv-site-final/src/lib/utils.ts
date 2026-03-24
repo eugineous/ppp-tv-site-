@@ -41,6 +41,72 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
+/** Decode HTML entities like &#038; &amp; &apos; &quot; etc. */
+export function decodeEntities(html: string): string {
+  return html
+    .replace(/&#0*38;|&amp;/g, '&')
+    .replace(/&#0*39;|&apos;/g, "'")
+    .replace(/&#0*34;|&quot;/g, '"')
+    .replace(/&#0*60;|&lt;/g, '<')
+    .replace(/&#0*62;|&gt;/g, '>')
+    .replace(/&#8216;|&#8217;/g, "'")
+    .replace(/&#8220;|&#8221;/g, '"')
+    .replace(/&#8211;/g, '–')
+    .replace(/&#8212;/g, '—')
+    .replace(/&#8230;/g, '…')
+    .replace(/&nbsp;/g, ' ');
+}
+
+/**
+ * Format raw scraped HTML/text into clean, readable article HTML.
+ * - Strips source attribution lines
+ * - Wraps bare text blocks in <p> tags
+ * - Detects and styles blockquotes
+ * - Ensures paragraph spacing
+ */
+export function formatArticleContent(raw: string): string {
+  if (!raw) return '';
+
+  let html = raw;
+
+  // Decode entities first
+  html = decodeEntities(html);
+
+  // Strip "Read more" / source attribution lines
+  html = html.replace(/<a[^>]*>(Read more|Read More|Source|Via|Originally published)[^<]*<\/a>/gi, '');
+  html = html.replace(/Read more(?: from| at| on)?[^<\n]*/gi, '');
+
+  // If it's plain text (no block tags), convert newlines to paragraphs
+  if (!/<(p|div|h[1-6]|blockquote|ul|ol|li)\b/i.test(html)) {
+    const paras = html
+      .split(/\n{2,}/)
+      .map(s => s.trim())
+      .filter(Boolean);
+    html = paras.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('\n');
+  }
+
+  // Ensure <p> tags have spacing (add class)
+  html = html.replace(/<p(\s[^>]*)?>/gi, '<p$1 class="article-p">');
+
+  // Style blockquotes as pull-quotes
+  html = html.replace(/<blockquote([^>]*)>/gi, '<blockquote$1 class="pull-quote">');
+
+  // Detect lines that look like quotes: text starting with " or ' and ending with " or '
+  html = html.replace(
+    /<p[^>]*>\s*[""']([^<]{20,})[""']\s*<\/p>/g,
+    '<blockquote class="pull-quote">$1</blockquote>'
+  );
+
+  // Style h2/h3 inside content
+  html = html.replace(/<h2([^>]*)>/gi, '<h2$1 class="article-subhead">');
+  html = html.replace(/<h3([^>]*)>/gi, '<h3$1 class="article-subhead" style="font-size:1.2rem">');
+
+  // Remove empty paragraphs
+  html = html.replace(/<p[^>]*>\s*(<br\s*\/?>)?\s*<\/p>/gi, '');
+
+  return html;
+}
+
 /** Build a full URL for the Cloudflare Worker */
 export function workerUrl(path: string): string {
   const base = process.env.NEXT_PUBLIC_WORKER_URL ?? '';
