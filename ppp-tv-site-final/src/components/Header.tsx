@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+
+const LOGO_URL = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev/LOGOS/PPPtv Logo-2.png';
 
 const MobileMenu = dynamic(() => import('./MobileMenu'), { ssr: false });
 
@@ -47,9 +50,15 @@ export default function Header() {
       >
         <div className="flex items-center px-4 md:px-10 h-[68px] gap-6">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-center gap-1 mr-2">
-            <span style={{ fontFamily: "'Bebas Neue', Impact, sans-serif", color: '#FF007A', fontSize: '2rem', letterSpacing: '.12em', lineHeight: 1 }}>PPP</span>
-            <span style={{ fontFamily: "'Bebas Neue', Impact, sans-serif", color: '#fff', fontSize: '2rem', letterSpacing: '.12em', lineHeight: 1 }}>TV</span>
+          <Link href="/" className="flex-shrink-0 flex items-center mr-2" aria-label="PPP TV Kenya Home">
+            <Image
+              src={LOGO_URL}
+              alt="PPP TV Kenya"
+              width={120}
+              height={48}
+              priority
+              style={{ objectFit: 'contain', height: '48px', width: 'auto' }}
+            />
           </Link>
 
           {/* Desktop nav */}

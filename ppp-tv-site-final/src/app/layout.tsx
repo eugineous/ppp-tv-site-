@@ -51,17 +51,15 @@ const FOOTER_COLS = [
   },
 ];
 
+const LOGO_URL = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev/LOGOS/PPPtv Logo-2.png';
+
 function SiteFooter() {
   return (
     <footer style={{ background: '#080808', borderTop: '1px solid #141414' }}>
       <div className="max-w-[1280px] mx-auto px-5 sm:px-8 pt-14 pb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
           <a href="/" className="flex items-center gap-3 mb-2">
-            <Image src="/icon.png" alt="PPP TV Kenya" width={52} height={52} style={{ objectFit: 'contain', borderRadius: '4px' }} />
-            <div>
-              <div className="display text-white" style={{ fontSize: '1.5rem', lineHeight: 1 }}>PPP TV</div>
-              <div style={{ fontSize: '9px', fontWeight: 900, letterSpacing: '.18em', color: '#444', textTransform: 'uppercase' }}>KENYA</div>
-            </div>
+            <Image src={LOGO_URL} alt="PPP TV Kenya" width={100} height={40} style={{ objectFit: 'contain', height: '40px', width: 'auto' }} />
           </a>
           <p style={{ fontSize: '11px', color: '#555', fontWeight: 600, letterSpacing: '.04em' }}>
             StarTimes Channel 430 &nbsp;·&nbsp; Kenya&apos;s #1 Entertainment Channel
