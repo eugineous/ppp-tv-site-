@@ -82,7 +82,7 @@ export default function SearchPage() {
           <p className="text-sm text-gray-400 mb-4">{results.length} result{results.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {results.map((article, i) => (
-              <ArticleCard key={article.slug} article={article} priority={i < 4} />
+              <ArticleCard key={article.slug} article={article} />
             ))}
           </div>
         </>
