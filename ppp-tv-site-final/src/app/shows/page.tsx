@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
-import { shows, getFeaturedShows } from '@/data/shows';
+import { shows, getFeaturedShows, SHOW_LOGOS } from '@/data/shows';
 import SectionLabel from '@/components/SectionLabel';
 
 export const metadata: Metadata = {
@@ -43,6 +44,11 @@ export default function ShowsPage() {
                 >
                   <div className="absolute top-0 left-0 w-1 h-full" style={{ background: accent }} aria-hidden="true" />
                   <div className="p-6 pl-7">
+                    {SHOW_LOGOS[show.slug] && (
+                      <div className="mb-3">
+                        <Image src={SHOW_LOGOS[show.slug]} alt={show.name} width={120} height={48} style={{ objectFit: 'contain', height: '48px', width: 'auto' }} />
+                      </div>
+                    )}
                     <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: accent }}>{show.category}</span>
                     <h2 className="font-bebas text-2xl text-white mt-1 mb-2 group-hover:opacity-80 transition-opacity">
                       {show.name}

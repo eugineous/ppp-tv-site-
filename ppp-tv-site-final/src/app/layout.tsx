@@ -52,6 +52,7 @@ const FOOTER_COLS = [
 ];
 
 const LOGO_URL = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev/LOGOS/PPPtv Logo-2.png';
+const STARTIMES_LOGO = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev/LOGOS/Startimes logo.png';
 
 function SiteFooter() {
   return (
@@ -64,6 +65,9 @@ function SiteFooter() {
           <p style={{ fontSize: '11px', color: '#555', fontWeight: 600, letterSpacing: '.04em' }}>
             StarTimes Channel 430 &nbsp;·&nbsp; Kenya&apos;s #1 Entertainment Channel
           </p>
+          <div className="mt-3">
+            <Image src={STARTIMES_LOGO} alt="StarTimes" width={80} height={28} style={{ objectFit: 'contain', height: '28px', width: 'auto', opacity: 0.6 }} />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {SOCIALS.map(s => (

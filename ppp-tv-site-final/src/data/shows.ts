@@ -1,5 +1,14 @@
 import type { Show } from '@/types';
 
+const R2 = 'https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev';
+
+export const SHOW_LOGOS: Record<string, string> = {
+  'urban-news':          `${R2}/LOGOS/Urban News show Logo.png`,
+  'juu-ya-game':         `${R2}/LOGOS/JUU YA GAME.png`,
+  'campus-xposure':      `${R2}/LOGOS/CAMPUS RAVE LOGO png.png`,
+  'tushinde-charity-show': `${R2}/LOGOS/Tushinde bet logo.png`,
+};
+
 export const shows: Show[] = [
   {
     slug: 'urban-news',

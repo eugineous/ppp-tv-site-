@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
-import { getShowBySlug, shows } from '@/data/shows';
+import { getShowBySlug, shows, SHOW_LOGOS } from '@/data/shows';
 import { getHostsForShow } from '@/data/hosts';
 
 interface Props {
@@ -41,6 +42,17 @@ export default function ShowPage({ params }: Props) {
           {/* Hero */}
           <div className={`relative bg-[#111] rounded-2xl p-8 mb-8 border-l-4 border-${show.accentColor} overflow-hidden`}>
             <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-white to-transparent" aria-hidden="true" />
+            {SHOW_LOGOS[show.slug] && (
+              <div className="mb-4">
+                <Image
+                  src={SHOW_LOGOS[show.slug]}
+                  alt={show.name}
+                  width={200}
+                  height={80}
+                  style={{ objectFit: 'contain', height: '80px', width: 'auto' }}
+                />
+              </div>
+            )}
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{show.category}</span>
             <h1 className="font-bebas text-5xl text-white tracking-wide mt-1 mb-2">{show.name}</h1>
             <p className="text-brand-pink font-medium mb-4">{show.tagline}</p>
