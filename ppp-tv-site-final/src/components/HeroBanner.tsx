@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { timeAgo, truncate } from '@/lib/utils';
+import { truncate } from '@/lib/utils';
 import type { Article } from '@/types';
 
 interface HeroBannerProps {
@@ -9,9 +9,9 @@ interface HeroBannerProps {
 
 export default function HeroBanner({ article }: HeroBannerProps) {
   return (
-    <div className="relative w-full aspect-[16/7] min-h-[280px] max-h-[520px] overflow-hidden bg-[#111]">
+    <div className="relative w-full" style={{ height: 'min(85vh, 700px)', minHeight: 400 }}>
       {/* Background image */}
-      {article.imageUrl && (
+      {article.imageUrl ? (
         <Image
           src={article.imageUrl}
           alt={article.title}
@@ -20,43 +20,65 @@ export default function HeroBanner({ article }: HeroBannerProps) {
           sizes="100vw"
           className="object-cover"
         />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black" />
       )}
 
-      {/* Gradient overlay */}
+      {/* Netflix-style gradient overlays */}
+      <div className="absolute inset-0 hero-gradient" aria-hidden="true" />
+
+      {/* Bottom fade into page bg */}
       <div
-        className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"
+        className="absolute bottom-0 left-0 right-0 h-32"
+        style={{ background: 'linear-gradient(to top, #141414, transparent)' }}
         aria-hidden="true"
       />
 
-      {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-8 max-w-4xl">
-        {/* Category badge */}
-        <span className="inline-block mb-3 px-3 py-1 bg-brand-pink text-white text-xs font-bold uppercase tracking-widest rounded w-fit">
-          {article.category}
-        </span>
+      {/* Content — bottom left like Netflix */}
+      <div className="absolute bottom-[15%] left-0 px-[4%] max-w-[600px] fade-up">
+        {/* Category tag */}
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className="text-xs font-bold uppercase tracking-[0.2em] px-2 py-1"
+            style={{ background: '#E50914', color: '#fff' }}
+          >
+            {article.category}
+          </span>
+          <span className="maturity-badge">18+</span>
+        </div>
 
         {/* Title */}
-        <h1 className="font-bebas text-3xl sm:text-5xl text-white leading-tight tracking-wide mb-2">
+        <h1 className="display text-5xl sm:text-7xl text-white leading-none mb-4 drop-shadow-2xl">
           {article.title}
         </h1>
 
         {/* Excerpt */}
         {article.excerpt && (
-          <p className="text-sm sm:text-base text-gray-300 mb-4 max-w-2xl line-clamp-2">
-            {truncate(article.excerpt, 160)}
+          <p className="text-base sm:text-lg text-[#d2d2d2] mb-6 leading-relaxed max-w-lg line-clamp-3">
+            {truncate(article.excerpt, 200)}
           </p>
         )}
 
-        {/* CTAs */}
+        {/* Buttons */}
         <div className="flex items-center gap-3 flex-wrap">
-          <Link
-            href={`/news/${article.slug}`}
-            className="px-5 py-2.5 bg-brand-pink text-white text-sm font-semibold rounded-lg hover:bg-pink-600 transition-colors"
-          >
-            Read Story
+          <Link href={`/news/${article.slug}`} className="btn-netflix btn-netflix-primary">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            Read Now
           </Link>
-          <span className="text-xs text-gray-400">{timeAgo(article.publishedAt)} · {article.sourceName}</span>
+          <Link href={`/news/${article.slug}`} className="btn-netflix btn-netflix-secondary">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            More Info
+          </Link>
         </div>
+      </div>
+
+      {/* Source badge — top right */}
+      <div className="absolute top-[30%] right-[4%] hidden sm:flex items-center gap-2 border-l-4 border-[#E50914] pl-3">
+        <span className="text-sm text-[#d2d2d2] font-medium">{article.sourceName}</span>
       </div>
     </div>
   );

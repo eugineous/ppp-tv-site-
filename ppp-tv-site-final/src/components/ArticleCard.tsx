@@ -12,25 +12,9 @@ interface ArticleCardProps {
   priority?: boolean;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  News: 'bg-blue-600',
-  Entertainment: 'bg-purple-600',
-  Sports: 'bg-green-600',
-  Music: 'bg-orange-500',
-  Lifestyle: 'bg-yellow-500',
-  Technology: 'bg-cyan-600',
-  Business: 'bg-teal-600',
-  Culture: 'bg-rose-600',
-  Community: 'bg-emerald-600',
-  Events: 'bg-indigo-600',
-};
-
-function getCategoryColor(category: string): string {
-  return CATEGORY_COLORS[category] ?? 'bg-brand-pink';
-}
-
 export default function ArticleCard({ article, priority = false }: ArticleCardProps) {
   const [bookmarked, setBookmarked] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     setBookmarked(isBookmarked(article.slug));
@@ -39,62 +23,99 @@ export default function ArticleCard({ article, priority = false }: ArticleCardPr
   function handleBookmark(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const next = toggleBookmark(article.slug);
-    setBookmarked(next);
+    setBookmarked(toggleBookmark(article.slug));
   }
 
   return (
-    <article className="group relative bg-[#111] rounded-xl overflow-hidden hover:ring-1 hover:ring-brand-pink/50 transition-all">
+    <article
+      className="netflix-card group cursor-pointer"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <Link href={`/news/${article.slug}`} className="block">
         {/* Thumbnail — 16:9 */}
-        <div className="relative aspect-video overflow-hidden bg-white/5">
+        <div className="relative aspect-video overflow-hidden rounded-sm bg-[#1a1a1a]">
           {article.imageUrl ? (
             <Image
               src={article.imageUrl}
               alt={article.title}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
               priority={priority}
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/5">
-              <span className="text-3xl font-bebas text-white/20">{article.category[0]}</span>
+            <div className="absolute inset-0 flex items-center justify-center bg-[#1a1a1a]">
+              <span className="display text-4xl text-white/20">{article.category[0]}</span>
             </div>
           )}
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" aria-hidden="true" />
+
+          {/* Dark overlay on hover */}
+          <div
+            className="absolute inset-0 transition-opacity duration-300"
+            style={{ background: 'rgba(0,0,0,0.4)', opacity: hovered ? 1 : 0 }}
+            aria-hidden="true"
+          />
+
+          {/* Play button on hover */}
+          {hovered && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
+                <svg className="w-5 h-5 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          )}
+
           {/* Category badge */}
-          <span className={`absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold text-white rounded uppercase tracking-wide ${getCategoryColor(article.category)}`}>
+          <span
+            className="absolute top-2 left-2 text-[10px] font-bold text-white px-2 py-0.5 uppercase tracking-wide"
+            style={{ background: '#E50914' }}
+          >
             {article.category}
           </span>
+
+          {/* Bookmark */}
+          <button
+            onClick={handleBookmark}
+            className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              bookmarked
+                ? 'bg-[#E50914] text-white'
+                : 'bg-black/60 text-gray-300 hover:bg-black/80 hover:text-white opacity-0 group-hover:opacity-100'
+            }`}
+            aria-label={bookmarked ? 'Remove from list' : 'Add to list'}
+            aria-pressed={bookmarked}
+          >
+            {bookmarked ? (
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            )}
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="p-3">
-          <h3 className="text-sm font-semibold text-white line-clamp-2 leading-snug group-hover:text-brand-pink transition-colors mb-1.5">
-            {article.title}
-          </h3>
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-gray-500">{timeAgo(article.publishedAt)}</span>
-            <span className="text-[11px] text-gray-600 truncate max-w-[100px]">{article.sourceName}</span>
+        {/* Info panel — shows on hover */}
+        <div
+          className="overflow-hidden transition-all duration-300 bg-[#1a1a1a] rounded-b-sm"
+          style={{ maxHeight: hovered ? '120px' : '0px', opacity: hovered ? 1 : 0 }}
+        >
+          <div className="p-3">
+            <h3 className="text-sm font-semibold text-white line-clamp-2 leading-snug mb-1">
+              {article.title}
+            </h3>
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="text-green-400 font-semibold">New</span>
+              <span className="text-gray-400">{timeAgo(article.publishedAt)}</span>
+              <span className="maturity-badge text-[10px]">18+</span>
+            </div>
           </div>
         </div>
       </Link>
-
-      {/* Bookmark button */}
-      <button
-        onClick={handleBookmark}
-        className={`absolute top-2 right-2 p-1.5 rounded-full transition-colors ${
-          bookmarked ? 'bg-brand-pink text-white' : 'bg-black/60 text-gray-300 hover:text-white hover:bg-black/80'
-        }`}
-        aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark article'}
-        aria-pressed={bookmarked}
-      >
-        <svg className="w-3.5 h-3.5" fill={bookmarked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-        </svg>
-      </button>
     </article>
   );
 }

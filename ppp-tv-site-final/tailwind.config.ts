@@ -14,6 +14,12 @@ const config: Config = {
           muted: '#888',
           light: '#d4d4d4',
         },
+        netflix: {
+          red: '#E50914',
+          bg: '#141414',
+          card: '#1a1a1a',
+          hover: '#2a2a2a',
+        },
       },
       fontFamily: {
         display: ['var(--font-bebas)', 'sans-serif'],

@@ -89,13 +89,13 @@ const FOOTER_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-[#080808] border-t border-white/5" aria-label="Site footer">
+    <footer className="bg-[#141414] border-t border-white/5 mt-16" aria-label="Site footer">
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Top row: logo + socials */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
           <div>
             <p className="font-bebas text-3xl text-white tracking-widest">
-              PPP<span className="text-brand-pink">TV</span>
+              PPP<span className="text-[#E50914]">TV</span>
             </p>
             <p className="text-xs text-gray-500 mt-1">StarTimes Channel 430 · Kenya First, Africa Always</p>
           </div>
@@ -119,7 +119,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           {FOOTER_LINKS.map((col) => (
             <div key={col.heading}>
-              <p className="text-xs font-semibold text-brand-pink uppercase tracking-widest mb-3">
+              <p className="text-xs font-semibold text-[#E50914] uppercase tracking-widest mb-3">
                 {col.heading}
               </p>
               <ul className="space-y-2">

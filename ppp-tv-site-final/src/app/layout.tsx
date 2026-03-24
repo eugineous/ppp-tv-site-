@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en-KE" className={`${bebas.variable} ${dm.variable}`}>
       <body className="min-h-screen flex flex-col bg-black" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <Header />
-        <main className="flex-1 fade-in" style={{ paddingBottom: '56px' }} id="main-content">
+        <main className="flex-1 fade-in" id="main-content">
           {children}
         </main>
         <RecentlyViewed />
