@@ -21,15 +21,15 @@ export default function CategoryRow({ label, articles, seeAllHref, accentColor }
   if (articles.length === 0) return null;
   const color = accentColor || CAT_COLORS[articles[0]?.category] || '#FF007A';
 
-  // Show 5 per page, paginate through all articles
-  const PAGE = 5;
+  // Show 4 per page, paginate through all articles
+  const PAGE = 4;
   const [page, setPage] = useState(0);
   const totalPages = Math.ceil(articles.length / PAGE);
   const canPrev = page > 0;
   const canNext = page < totalPages - 1;
   const visible = articles.slice(page * PAGE, page * PAGE + PAGE);
 
-  // Pad to exactly 5 so grid never collapses
+  // Pad to exactly 4 so grid never collapses
   const padded = [...visible];
   while (padded.length < PAGE) padded.push(null as unknown as Article);
 
