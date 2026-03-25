@@ -89,29 +89,62 @@ function stripHtml(html: string): string {
 }
 
 // ── PROMOTIONAL CONTENT GUARDRAILS ────────────────────────────────────────────
+// These run at THREE levels:
+//   1. Title + excerpt scan  → reject whole article
+//   2. Full body scan        → reject whole article if body is predominantly brand PR
+//   3. Paragraph scan        → strip individual promo paragraphs from body
 
 /**
- * Patterns that signal a title or excerpt is promotional/advertorial.
- * If ANY of these match the title, the article is rejected entirely.
+ * Level 1 — Title/excerpt patterns that signal a promotional article.
+ * Reject the whole article if ANY match.
  */
 const PROMO_TITLE_PATTERNS: RegExp[] = [
   // Explicit ad labels
-  /\b(sponsored|advertorial|advertisement|paid post|paid content|partner content|branded content|native ad|promoted)\b/i,
+  /\b(sponsored|advertorial|advertisement|paid post|paid content|partner content|branded content|native ad|promoted|promotion)\b/i,
   // Press release / PR language
-  /\b(press release|media release|official statement|for immediate release)\b/i,
+  /\b(press release|media release|official statement|for immediate release|pr newswire|business wire|globe newswire)\b/i,
+  // Brand-as-author signals (e.g. "Written By Zaron Cosmetics")
+  /\bwritten by\s+[A-Z][a-zA-Z\s]+(cosmetics?|beauty|brand|company|corp|ltd|inc|group|holdings?|enterprises?|solutions?|technologies?|services?)\b/i,
   // Product launch / brand push
-  /\b(launches?|unveils?|introduces?|announces?|debuts?|rolls? out|now available|on sale now|buy now|shop now|order now|get yours?)\b.*\b(product|collection|range|line|model|edition|version|app|service|platform|solution)\b/i,
+  /\b(launches?|unveils?|introduces?|announces?|debuts?|rolls? out|now available|on sale now|buy now|shop now|order now|get yours?)\b.{0,60}\b(product|collection|range|line|model|edition|version|app|service|platform|solution)\b/i,
   // Giveaway / contest / promo
   /\b(win a|giveaway|contest|sweepstake|raffle|promo code|discount code|coupon|voucher|free gift|limited offer|exclusive deal|flash sale|special offer|up to \d+% off)\b/i,
-  // Brand-centric puff pieces
+  // Brand-centric puff pieces — brand hosts/sponsors/donates
   /\b(partners? with|in partnership with|powered by|brought to you by|supported by|presented by|in association with)\b/i,
+  // Brand CSR / outreach stories written by the brand itself
+  /\b(hosts?|sponsors?|donates?|gifts?|empowers?|supports?)\b.{0,80}\b(widows?|orphans?|community|women|youth|children|families)\b.{0,120}\b(cosmetics?|beauty|brand|company|corp|ltd|inc|group)\b/i,
   // Recruitment / corporate
   /\b(we.re hiring|join our team|career opportunity|job opening|apply now|vacancy)\b/i,
+  // "The post appeared first on" — BellaNaija brand content signal
+  /the post .{0,120} appeared first on/i,
 ];
 
 /**
- * Patterns that signal a paragraph inside an article is promotional.
- * Matching paragraphs are stripped from the body; the article itself is kept.
+ * Level 2 — Full-body signals that the article is brand PR even if title looks neutral.
+ * Count how many of these fire; if >= 3, reject the whole article.
+ */
+const PROMO_BODY_SIGNALS: RegExp[] = [
+  // Brand as author / source
+  /\bwritten by\s+[A-Z]/i,
+  /\bthe post .{0,120} appeared first on\b/i,
+  /\bthis (article|post|content|story) (is|was) (sponsored|paid|brought|supported|presented)\b/i,
+  // CEO / founder quotes promoting their own brand
+  /\b(founder|ceo|chief executive|managing director|president)\b.{0,120}\b(said|stated|noted|added|commented)\b.{0,200}\b(brand|company|product|mission|vision|commitment|initiative)\b/i,
+  // Brand mission / purpose language
+  /\b(our (mission|vision|commitment|purpose|belief|values?)|the brand.s (mission|vision|commitment|purpose))\b/i,
+  // Brand CSR boilerplate
+  /\b(remains? committed to|reinforcing (its|our) (mission|commitment|belief)|using (its|our) platform)\b/i,
+  // Product / service availability
+  /\b(available (now|online|at|from|in stores?)|purchase (at|from|online)|order (at|from|online))\b/i,
+  // Explicit brand promotion
+  /\b(leading (brand|company|manufacturer|provider|platform)|award.winning (brand|product|service))\b/i,
+  // "The post appeared first on" footer
+  /the post .{0,80} appeared first on .{0,80}\. read (today|now|more)/i,
+];
+
+/**
+ * Level 3 — Paragraph-level patterns.
+ * Strip matching paragraphs from the body; keep the article.
  */
 const PROMO_PARA_PATTERNS: RegExp[] = [
   // Ad / sponsor disclosures
@@ -126,18 +159,33 @@ const PROMO_PARA_PATTERNS: RegExp[] = [
   /\b(available (now|online|at|from|in stores?)|purchase (at|from|online)|order (at|from|online)|visit (our|the) (website|store|shop)|follow us (on|at)|subscribe (to|for) (our|the))\b/i,
   // Social media follow prompts
   /\b(follow (us|me|them) on (instagram|twitter|facebook|tiktok|youtube|x)|like (our|the) (page|account)|join (our|the) (community|group|channel))\b/i,
+  // "The post appeared first on" footer lines
+  /the post .{0,120} appeared first on/i,
+  // Brand mission boilerplate
+  /\b(remains? committed to|reinforcing (its|our) (mission|commitment)|using (its|our) platform and resources)\b/i,
+  // CEO quote promoting brand
+  /\b(founder|ceo|chief executive|managing director)\b.{0,60}\b(said|stated|noted|added)\b.{0,200}\b(brand|mission|commitment|initiative|empower)\b/i,
+  // Written-by attribution lines
+  /^written by\s+/i,
 ];
 
-/** Returns true if the article title/excerpt is promotional and should be rejected */
+/** Level 1: reject if title/excerpt is promotional */
 function isPromotional(title: string, excerpt: string): boolean {
-  const combined = `${title} ${excerpt}`.toLowerCase();
+  const combined = `${title} ${excerpt}`;
   return PROMO_TITLE_PATTERNS.some(r => r.test(combined));
 }
 
-/** Strips promotional paragraphs from article body HTML */
+/** Level 2: reject if article body is predominantly brand PR (>= 3 body signals) */
+function isBodyPromotional(content: string): boolean {
+  if (!content) return false;
+  const text = stripHtml(content);
+  const hits = PROMO_BODY_SIGNALS.filter(r => r.test(text)).length;
+  return hits >= 3;
+}
+
+/** Level 3: strip promotional paragraphs from article body HTML */
 function cleanPromotionalContent(html: string): string {
   if (!html) return html;
-  // Remove entire <p> blocks that match promo patterns
   return html.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (match, inner) => {
     const text = stripHtml(inner).trim();
     if (PROMO_PARA_PATTERNS.some(r => r.test(text))) return '';
@@ -229,6 +277,11 @@ async function scrapeArticlePage(url: string): Promise<{ image: string; content:
     const content = paragraphs.map((p) => `<p>${p}</p>`).join('\n');
     const excerpt = decodeXML(ogDesc) || paragraphs[0]?.slice(0, 250) || '';
 
+    // If the scraped excerpt itself is brand PR, return empty to trigger rejection
+    if (isPromotional('', excerpt)) {
+      return { image: '', content: '', excerpt: '' };
+    }
+
     return {
       image: ogImage.startsWith('//') ? `https:${ogImage}` : ogImage,
       content,
@@ -273,6 +326,34 @@ const RSS_FEEDS: Array<{ url: string; name: string; category: string }> = [
   { url: 'https://techcabal.com/feed/',                       name: 'TechCabal',          category: 'Technology' },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * URL-level guardrail: skip articles from known PR/brand content URL patterns.
+ * These are paths that reliably indicate brand-written content.
+ */
+function isPromoUrl(url: string): boolean {
+  const u = url.toLowerCase();
+  return (
+    u.includes('/press-release') ||
+    u.includes('/press_release') ||
+    u.includes('/sponsored') ||
+    u.includes('/advertorial') ||
+    u.includes('/partner-content') ||
+    u.includes('/branded-content') ||
+    u.includes('/native-ad') ||
+    u.includes('/paid-post') ||
+    u.includes('/brand-voice') ||
+    u.includes('/prwire') ||
+    u.includes('/prnewswire') ||
+    u.includes('/businesswire') ||
+    u.includes('/globenewswire') ||
+    u.includes('/accesswire') ||
+    u.includes('/einpresswire') ||
+    u.includes('/newswire')
+  );
+}
+
 async function fetchRSSFeed(feed: { url: string; name: string; category: string }): Promise<Article[]> {
   try {
     const res = await fetch(feed.url, {
@@ -303,8 +384,15 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
         description.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] ?? '';
 
       if (!title || !link) continue;
+
+      // URL-level guardrail: skip known PR/brand content URL patterns
+      if (isPromoUrl(link)) continue;
+
+      // Early title check before scraping (saves bandwidth)
+      if (isPromotional(title, decodeXML(stripHtml(description)).slice(0, 300))) continue;
+
       items.push({ title, link, pubDate, description, mediaUrl, contentEncoded });
-      if (items.length >= 10) break; // limit per feed to keep cron fast
+      if (items.length >= 10) break;
     }
 
     // Scrape each article page for og:image + content (in parallel, max 10)
@@ -334,7 +422,11 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
       })
     );
 
-    return articles.filter((a) => a.imageUrl && !isPromotional(a.title, a.excerpt)); // reject promo articles
+    return articles.filter((a) =>
+      a.imageUrl &&
+      !isPromotional(a.title, a.excerpt) &&   // Level 1: title/excerpt check
+      !isBodyPromotional(a.content)            // Level 2: body PR density check
+    );
   } catch {
     return [];
   }
@@ -461,6 +553,19 @@ export default {
       const existing = await getArticles(env);
       const before = existing.length;
       const clean = existing.filter((a) => a.imageUrl && a.imageUrl.length > 5);
+      await saveArticles(env, clean);
+      return json({ before, after: clean.length, removed: before - clean.length });
+    }
+
+    // ── POST /purge-promo — remove promotional articles from KV ───────────
+    if (path === '/purge-promo' && method === 'POST') {
+      if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
+      const existing = await getArticles(env);
+      const before = existing.length;
+      const clean = existing.filter((a) =>
+        !isPromotional(a.title, a.excerpt) &&
+        !isBodyPromotional(a.content)
+      );
       await saveArticles(env, clean);
       return json({ before, after: clean.length, removed: before - clean.length });
     }
