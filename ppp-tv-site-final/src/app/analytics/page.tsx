@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import type { AnalyticsSummary } from '@/types';
 
+// Prevent static generation timeout — this page is fully client-side
+export const dynamic = 'force-dynamic';
+
 const PASSWORD = process.env.NEXT_PUBLIC_ANALYTICS_PASSWORD ?? 'ppptv2026';
 
 export default function AnalyticsPage() {

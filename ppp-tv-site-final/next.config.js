@@ -50,7 +50,6 @@ const nextConfig = {
 
   // Experimental: faster page loads
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['date-fns'],
   },
 };
