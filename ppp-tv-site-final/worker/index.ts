@@ -88,6 +88,65 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// ── PROMOTIONAL CONTENT GUARDRAILS ────────────────────────────────────────────
+
+/**
+ * Patterns that signal a title or excerpt is promotional/advertorial.
+ * If ANY of these match the title, the article is rejected entirely.
+ */
+const PROMO_TITLE_PATTERNS: RegExp[] = [
+  // Explicit ad labels
+  /\b(sponsored|advertorial|advertisement|paid post|paid content|partner content|branded content|native ad|promoted)\b/i,
+  // Press release / PR language
+  /\b(press release|media release|official statement|for immediate release)\b/i,
+  // Product launch / brand push
+  /\b(launches?|unveils?|introduces?|announces?|debuts?|rolls? out|now available|on sale now|buy now|shop now|order now|get yours?)\b.*\b(product|collection|range|line|model|edition|version|app|service|platform|solution)\b/i,
+  // Giveaway / contest / promo
+  /\b(win a|giveaway|contest|sweepstake|raffle|promo code|discount code|coupon|voucher|free gift|limited offer|exclusive deal|flash sale|special offer|up to \d+% off)\b/i,
+  // Brand-centric puff pieces
+  /\b(partners? with|in partnership with|powered by|brought to you by|supported by|presented by|in association with)\b/i,
+  // Recruitment / corporate
+  /\b(we.re hiring|join our team|career opportunity|job opening|apply now|vacancy)\b/i,
+];
+
+/**
+ * Patterns that signal a paragraph inside an article is promotional.
+ * Matching paragraphs are stripped from the body; the article itself is kept.
+ */
+const PROMO_PARA_PATTERNS: RegExp[] = [
+  // Ad / sponsor disclosures
+  /\b(this (article|post|content|story) (is|was) (sponsored|paid|brought|supported|presented)|sponsored by|advertisement|advertorial)\b/i,
+  // CTA / sales language
+  /\b(click here to (buy|order|shop|get|download|sign up|register|subscribe)|buy now|shop now|order now|get yours?|add to cart|limited (time|stock)|while stocks? last)\b/i,
+  // Discount / promo codes
+  /\b(use (code|promo|coupon|discount code)|promo code|coupon code|discount code|voucher code|get \d+% off|save \d+%|free shipping)\b/i,
+  // Brand partnership disclosures
+  /\b(in partnership with|powered by|brought to you by|supported by|presented by|in association with|affiliate (link|disclosure)|this post (contains?|includes?) affiliate)\b/i,
+  // Product push paragraphs
+  /\b(available (now|online|at|from|in stores?)|purchase (at|from|online)|order (at|from|online)|visit (our|the) (website|store|shop)|follow us (on|at)|subscribe (to|for) (our|the))\b/i,
+  // Social media follow prompts
+  /\b(follow (us|me|them) on (instagram|twitter|facebook|tiktok|youtube|x)|like (our|the) (page|account)|join (our|the) (community|group|channel))\b/i,
+];
+
+/** Returns true if the article title/excerpt is promotional and should be rejected */
+function isPromotional(title: string, excerpt: string): boolean {
+  const combined = `${title} ${excerpt}`.toLowerCase();
+  return PROMO_TITLE_PATTERNS.some(r => r.test(combined));
+}
+
+/** Strips promotional paragraphs from article body HTML */
+function cleanPromotionalContent(html: string): string {
+  if (!html) return html;
+  // Remove entire <p> blocks that match promo patterns
+  return html.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (match, inner) => {
+    const text = stripHtml(inner).trim();
+    if (PROMO_PARA_PATTERNS.some(r => r.test(text))) return '';
+    return match;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 /** Extract og:image, og:description, and article body from a page */
 async function scrapeArticlePage(url: string): Promise<{ image: string; content: string; excerpt: string }> {
   try {
@@ -137,7 +196,7 @@ async function scrapeArticlePage(url: string): Promise<{ image: string; content:
       .replace(/<[^>]+(class|id|style|data-[^=]*)=["'][^"']*["'][^>]*/gi, (m) => m.replace(/(class|id|style|data-[^=]*)=["'][^"']*["']/gi, ''))
       .trim();
 
-    // Extract paragraphs - skip junk lines
+    // Extract paragraphs - skip junk and promotional lines
     const JUNK = [
       /^(subscribe|sign up|newsletter|follow us|share this|click here|read more|advertisement|sponsored|related:|tags:|filed under|also read|see also|more from|you may also|don't miss|trending now|most read|popular now|breaking news alert)/i,
       /^(photo:|image:|caption:|credit:|source:|via:|originally published|copyright|all rights reserved|\(c\)|©)/i,
@@ -150,6 +209,7 @@ async function scrapeArticlePage(url: string): Promise<{ image: string; content:
       const text = stripHtml(m[1]).trim();
       if (text.length < 40) continue;
       if (JUNK.some(r => r.test(text))) continue;
+      if (PROMO_PARA_PATTERNS.some(r => r.test(text))) continue; // strip promo paragraphs
       paragraphs.push(text);
       if (paragraphs.length >= 12) break;
     }
@@ -255,7 +315,7 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
         const excerpt = scraped.excerpt || decodeXML(stripHtml(item.description)).slice(0, 250);
         // Use content:encoded body if available, else scraped content
         const rawBody = item.contentEncoded || scraped.content || '';
-        const content = rawBody ? rawBody : `<p>${excerpt}</p>`;
+        const content = rawBody ? cleanPromotionalContent(rawBody) : `<p>${excerpt}</p>`;
         const publishedAt = item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString();
         const slug = slugify(`${item.title}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`);
 
@@ -274,7 +334,7 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
       })
     );
 
-    return articles.filter((a) => a.imageUrl); // only keep articles with images
+    return articles.filter((a) => a.imageUrl && !isPromotional(a.title, a.excerpt)); // reject promo articles
   } catch {
     return [];
   }
