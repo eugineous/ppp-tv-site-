@@ -8,6 +8,11 @@ const CAT_COLORS: Record<string, string> = {
   Music: '#FF6B00',
   Lifestyle: '#00FF94',
   Technology: '#FFE600',
+  Politics: '#FF4500',
+  Business: '#FFE600',
+  Health: '#00FF94',
+  Movies: '#E50914',
+  Science: '#00CFFF',
   Events: '#FF007A',
   Celebrity: '#FF007A',
 };
@@ -23,6 +28,11 @@ export default function CategoryRow({ label, articles, seeAllHref, accentColor }
   if (articles.length === 0) return null;
   const color = accentColor || CAT_COLORS[articles[0]?.category] || '#FF007A';
 
+  // RULE: always show exactly 6 cards per row
+  // If fewer than 6, pad with nulls; if more, slice to 6
+  const SIX = 6;
+  const sliced = articles.slice(0, SIX);
+
   return (
     <section className="cat-row" aria-label={`${label} articles`}>
       <div className="cat-row-header">
@@ -31,18 +41,24 @@ export default function CategoryRow({ label, articles, seeAllHref, accentColor }
           <span className="cat-row-title">{label}</span>
           {seeAllHref && (
             <a href={seeAllHref} className="cat-row-link" style={{ color }}>
-              Explore All
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              See All
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>
             </a>
           )}
         </div>
+        {seeAllHref && (
+          <a href={seeAllHref} className="cat-row-see-all-btn" style={{ borderColor: color, color }}>
+            View All →
+          </a>
+        )}
       </div>
 
-      <div className="cat-row-scroll">
-        {articles.map((article) => (
-          <ArticleCard key={article.slug} article={article} accentColor={color} />
+      {/* 6-column grid — enforced, no horizontal scroll */}
+      <div className="cat-row-grid">
+        {sliced.map((article, i) => (
+          <ArticleCard key={article.slug} article={article} accentColor={color} ctaIndex={i} />
         ))}
       </div>
     </section>
