@@ -2,10 +2,7 @@ import { fetchArticles, fetchTrending } from '@/lib/worker';
 import HeroBanner from '@/components/HeroBanner';
 import CategoryRow from '@/components/CategoryRow';
 import Top10Row from '@/components/Top10Row';
-import dynamic from 'next/dynamic';
 import type { Article } from '@/types';
-
-const XTrends = dynamic(() => import('@/components/XTrends'), { ssr: false });
 
 export const revalidate = 300;
 
@@ -69,21 +66,6 @@ export default async function HomePage() {
 
           {/* Top 10 — large auto-scroll carousel */}
           {top10.length >= 3 && <Top10Row articles={top10} />}
-
-          {/* X Trends strip — full width between rows */}
-          <div className="xtrends-strip">
-            <div className="xtrends-strip-inner">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '0 1rem' }}>
-                <svg width="16" height="16" fill="#1d9bf0" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                </svg>
-                <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.2rem', color: '#fff', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                  What&apos;s Trending on X Kenya
-                </span>
-              </div>
-              <XTrends />
-            </div>
-          </div>
 
           {/* Category rows */}
           {CATEGORIES.map(({ label, cat, href, color }) => {

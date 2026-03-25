@@ -103,13 +103,19 @@ const PROMO_TITLE_PATTERNS: RegExp[] = [
   /\b(sponsored|advertorial|advertisement|paid post|paid content|partner content|branded content|native ad|promoted|promotion)\b/i,
   // Press release / PR language
   /\b(press release|media release|official statement|for immediate release|pr newswire|business wire|globe newswire)\b/i,
-  // Brand-as-author signals (e.g. "Written By Zaron Cosmetics")
-  /\bwritten by\s+[A-Z][a-zA-Z\s]+(cosmetics?|beauty|brand|company|corp|ltd|inc|group|holdings?|enterprises?|solutions?|technologies?|services?)\b/i,
+  // Brand-as-author signals
+  /\bwritten by\s+[A-Z][a-zA-Z\s]+(cosmetics?|beauty|brand|company|corp|ltd|inc|group|holdings?|enterprises?|solutions?|technologies?|services?|media|ventures?|studios?|productions?|entertainment)\b/i,
+  // TV/entertainment industry PR — show launches, renewals, syndication deals
+  /\b(launches?|unveils?|introduces?|announces?|debuts?|renews?|greenlights?|orders?|picks? up|rolls? out)\b.{0,80}\b(show|series|season|episode|special|pilot|spinoff|reboot|franchise|slate|syndication|deal|partnership)\b/i,
+  // Network/studio PR — "CBS Media Ventures", "NBC Universal", etc.
+  /\b(CBS|NBC|ABC|FOX|HBO|Netflix|Disney|Warner|Paramount|Sony|Universal|Amazon|Apple|Hulu|Peacock|Showtime|Starz)\b.{0,60}\b(announces?|launches?|renews?|orders?|greenlights?|picks? up|debuts?|unveils?|confirms?)\b/i,
+  // Syndication / distribution deals
+  /\b(syndication|syndicated|fall slate|upfront|scatter market|first-run|off-network|distribution deal|content deal|licensing deal)\b/i,
   // Product launch / brand push
   /\b(launches?|unveils?|introduces?|announces?|debuts?|rolls? out|now available|on sale now|buy now|shop now|order now|get yours?)\b.{0,60}\b(product|collection|range|line|model|edition|version|app|service|platform|solution)\b/i,
   // Giveaway / contest / promo
   /\b(win a|giveaway|contest|sweepstake|raffle|promo code|discount code|coupon|voucher|free gift|limited offer|exclusive deal|flash sale|special offer|up to \d+% off)\b/i,
-  // Brand-centric puff pieces — brand hosts/sponsors/donates
+  // Brand-centric puff pieces
   /\b(partners? with|in partnership with|powered by|brought to you by|supported by|presented by|in association with)\b/i,
   // Brand CSR / outreach stories written by the brand itself
   /\b(hosts?|sponsors?|donates?|gifts?|empowers?|supports?)\b.{0,80}\b(widows?|orphans?|community|women|youth|children|families)\b.{0,120}\b(cosmetics?|beauty|brand|company|corp|ltd|inc|group)\b/i,
@@ -117,6 +123,9 @@ const PROMO_TITLE_PATTERNS: RegExp[] = [
   /\b(we.re hiring|join our team|career opportunity|job opening|apply now|vacancy)\b/i,
   // "The post appeared first on" — BellaNaija brand content signal
   /the post .{0,120} appeared first on/i,
+  // Entertainment industry trade PR (Variety, Deadline, Hollywood Reporter style)
+  /\b(as part of|part of (its|their|the) (fall|spring|summer|winter) (slate|lineup|schedule|programming))\b/i,
+  /\b(executive produced by|showrunner|co-produced by|produced in association with)\b.{0,120}\b(network|studio|media|ventures?|productions?)\b/i,
 ];
 
 /**
@@ -124,22 +133,19 @@ const PROMO_TITLE_PATTERNS: RegExp[] = [
  * Count how many of these fire; if >= 3, reject the whole article.
  */
 const PROMO_BODY_SIGNALS: RegExp[] = [
-  // Brand as author / source
   /\bwritten by\s+[A-Z]/i,
   /\bthe post .{0,120} appeared first on\b/i,
   /\bthis (article|post|content|story) (is|was) (sponsored|paid|brought|supported|presented)\b/i,
-  // CEO / founder quotes promoting their own brand
   /\b(founder|ceo|chief executive|managing director|president)\b.{0,120}\b(said|stated|noted|added|commented)\b.{0,200}\b(brand|company|product|mission|vision|commitment|initiative)\b/i,
-  // Brand mission / purpose language
   /\b(our (mission|vision|commitment|purpose|belief|values?)|the brand.s (mission|vision|commitment|purpose))\b/i,
-  // Brand CSR boilerplate
   /\b(remains? committed to|reinforcing (its|our) (mission|commitment|belief)|using (its|our) platform)\b/i,
-  // Product / service availability
   /\b(available (now|online|at|from|in stores?)|purchase (at|from|online)|order (at|from|online))\b/i,
-  // Explicit brand promotion
   /\b(leading (brand|company|manufacturer|provider|platform)|award.winning (brand|product|service))\b/i,
-  // "The post appeared first on" footer
   /the post .{0,80} appeared first on .{0,80}\. read (today|now|more)/i,
+  // Entertainment industry PR signals
+  /\b(as part of (its|their|the) (fall|spring|summer|winter) (slate|lineup|schedule|programming))\b/i,
+  /\b(syndication|syndicated deal|distribution deal|content deal|licensing agreement)\b/i,
+  /\b(executive producer|showrunner|series regular|recurring role|guest star)\b.{0,120}\b(announced|confirmed|revealed|set to|tapped to)\b/i,
 ];
 
 /**

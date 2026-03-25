@@ -19,20 +19,25 @@ export default function Top10Row({ articles }: Props) {
     setActive(idx);
   }, []);
 
-  const next = useCallback(() => {
-    goTo((active + 1) % items.length, 'left');
-  }, [active, items.length, goTo]);
-
   const prev = useCallback(() => {
-    goTo((active - 1 + items.length) % items.length, 'right');
-  }, [active, items.length, goTo]);
+    setAnimDir('right');
+    setActive(p => (p - 1 + items.length) % items.length);
+  }, [items.length]);
 
-  // Auto-advance
+  const next = useCallback(() => {
+    setAnimDir('left');
+    setActive(p => (p + 1) % items.length);
+  }, [items.length]);
+
+  // Auto-advance — continuous loop, never stops
   useEffect(() => {
     if (paused) return;
-    timerRef.current = setInterval(next, INTERVAL);
+    timerRef.current = setInterval(() => {
+      setAnimDir('left');
+      setActive(prev => (prev + 1) % items.length);
+    }, INTERVAL);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [paused, next]);
+  }, [paused, items.length]);
 
   if (items.length === 0) return null;
 
