@@ -11,14 +11,15 @@ function authHeaders(): HeadersInit {
 export async function fetchArticles(options: FetchArticlesOptions = {}): Promise<Article[]> {
   const params = new URLSearchParams();
   if (options.category) params.set('category', options.category);
-  if (options.sort) params.set('sort', options.sort);
-  if (options.limit) params.set('limit', String(options.limit));
-  if (options.offset) params.set('offset', String(options.offset));
+  if (options.sort)     params.set('sort', options.sort);
+  if (options.limit)    params.set('limit', String(options.limit));
+  if (options.offset)   params.set('offset', String(options.offset));
 
   const url = `${WORKER_BASE}/articles${params.toString() ? `?${params}` : ''}`;
 
   try {
     const res = await fetch(url, {
+      // ISR: serve cached version instantly, revalidate in background every 5 min
       next: { revalidate: 300 },
       headers: authHeaders(),
     });
@@ -30,7 +31,7 @@ export async function fetchArticles(options: FetchArticlesOptions = {}): Promise
   }
 }
 
-/** Fetch a single article by slug */
+/** Fetch a single article by slug — cache for 1 hour */
 export async function fetchArticleBySlug(slug: string): Promise<Article | null> {
   try {
     const res = await fetch(`${WORKER_BASE}/articles/${slug}`, {
@@ -44,11 +45,12 @@ export async function fetchArticleBySlug(slug: string): Promise<Article | null> 
   }
 }
 
-/** Fetch top trending articles (top 5 by gravity-decay score) */
+/** Fetch top trending articles — cache 5 min */
 export async function fetchTrending(): Promise<Article[]> {
   try {
     const res = await fetch(`${WORKER_BASE}/trending`, {
       next: { revalidate: 300 },
+      headers: authHeaders(),
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -58,26 +60,26 @@ export async function fetchTrending(): Promise<Article[]> {
   }
 }
 
-/** Record a page view for an article (fire-and-forget) */
-export async function recordView(slug: string): Promise<void> {
-  try {
-    await fetch(`${WORKER_BASE}/views`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug }),
-    });
-  } catch {
-    // silently fail — view tracking is non-critical
+/** Record a page view — fire and forget, no await needed */
+export function recordView(slug: string): void {
+  if (typeof window === 'undefined') return;
+  // Use sendBeacon for non-blocking, guaranteed delivery
+  const url = `${WORKER_BASE}/views`;
+  const data = JSON.stringify({ slug });
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }));
+  } else {
+    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: data, keepalive: true }).catch(() => {});
   }
 }
 
-/** Search articles by keyword */
+/** Search articles — no cache (always fresh) */
 export async function searchArticles(query: string): Promise<Article[]> {
   if (!query.trim()) return [];
   try {
     const res = await fetch(
       `${WORKER_BASE}/search?q=${encodeURIComponent(query.trim())}`,
-      { next: { revalidate: 0 } }
+      { cache: 'no-store' }
     );
     if (!res.ok) return [];
     const data = await res.json();

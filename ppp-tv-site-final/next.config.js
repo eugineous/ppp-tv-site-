@@ -8,8 +8,8 @@ const securityHeaders = [
 
 const nextConfig = {
   compress: true,
+  poweredByHeader: false,
 
-  // Faster builds — skip type-check in CI (types checked separately)
   typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: true },
 
@@ -19,12 +19,13 @@ const nextConfig = {
       { protocol: 'http',  hostname: '**' },
     ],
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 86400, // 24h image cache
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    minimumCacheTTL: 604800,   // 7 days — images rarely change
+    deviceSizes: [640, 828, 1080, 1200, 1920],
+    imageSizes: [64, 128, 256, 384],
+    dangerouslyAllowSVG: false,
+    unoptimized: false,
   },
 
-  // Aggressive static asset caching
   async headers() {
     return [
       {
@@ -32,25 +33,31 @@ const nextConfig = {
         headers: securityHeaders,
       },
       {
-        // Cache static assets for 1 year
         source: '/_next/static/(.*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
       {
-        // Cache images for 24h
         source: '/_next/image(.*)',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=3600' },
+          { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        // Cache all page HTML for 5 min with stale-while-revalidate
+        source: '/((?!api|_next).*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=600' },
         ],
       },
     ];
   },
 
-  // Experimental: faster page loads
   experimental: {
-    optimizePackageImports: ['date-fns'],
+    optimizePackageImports: ['date-fns', 'react', 'react-dom'],
+    // Partial prerendering — serve shell instantly, stream content
+    ppr: false, // keep off until stable
   },
 };
 

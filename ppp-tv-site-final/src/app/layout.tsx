@@ -38,9 +38,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#FF007A" />
-        <link rel="preconnect" href="https://ppp-tv-worker.ppp-tv-site.workers.dev" />
+        {/* Preconnect to all external origins we load from */}
+        <link rel="preconnect" href="https://ppp-tv-worker.euginemicah.workers.dev" />
+        <link rel="preconnect" href="https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* DNS prefetch for common image CDNs */}
+        <link rel="dns-prefetch" href="https://www.aljazeera.com" />
+        <link rel="dns-prefetch" href="https://www.nation.africa" />
+        <link rel="dns-prefetch" href="https://www.standardmedia.co.ke" />
+        <link rel="dns-prefetch" href="https://www.bellanaija.com" />
+        <link rel="dns-prefetch" href="https://www.capitalfm.co.ke" />
+        <link rel="dns-prefetch" href="https://techcrunch.com" />
+        <link rel="dns-prefetch" href="https://www.bbc.co.uk" />
+        {/* Prefetch top pages for instant navigation */}
+        <link rel="prefetch" href="/news" as="document" />
+        <link rel="prefetch" href="/entertainment" as="document" />
+        <link rel="prefetch" href="/sports" as="document" />
       </head>
       <body className={`min-h-screen flex flex-col bg-black ${bebasNeue.variable} ${dmSans.variable}`}>
         <Header />

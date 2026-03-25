@@ -106,7 +106,7 @@ export default function CategoryRow({ label, articles, seeAllHref, accentColor }
       <div className="cat-row-grid">
         {padded.map((article, i) =>
           article ? (
-            <ArticleCard key={article.slug} article={article} accentColor={color} ctaIndex={i} />
+            <ArticleCard key={article.slug} article={article} accentColor={color} ctaIndex={i} priority={page === 0 && i < 4} />
           ) : (
             <div key={`empty-${i}`} className="cat-row-empty-slot" />
           )

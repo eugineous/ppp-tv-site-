@@ -277,7 +277,7 @@ body {
 
 /* ── Category rows ── */
 .rows-section { padding: 0 0 4rem; margin-top: -80px; position: relative; z-index: 10; }
-.cat-row { padding: 1.5rem 1rem 0; }
+.cat-row { padding: 1.5rem 1rem 0; content-visibility: auto; contain-intrinsic-size: 0 400px; }
 @media (min-width: 640px)  { .cat-row { padding: 1.5rem 1.5rem 0; } }
 @media (min-width: 1024px) { .cat-row { padding: 1.5rem 3rem 0; } }
 .cat-row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
@@ -331,7 +331,7 @@ body {
 /* ── Row card — fills its grid column, uniform size ── */
 .row-card-wrap { position: relative; width: 100%; }
 
-.row-card { display: block; width: 100%; text-decoration: none; transition: transform .25s ease; transform-origin: center bottom; }
+.row-card { display: block; width: 100%; text-decoration: none; transition: transform .25s ease; transform-origin: center bottom; will-change: transform; }
 .row-card:hover { transform: translateY(-5px); z-index: 20; }
 
 /* 16:9 thumbnail */
@@ -343,8 +343,9 @@ body {
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 0;
+  contain: layout style paint; /* isolate repaints */
 }
-.row-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.row-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; will-change: transform; }
 .row-card:hover .row-card-img img { transform: scale(1.04); }
 
 .row-card-img-fallback { width: 100%; height: 100%; background: linear-gradient(135deg,#1a1a1a 0%,#0d0d0d 100%); display: flex; align-items: center; justify-content: center; }
