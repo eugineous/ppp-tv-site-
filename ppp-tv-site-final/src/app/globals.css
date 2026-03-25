@@ -331,24 +331,24 @@ body {
 /* ── Row card — fills its grid column, uniform size ── */
 .row-card-wrap { position: relative; width: 100%; }
 
-/* Inner wrapper — this is what scales on hover */
+/* Inner wrapper — lifts up on hover, no scale */
 .row-card-inner {
   position: relative;
   width: 100%;
   border-radius: 10px;
-  transition: transform .3s cubic-bezier(.2,0,.2,1), box-shadow .3s ease;
-  transform-origin: center top;
-  will-change: transform;
   background: #0d0d0d;
+  transition: transform .25s cubic-bezier(.2,0,.2,1), box-shadow .25s ease;
+  will-change: transform;
 }
-/* Netflix zoom-out effect — scales up 1.18x from its position */
+/* Lift up — card rises above others, shadow appears */
 .row-card-inner--hovered {
-  transform: scale(1.18);
-  box-shadow: 0 20px 60px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06);
+  transform: translateY(-8px);
+  box-shadow: 0 24px 48px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.07);
   z-index: 50;
 }
 
 .row-card { display: block; width: 100%; text-decoration: none; }
+.row-card-info-link { display: block; text-decoration: none; }
 
 /* 16:9 thumbnail */
 .row-card-img {
@@ -358,11 +358,10 @@ body {
   background: #111;
   border-radius: 10px 10px 0 0;
   overflow: hidden;
-  margin-bottom: 0;
   contain: layout style paint;
 }
 .row-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; will-change: transform; }
-.row-card-inner--hovered .row-card-img img { transform: scale(1.04); }
+.row-card-inner--hovered .row-card-img img { transform: scale(1.03); }
 
 .row-card-img-fallback { width: 100%; height: 100%; background: linear-gradient(135deg,#1a1a1a 0%,#0d0d0d 100%); display: flex; align-items: center; justify-content: center; }
 
@@ -430,40 +429,76 @@ body {
 
 .row-card-info { display: none; }
 
-/* ── Netflix hover expansion panel — slides in below the scaled card ── */
-.row-card-hover-panel {
-  background: #141414;
-  border-radius: 0 0 10px 10px;
+/* ══ HOVER OVERLAY — full card popup matching screenshots ══
+   Appears on top of the lifted card, same width, rounded corners,
+   dark background, image → category pill → big title → excerpt → source+time → CTA
+*/
+.row-card-hover-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: #0d0d0d;
+  border-radius: 10px;
   overflow: hidden;
-  animation: hoverPanelIn .2s cubic-bezier(.2,0,.2,1) forwards;
+  box-shadow: 0 32px 64px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
+  z-index: 100;
+  animation: hoverOverlayIn .2s cubic-bezier(.2,0,.2,1) forwards;
+  pointer-events: auto;
 }
-@keyframes hoverPanelIn {
-  from { opacity: 0; max-height: 0; }
-  to   { opacity: 1; max-height: 200px; }
+@keyframes hoverOverlayIn {
+  from { opacity: 0; transform: translateY(6px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-.row-card-hover-panel-bar { height: 3px; width: 100%; }
-.row-card-hover-panel-body { padding: 10px 12px 12px; }
-.row-card-hover-panel-title {
+
+.row-card-hover-img-link { display: block; text-decoration: none; }
+.row-card-hover-img {
+  position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #111;
+}
+.row-card-hover-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.row-card-hover-img-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(13,13,13,1) 0%, rgba(13,13,13,.4) 50%, transparent 100%);
+}
+.row-card-hover-img-accent { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+
+.row-card-hover-body { padding: 12px 14px 14px; }
+
+/* Category pill — matches screenshots */
+.row-card-hover-cat {
+  display: inline-block;
+  font-size: .65rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 999px; margin-bottom: 10px;
+}
+
+/* Big title — Bebas, uppercase, white */
+.row-card-hover-title {
   font-family: var(--font-bebas,'Bebas Neue'),Impact,sans-serif;
-  font-size: 1rem; color: #fff; letter-spacing: .03em; text-transform: uppercase;
-  line-height: 1.2; margin-bottom: 5px;
-  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+  font-size: 1.15rem; color: #fff; letter-spacing: .02em; text-transform: uppercase;
+  line-height: 1.15; margin-bottom: 7px;
+  display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3;
   -webkit-box-orient: vertical; overflow: hidden;
 }
-.row-card-hover-panel-excerpt {
-  font-size: .75rem; color: #888; line-height: 1.5; margin-bottom: 8px;
-  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+
+/* Excerpt */
+.row-card-hover-excerpt {
+  font-size: .78rem; color: #888; line-height: 1.55; margin-bottom: 10px;
+  display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3;
   -webkit-box-orient: vertical; overflow: hidden;
 }
-.row-card-hover-panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.row-card-hover-panel-meta { display: flex; align-items: center; gap: 4px; font-size: .65rem; font-weight: 600; overflow: hidden; min-width: 0; }
-.row-card-hover-panel-btn {
-  display: inline-flex; align-items: center; padding: 5px 12px;
-  font-size: .62rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
-  text-decoration: none; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
-  transition: opacity .15s;
+
+/* Source + time */
+.row-card-hover-meta {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .68rem; color: #666; font-weight: 600; margin-bottom: 12px;
 }
-.row-card-hover-panel-btn:hover { opacity: .85; }
+
+/* CTA button — pill, accent color */
+.row-card-hover-btn {
+  display: inline-flex; align-items: center;
+  padding: 8px 18px; border-radius: 999px;
+  font-size: .7rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
+  text-decoration: none; transition: opacity .15s;
+}
+.row-card-hover-btn:hover { opacity: .85; }
 
 /* ── Top 10 number overlay — Netflix-style huge outlined rank ── */
 .top10-wrap { position: relative; padding-left: 28px; }

@@ -22,11 +22,11 @@ const COLS = [
   },
   {
     heading: 'PPP TV',
-    links: [['About Us','/about'],['Hosts & On-Air','/hosts'],['The Team','/staff'],['Contact & Ads','/contact'],['Live','/live'],['Search','/search']] as [string,string][],
+    links: [['About Us','/about'],['Hosts & On-Air','/people'],['The Team','/people'],['Contact & Ads','/contact'],['Live','/live'],['Search','/search']] as [string,string][],
   },
   {
     heading: 'Account',
-    links: [['My List','/saved'],['Privacy Policy','/privacy'],['Terms of Use','/terms']] as [string,string][],
+    links: [['Privacy Policy','/privacy'],['Terms of Use','/terms']] as [string,string][],
   },
 ];
 

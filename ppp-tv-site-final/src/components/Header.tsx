@@ -22,7 +22,7 @@ const NAV = [
   { label: 'Technology',    href: '/technology' },
   { label: 'Science',       href: '/science' },
   { label: '🔥 Trending',   href: '/trending' },
-  { label: 'My List',       href: '/saved' },
+  { label: 'People',        href: '/people' },
   { label: '🔴 Live',       href: '/live' },
 ];
 

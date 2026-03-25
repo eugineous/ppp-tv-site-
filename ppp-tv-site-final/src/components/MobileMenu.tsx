@@ -14,6 +14,7 @@ const mainLinks = [
   { href: '/health',       label: 'Health'        },
   { href: '/technology',   label: 'Technology'    },
   { href: '/science',      label: 'Science'       },
+  { href: '/people',      label: 'People'        },
   { href: '/trending',     label: '🔥 Trending'   },
   { href: '/live',         label: '🔴 Live'       },
   { href: '/video',        label: 'Video'         },
