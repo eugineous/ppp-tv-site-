@@ -115,13 +115,7 @@ export default async function HomePage() {
               </div>
               <div style={{ padding: '8px 0' }}>
                 {CATEGORIES.map(({ label, cat, href, color }) => (
-                  <a
-                    key={cat}
-                    href={href}
-                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', textDecoration: 'none', transition: 'background .15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
+                  <a key={cat} href={href} className="sidebar-cat-link">
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, flexShrink: 0 }} />
                     <span style={{ fontSize: '.8rem', color: '#ccc', fontWeight: 600 }}>{label}</span>
                     <svg style={{ marginLeft: 'auto', color: '#444' }} width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,14 +127,9 @@ export default async function HomePage() {
             </div>
 
             {/* Live now card */}
-            <a
-              href="/live"
-              style={{ display: 'block', marginTop: '1.5rem', background: 'linear-gradient(135deg,#1a0000 0%,#0a0a0a 100%)', border: '1px solid rgba(255,0,0,0.2)', borderRadius: '6px', padding: '1.25rem', textDecoration: 'none', transition: 'border-color .2s' }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(255,0,0,0.5)')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,0,0,0.2)')}
-            >
+            <a href="/live" className="sidebar-live-card">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', animation: 'pulse 1.4s ease-in-out infinite' }} />
+                <span className="live-dot" />
                 <span style={{ fontSize: '.6rem', fontWeight: 900, letterSpacing: '.12em', textTransform: 'uppercase', color: '#ef4444' }}>Live Now</span>
               </div>
               <p style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.2rem', color: '#fff', letterSpacing: '.04em', marginBottom: '4px' }}>PPP TV Kenya</p>
