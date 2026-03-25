@@ -14,10 +14,14 @@ export const revalidate = 300;
 const CATEGORIES = [
   { label: 'Kenya News',    cat: 'News',          href: '/news',          color: '#FF007A' },
   { label: 'Politics',      cat: 'Politics',       href: '/politics',      color: '#FF4500' },
+  { label: 'Business',      cat: 'Business',       href: '/business',      color: '#FFE600' },
   { label: 'Entertainment', cat: 'Entertainment',  href: '/entertainment', color: '#BF00FF' },
   { label: 'Sports',        cat: 'Sports',         href: '/sports',        color: '#00CFFF' },
+  { label: 'Movies',        cat: 'Movies',         href: '/movies',        color: '#E50914' },
   { label: 'Lifestyle',     cat: 'Lifestyle',      href: '/lifestyle',     color: '#00FF94' },
+  { label: 'Health',        cat: 'Health',         href: '/health',        color: '#00FF94' },
   { label: 'Technology',    cat: 'Technology',     href: '/technology',    color: '#FFE600' },
+  { label: 'Science',       cat: 'Science',        href: '/science',       color: '#00CFFF' },
 ];
 
 function groupByCategory(articles: Article[]): Record<string, Article[]> {

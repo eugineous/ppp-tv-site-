@@ -293,37 +293,135 @@ async function scrapeArticlePage(url: string): Promise<{ image: string; content:
 }
 
 const RSS_FEEDS: Array<{ url: string; name: string; category: string }> = [
-  // News - Kenya
-  { url: 'https://www.nation.africa/kenya/rss.xml',           name: 'Nation Africa',      category: 'News' },
-  { url: 'https://www.standardmedia.co.ke/rss/headlines.php', name: 'Standard Media',     category: 'News' },
-  { url: 'https://www.the-star.co.ke/rss/',                   name: 'The Star Kenya',     category: 'News' },
-  { url: 'https://www.citizen.digital/feed',                  name: 'Citizen Digital',    category: 'News' },
-  { url: 'https://www.capitalfm.co.ke/news/feed/',            name: 'Capital FM Kenya',   category: 'News' },
-  // News - Africa & World
-  { url: 'https://www.theeastafrican.co.ke/tea/rss.xml',      name: 'The East African',   category: 'News' },
-  { url: 'https://www.africanews.com/feed/rss2/',             name: 'Africa News',        category: 'News' },
-  { url: 'https://www.aljazeera.com/xml/rss/all.xml',         name: 'Al Jazeera Africa',  category: 'News' },
-  { url: 'https://www.bbc.co.uk/africa/rss.xml',              name: 'BBC Africa',         category: 'News' },
-  // Politics
-  { url: 'https://www.nation.africa/kenya/politics/rss.xml',  name: 'Nation Politics',    category: 'Politics' },
-  { url: 'https://www.standardmedia.co.ke/rss/politics.php',  name: 'Standard Politics',  category: 'Politics' },
-  { url: 'https://www.the-star.co.ke/news/politics/rss/',     name: 'The Star Politics',  category: 'Politics' },
-  { url: 'https://www.capitalfm.co.ke/politics/feed/',        name: 'Capital FM Politics',category: 'Politics' },
-  // Entertainment
-  { url: 'https://www.sde.co.ke/feed/',                       name: 'SDE Kenya',          category: 'Entertainment' },
-  { url: 'https://www.ghafla.com/ke/feed/',                   name: 'Ghafla Kenya',       category: 'Entertainment' },
-  { url: 'https://www.mpasho.co.ke/feed/',                    name: 'Mpasho',             category: 'Entertainment' },
-  { url: 'https://www.pulselive.co.ke/rss',                   name: 'Pulse Live Kenya',   category: 'Entertainment' },
-  { url: 'https://www.tuko.co.ke/rss/',                       name: 'Tuko Kenya',         category: 'Entertainment' },
-  { url: 'https://www.bellanaija.com/feed/',                   name: 'BellaNaija',         category: 'Entertainment' },
-  // Sports
-  { url: 'https://www.standardmedia.co.ke/rss/sports.php',    name: 'Standard Sports',    category: 'Sports' },
-  { url: 'https://www.nation.africa/kenya/sports/rss.xml',    name: 'Nation Sports',      category: 'Sports' },
-  // Lifestyle
-  { url: 'https://www.standardmedia.co.ke/rss/lifestyle.php', name: 'Standard Lifestyle', category: 'Lifestyle' },
-  // Technology
-  { url: 'https://www.techweez.com/feed/',                    name: 'Techweez',           category: 'Technology' },
-  { url: 'https://techcabal.com/feed/',                       name: 'TechCabal',          category: 'Technology' },
+  // ── NEWS — Kenya ──────────────────────────────────────────────────────────
+  { url: 'https://www.nation.africa/kenya/rss.xml',              name: 'Nation Africa',         category: 'News' },
+  { url: 'https://www.standardmedia.co.ke/rss/headlines.php',    name: 'Standard Media',        category: 'News' },
+  { url: 'https://www.the-star.co.ke/rss/',                      name: 'The Star Kenya',        category: 'News' },
+  { url: 'https://www.citizen.digital/feed',                     name: 'Citizen Digital',       category: 'News' },
+  { url: 'https://www.capitalfm.co.ke/news/feed/',               name: 'Capital FM Kenya',      category: 'News' },
+  { url: 'https://www.kbc.co.ke/feed/',                          name: 'KBC Kenya',             category: 'News' },
+  { url: 'https://www.peopledailykenya.com/feed/',               name: 'People Daily Kenya',    category: 'News' },
+  // ── NEWS — East Africa ────────────────────────────────────────────────────
+  { url: 'https://www.theeastafrican.co.ke/tea/rss.xml',         name: 'The East African',      category: 'News' },
+  { url: 'https://www.monitor.co.ug/feed/',                      name: 'Daily Monitor Uganda',  category: 'News' },
+  { url: 'https://www.thecitizen.co.tz/feed/',                   name: 'The Citizen Tanzania',  category: 'News' },
+  { url: 'https://www.newvision.co.ug/feed/',                    name: 'New Vision Uganda',     category: 'News' },
+  // ── NEWS — Africa & World ─────────────────────────────────────────────────
+  { url: 'https://www.africanews.com/feed/rss2/',                name: 'Africa News',           category: 'News' },
+  { url: 'https://www.aljazeera.com/xml/rss/all.xml',            name: 'Al Jazeera Africa',     category: 'News' },
+  { url: 'https://www.bbc.co.uk/africa/rss.xml',                 name: 'BBC Africa',            category: 'News' },
+  { url: 'https://www.vanguardngr.com/feed/',                    name: 'Vanguard Nigeria',      category: 'News' },
+  { url: 'https://www.premiumtimesng.com/feed/',                 name: 'Premium Times Nigeria', category: 'News' },
+  { url: 'https://www.myjoyonline.com/feed/',                    name: 'Joy Online Ghana',      category: 'News' },
+  { url: 'https://www.timeslive.co.za/rss/',                     name: 'Times Live SA',         category: 'News' },
+  { url: 'https://www.news24.com/rss',                           name: 'News24 SA',             category: 'News' },
+  { url: 'https://www.reuters.com/rssFeed/worldNews',            name: 'Reuters World',         category: 'News' },
+
+  // ── POLITICS ──────────────────────────────────────────────────────────────
+  { url: 'https://www.nation.africa/kenya/politics/rss.xml',     name: 'Nation Politics',       category: 'Politics' },
+  { url: 'https://www.standardmedia.co.ke/rss/politics.php',     name: 'Standard Politics',     category: 'Politics' },
+  { url: 'https://www.the-star.co.ke/news/politics/rss/',        name: 'The Star Politics',     category: 'Politics' },
+  { url: 'https://www.capitalfm.co.ke/politics/feed/',           name: 'Capital FM Politics',   category: 'Politics' },
+  { url: 'https://www.citizen.digital/category/politics/feed/',  name: 'Citizen Politics',      category: 'Politics' },
+  { url: 'https://www.kbc.co.ke/category/politics/feed/',        name: 'KBC Politics',          category: 'Politics' },
+
+  // ── ENTERTAINMENT — Kenya ─────────────────────────────────────────────────
+  { url: 'https://www.sde.co.ke/feed/',                          name: 'SDE Kenya',             category: 'Entertainment' },
+  { url: 'https://www.ghafla.com/ke/feed/',                      name: 'Ghafla Kenya',          category: 'Entertainment' },
+  { url: 'https://www.mpasho.co.ke/feed/',                       name: 'Mpasho',                category: 'Entertainment' },
+  { url: 'https://www.pulselive.co.ke/rss',                      name: 'Pulse Live Kenya',      category: 'Entertainment' },
+  { url: 'https://www.tuko.co.ke/rss/',                          name: 'Tuko Kenya',            category: 'Entertainment' },
+  // ── ENTERTAINMENT — Africa ────────────────────────────────────────────────
+  { url: 'https://www.bellanaija.com/feed/',                     name: 'BellaNaija',            category: 'Entertainment' },
+  { url: 'https://www.pulse.ng/rss',                             name: 'Pulse Nigeria',         category: 'Entertainment' },
+  { url: 'https://www.pulse.com.gh/rss',                         name: 'Pulse Ghana',           category: 'Entertainment' },
+  { url: 'https://www.thisisafrica.me/feed/',                    name: 'This Is Africa',        category: 'Entertainment' },
+  // ── ENTERTAINMENT — Global ────────────────────────────────────────────────
+  { url: 'https://variety.com/feed/',                            name: 'Variety',               category: 'Entertainment' },
+  { url: 'https://deadline.com/feed/',                           name: 'Deadline Hollywood',    category: 'Entertainment' },
+  { url: 'https://www.hollywoodreporter.com/feed/',              name: 'Hollywood Reporter',    category: 'Entertainment' },
+  { url: 'https://ew.com/feed/',                                 name: 'Entertainment Weekly',  category: 'Entertainment' },
+
+  // ── SPORTS — Kenya & Africa ───────────────────────────────────────────────
+  { url: 'https://www.standardmedia.co.ke/rss/sports.php',       name: 'Standard Sports',       category: 'Sports' },
+  { url: 'https://www.nation.africa/kenya/sports/rss.xml',       name: 'Nation Sports',         category: 'Sports' },
+  { url: 'https://www.capitalfm.co.ke/sports/feed/',             name: 'Capital FM Sports',     category: 'Sports' },
+  { url: 'https://www.supersport.com/rss/football',              name: 'SuperSport Football',   category: 'Sports' },
+  { url: 'https://www.cafonline.com/rss',                        name: 'CAF Online',            category: 'Sports' },
+  // ── SPORTS — Global ───────────────────────────────────────────────────────
+  { url: 'https://www.bbc.co.uk/sport/rss.xml',                  name: 'BBC Sport',             category: 'Sports' },
+  { url: 'https://www.skysports.com/rss/12040',                  name: 'Sky Sports',            category: 'Sports' },
+  { url: 'https://www.espn.com/espn/rss/news',                   name: 'ESPN',                  category: 'Sports' },
+  { url: 'https://www.goal.com/feeds/en/news',                   name: 'Goal.com',              category: 'Sports' },
+  { url: 'https://www.fourfourtwo.com/rss',                      name: 'FourFourTwo',           category: 'Sports' },
+
+  // ── MUSIC ─────────────────────────────────────────────────────────────────
+  { url: 'https://www.capitalfm.co.ke/music/feed/',              name: 'Capital FM Music',      category: 'Music' },
+  { url: 'https://www.ghafla.com/ke/category/music/feed/',       name: 'Ghafla Music',          category: 'Music' },
+  { url: 'https://www.bellanaija.com/category/music/feed/',      name: 'BellaNaija Music',      category: 'Music' },
+  { url: 'https://www.pulse.ng/entertainment/music/rss',         name: 'Pulse Music Nigeria',   category: 'Music' },
+  { url: 'https://pitchfork.com/rss/news',                       name: 'Pitchfork',             category: 'Music' },
+  { url: 'https://www.rollingstone.com/music/feed/',             name: 'Rolling Stone Music',   category: 'Music' },
+  { url: 'https://www.billboard.com/feed/',                      name: 'Billboard',             category: 'Music' },
+  { url: 'https://www.nme.com/feed',                             name: 'NME',                   category: 'Music' },
+
+  // ── LIFESTYLE ─────────────────────────────────────────────────────────────
+  { url: 'https://www.standardmedia.co.ke/rss/lifestyle.php',    name: 'Standard Lifestyle',    category: 'Lifestyle' },
+  { url: 'https://www.nation.africa/kenya/lifestyle/rss.xml',    name: 'Nation Lifestyle',      category: 'Lifestyle' },
+  { url: 'https://www.pulselive.co.ke/lifestyle/rss',            name: 'Pulse Lifestyle Kenya', category: 'Lifestyle' },
+  { url: 'https://www.tuko.co.ke/category/lifestyle/rss/',       name: 'Tuko Lifestyle',        category: 'Lifestyle' },
+  { url: 'https://www.bellanaija.com/category/living/feed/',     name: 'BellaNaija Living',     category: 'Lifestyle' },
+  { url: 'https://www.vogue.com/feed/rss',                       name: 'Vogue',                 category: 'Lifestyle' },
+  { url: 'https://www.elle.com/rss/all.xml/',                    name: 'Elle',                  category: 'Lifestyle' },
+
+  // ── TECHNOLOGY ────────────────────────────────────────────────────────────
+  { url: 'https://www.techweez.com/feed/',                       name: 'Techweez',              category: 'Technology' },
+  { url: 'https://techcabal.com/feed/',                          name: 'TechCabal',             category: 'Technology' },
+  { url: 'https://www.humanipo.com/feed/',                       name: 'HumanIPO',              category: 'Technology' },
+  { url: 'https://disrupt-africa.com/feed/',                     name: 'Disrupt Africa',        category: 'Technology' },
+  { url: 'https://techcrunch.com/feed/',                         name: 'TechCrunch',            category: 'Technology' },
+  { url: 'https://www.theverge.com/rss/index.xml',               name: 'The Verge',             category: 'Technology' },
+  { url: 'https://feeds.arstechnica.com/arstechnica/index',      name: 'Ars Technica',          category: 'Technology' },
+  { url: 'https://www.wired.com/feed/rss',                       name: 'Wired',                 category: 'Technology' },
+  { url: 'https://www.engadget.com/rss.xml',                     name: 'Engadget',              category: 'Technology' },
+
+  // ── BUSINESS ─────────────────────────────────────────────────────────────
+  { url: 'https://www.businessdailyafrica.com/feed/',            name: 'Business Daily Africa', category: 'Business' },
+  { url: 'https://www.standardmedia.co.ke/rss/business.php',     name: 'Standard Business',     category: 'Business' },
+  { url: 'https://www.nation.africa/kenya/business/rss.xml',     name: 'Nation Business',       category: 'Business' },
+  { url: 'https://www.capitalfm.co.ke/business/feed/',           name: 'Capital FM Business',   category: 'Business' },
+  { url: 'https://www.theeastafrican.co.ke/tea/business/rss.xml',name: 'EA Business',           category: 'Business' },
+  { url: 'https://www.bloomberg.com/feeds/podcasts/etf.xml',     name: 'Bloomberg',             category: 'Business' },
+  { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',          name: 'Wall Street Journal',   category: 'Business' },
+  { url: 'https://www.ft.com/rss/home/africa',                   name: 'Financial Times Africa',category: 'Business' },
+  { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',name: 'CNBC Business',         category: 'Business' },
+
+  // ── HEALTH ────────────────────────────────────────────────────────────────
+  { url: 'https://www.nation.africa/kenya/health/rss.xml',       name: 'Nation Health',         category: 'Health' },
+  { url: 'https://www.standardmedia.co.ke/rss/health.php',       name: 'Standard Health',       category: 'Health' },
+  { url: 'https://www.who.int/rss-feeds/news-english.xml',       name: 'WHO News',              category: 'Health' },
+  { url: 'https://www.medicalnewstoday.com/rss/news',            name: 'Medical News Today',    category: 'Health' },
+  { url: 'https://www.healthline.com/rss/news',                  name: 'Healthline',            category: 'Health' },
+  { url: 'https://www.webmd.com/rss/rss.aspx?rss=news',          name: 'WebMD',                 category: 'Health' },
+  { url: 'https://www.sciencedaily.com/rss/health_medicine.xml', name: 'Science Daily Health',  category: 'Health' },
+
+  // ── MOVIES ────────────────────────────────────────────────────────────────
+  { url: 'https://www.empireonline.com/movies/feed/',            name: 'Empire Magazine',       category: 'Movies' },
+  { url: 'https://www.indiewire.com/feed/',                      name: 'IndieWire',             category: 'Movies' },
+  { url: 'https://collider.com/feed/',                           name: 'Collider',              category: 'Movies' },
+  { url: 'https://screenrant.com/feed/',                         name: 'Screen Rant',           category: 'Movies' },
+  { url: 'https://www.slashfilm.com/feed/',                      name: 'SlashFilm',             category: 'Movies' },
+  { url: 'https://www.cinemablend.com/rss/news',                 name: 'CinemaBlend',           category: 'Movies' },
+  { url: 'https://www.ign.com/rss/articles',                     name: 'IGN Movies',            category: 'Movies' },
+  { url: 'https://www.rogerebert.com/feed',                      name: 'RogerEbert.com',        category: 'Movies' },
+
+  // ── SCIENCE ───────────────────────────────────────────────────────────────
+  { url: 'https://www.sciencedaily.com/rss/top.xml',             name: 'Science Daily',         category: 'Science' },
+  { url: 'https://www.newscientist.com/feed/home/',              name: 'New Scientist',         category: 'Science' },
+  { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',       name: 'NASA News',             category: 'Science' },
+  { url: 'https://www.nature.com/nature.rss',                    name: 'Nature',                category: 'Science' },
+  { url: 'https://feeds.nationalgeographic.com/ng/News/News_Main',name: 'National Geographic',  category: 'Science' },
+  { url: 'https://www.scientificamerican.com/feed/rss/',         name: 'Scientific American',   category: 'Science' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

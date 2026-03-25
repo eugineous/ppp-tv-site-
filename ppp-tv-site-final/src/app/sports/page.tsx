@@ -7,33 +7,45 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Sports | PPP TV',
-  description: 'Kenya and Africa sports news - football, athletics, rugby and more.',
+  description: 'Kenya and Africa sports - football, athletics, rugby, cricket and more.',
 };
 
 export default async function SportsPage() {
-  const [sports, ent] = await Promise.all([
-    fetchArticles({ category: 'Sports', limit: 40 }),
-    fetchArticles({ category: 'Entertainment', limit: 12 }),
+  const [sports, news, ent] = await Promise.all([
+    fetchArticles({ category: 'Sports', limit: 80 }),
+    fetchArticles({ category: 'News', limit: 8 }),
+    fetchArticles({ category: 'Entertainment', limit: 8 }),
   ]);
 
   const hero = sports.slice(0, 5);
+  const latest = sports.slice(0, 12);
   const football = sports.filter(a => {
     const t = (a.title + ' ' + a.excerpt).toLowerCase();
-    return t.includes('football') || t.includes('premier league') || t.includes('fifa') || t.includes('soccer') || t.includes('salah') || t.includes('harambee');
+    return t.includes('football') || t.includes('premier league') || t.includes('fifa') || t.includes('soccer') || t.includes('harambee') || t.includes('afcon') || t.includes('champions league') || t.includes('bundesliga') || t.includes('la liga') || t.includes('serie a');
   }).slice(0, 12);
   const athletics = sports.filter(a => {
     const t = (a.title + ' ' + a.excerpt).toLowerCase();
-    return t.includes('athletics') || t.includes('marathon') || t.includes('kipchoge') || t.includes('rugby') || t.includes('cricket') || t.includes('basketball');
+    return t.includes('athletics') || t.includes('marathon') || t.includes('kipchoge') || t.includes('track') || t.includes('field') || t.includes('world record');
   }).slice(0, 12);
+  const rugby = sports.filter(a => {
+    const t = (a.title + ' ' + a.excerpt).toLowerCase();
+    return t.includes('rugby') || t.includes('cricket') || t.includes('basketball') || t.includes('volleyball') || t.includes('netball');
+  }).slice(0, 12);
+  const africa = sports.filter(a => a.sourceName?.includes('SuperSport') || a.sourceName?.includes('CAF')).slice(0, 12);
+  const global = sports.filter(a => a.sourceName?.includes('BBC Sport') || a.sourceName?.includes('Sky Sports') || a.sourceName?.includes('ESPN') || a.sourceName?.includes('Goal') || a.sourceName?.includes('FourFourTwo')).slice(0, 12);
 
   return (
     <div style={{ background: '#000', minHeight: '100vh' }}>
       {hero.length > 0 && <HeroBanner articles={hero} />}
       <div style={{ maxWidth: '1440px', margin: '0 auto', paddingTop: '1rem' }}>
-        {sports.length > 0 && <CategoryRow label="Latest Sports" articles={sports.slice(0, 12)} seeAllHref="/sports" accentColor="#00CFFF" />}
+        {latest.length > 0 && <CategoryRow label="Latest Sports" articles={latest} seeAllHref="/sports" accentColor="#00CFFF" />}
         {football.length > 0 && <CategoryRow label="Football" articles={football} seeAllHref="/sports" accentColor="#FF007A" />}
-        {athletics.length > 0 && <CategoryRow label="Athletics & More" articles={athletics} seeAllHref="/sports" accentColor="#FFE600" />}
-        {ent.length > 0 && <CategoryRow label="Entertainment" articles={ent.slice(0, 8)} seeAllHref="/entertainment" accentColor="#BF00FF" />}
+        {athletics.length > 0 && <CategoryRow label="Athletics & Running" articles={athletics} seeAllHref="/sports" accentColor="#FFE600" />}
+        {rugby.length > 0 && <CategoryRow label="Rugby, Cricket & More" articles={rugby} seeAllHref="/sports" accentColor="#00FF94" />}
+        {africa.length > 0 && <CategoryRow label="Africa Sports" articles={africa} seeAllHref="/sports" accentColor="#FF4500" />}
+        {global.length > 0 && <CategoryRow label="Global Sports" articles={global} seeAllHref="/sports" accentColor="#BF00FF" />}
+        {news.length > 0 && <CategoryRow label="Top News" articles={news} seeAllHref="/news" accentColor="#FF007A" />}
+        {ent.length > 0 && <CategoryRow label="Entertainment" articles={ent} seeAllHref="/entertainment" accentColor="#BF00FF" />}
         {sports.length > 12 && <CategoryRow label="More Sports" articles={sports.slice(12)} seeAllHref="/sports" accentColor="#333" />}
       </div>
     </div>

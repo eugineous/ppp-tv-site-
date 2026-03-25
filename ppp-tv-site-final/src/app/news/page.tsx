@@ -8,20 +8,24 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Kenya News | PPP TV',
-  description: 'Latest Kenya and Africa news - breaking stories, politics, business and more.',
+  description: 'Latest Kenya and Africa news - breaking stories, politics, business, health and more.',
 };
 
 export default async function NewsPage() {
-  const [news, politics, world] = await Promise.all([
-    fetchArticles({ category: 'News', limit: 40 }),
+  const [news, politics, business, health, world] = await Promise.all([
+    fetchArticles({ category: 'News', limit: 60 }),
     fetchArticles({ category: 'Politics', limit: 12 }),
-    fetchArticles({ sort: 'recent', limit: 60 }),
+    fetchArticles({ category: 'Business', limit: 12 }),
+    fetchArticles({ category: 'Health', limit: 12 }),
+    fetchArticles({ category: 'News', limit: 80 }),
   ]);
 
   const hero = news.slice(0, 5);
   const breaking = news.slice(0, 12);
-  const kenya = news.filter(a => a.sourceName?.includes('Nation') || a.sourceName?.includes('Standard') || a.sourceName?.includes('Star') || a.sourceName?.includes('Capital') || a.sourceName?.includes('Citizen')).slice(0, 12);
-  const africa = world.filter(a => a.sourceName?.includes('Africa') || a.sourceName?.includes('East African') || a.sourceName?.includes('Al Jazeera') || a.sourceName?.includes('BBC')).slice(0, 12);
+  const kenya = news.filter(a => ['Nation Africa','Standard Media','The Star Kenya','Capital FM Kenya','Citizen Digital','KBC Kenya','People Daily Kenya'].some(s => a.sourceName?.includes(s.split(' ')[0]))).slice(0, 12);
+  const eastAfrica = news.filter(a => a.sourceName?.includes('East African') || a.sourceName?.includes('Monitor') || a.sourceName?.includes('Citizen Tanzania') || a.sourceName?.includes('New Vision')).slice(0, 12);
+  const africa = news.filter(a => a.sourceName?.includes('Africa News') || a.sourceName?.includes('Al Jazeera') || a.sourceName?.includes('BBC') || a.sourceName?.includes('Vanguard') || a.sourceName?.includes('Premium Times') || a.sourceName?.includes('Joy Online') || a.sourceName?.includes('Times Live') || a.sourceName?.includes('News24')).slice(0, 12);
+  const global = news.filter(a => a.sourceName?.includes('Reuters')).slice(0, 12);
 
   return (
     <div style={{ background: '#000', minHeight: '100vh' }}>
@@ -31,8 +35,12 @@ export default async function NewsPage() {
         {news.length >= 5 && <Top10Row articles={news.slice(0, 10)} />}
         {kenya.length > 0 && <CategoryRow label="Kenya & Nairobi" articles={kenya} seeAllHref="/news" accentColor="#FF4500" />}
         {politics.length > 0 && <CategoryRow label="Politics" articles={politics} seeAllHref="/politics" accentColor="#FF6B00" />}
-        {africa.length > 0 && <CategoryRow label="Africa & World" articles={africa} seeAllHref="/news" accentColor="#BF00FF" />}
-        {news.length > 12 && <CategoryRow label="More News" articles={news.slice(12)} seeAllHref="/news" accentColor="#555" />}
+        {eastAfrica.length > 0 && <CategoryRow label="East Africa" articles={eastAfrica} seeAllHref="/news" accentColor="#00CFFF" />}
+        {africa.length > 0 && <CategoryRow label="Africa" articles={africa} seeAllHref="/news" accentColor="#BF00FF" />}
+        {business.length > 0 && <CategoryRow label="Business & Economy" articles={business} seeAllHref="/business" accentColor="#FFE600" />}
+        {health.length > 0 && <CategoryRow label="Health" articles={health} seeAllHref="/health" accentColor="#00FF94" />}
+        {global.length > 0 && <CategoryRow label="World News" articles={global} seeAllHref="/news" accentColor="#555" />}
+        {news.length > 12 && <CategoryRow label="More News" articles={news.slice(12)} seeAllHref="/news" accentColor="#333" />}
       </div>
     </div>
   );
