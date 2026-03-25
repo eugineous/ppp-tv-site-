@@ -6,6 +6,15 @@ import { rssFeeds } from '@/data/rssFeeds';
 const parser = new Parser({
   timeout: 10000,
   headers: { 'User-Agent': 'PPP-TV-Kenya/1.0 (+https://ppptv.co.ke)' },
+  customFields: {
+    item: [
+      ['media:content', 'media:content', { keepArray: false }],
+      ['media:thumbnail', 'media:thumbnail', { keepArray: false }],
+      ['media:group', 'media:group', { keepArray: false }],
+      ['itunes:image', 'itunes:image', { keepArray: false }],
+      ['image', 'image', { keepArray: false }],
+    ],
+  },
 });
 
 /** Parse a single RSS feed URL into Article objects */
@@ -23,10 +32,10 @@ export async function parseRSSFeed(
         slug: slugify(`${title}-${Date.now()}`),
         title,
         excerpt: item.contentSnippet ?? item.summary ?? '',
-        content: item.content ?? item['content:encoded'] ?? '',
+        content: item.content ?? (item as unknown as Record<string, string>)['content:encoded'] ?? '',
         category,
         tags: [],
-        imageUrl: extractImage(item) ?? '',
+        imageUrl: extractImage(item as unknown as Parser.Item & Record<string, unknown>) ?? '',
         sourceUrl: item.link ?? url,
         sourceName,
         publishedAt,
@@ -39,18 +48,54 @@ export async function parseRSSFeed(
 
 /** Extract the best available image from an RSS item */
 function extractImage(item: Parser.Item & Record<string, unknown>): string | null {
-  // Try media:content
-  const media = item['media:content'] as { $?: { url?: string } } | undefined;
+  // 1. media:content (most common in modern feeds)
+  const media = item['media:content'] as { $?: { url?: string }; url?: string } | undefined;
   if (media?.$?.url) return media.$.url;
+  if (media?.url) return media.url;
 
-  // Try enclosure
-  const enc = item.enclosure as { url?: string } | undefined;
+  // 2. media:thumbnail
+  const thumb = item['media:thumbnail'] as { $?: { url?: string }; url?: string } | undefined;
+  if (thumb?.$?.url) return thumb.$.url;
+  if (thumb?.url) return thumb.url;
+
+  // 3. enclosure (podcasts / some news feeds)
+  const enc = item.enclosure as { url?: string; type?: string } | undefined;
+  if (enc?.url && enc.type?.startsWith('image')) return enc.url;
   if (enc?.url) return enc.url;
 
-  // Try to extract from content HTML
-  const content = (item.content ?? item['content:encoded'] ?? '') as string;
-  const match = content.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (match?.[1]) return match[1];
+  // 4. itunes:image
+  const itunes = item['itunes:image'] as { href?: string; $?: { href?: string } } | undefined;
+  if (itunes?.href) return itunes.href;
+  if (itunes?.$?.href) return itunes.$.href;
+
+  // 5. image field directly on item
+  const imgField = item['image'] as string | { url?: string } | undefined;
+  if (typeof imgField === 'string' && imgField.startsWith('http')) return imgField;
+  if (typeof imgField === 'object' && imgField?.url) return imgField.url;
+
+  // 6. Extract from content:encoded or content HTML
+  const rawContent = (item['content:encoded'] ?? item.content ?? item.summary ?? '') as string;
+  if (rawContent) {
+    // Try src="..." or src='...'
+    const srcMatch = rawContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (srcMatch?.[1] && srcMatch[1].startsWith('http')) return srcMatch[1];
+
+    // Try srcset first image
+    const srcsetMatch = rawContent.match(/srcset=["']([^\s"']+)/i);
+    if (srcsetMatch?.[1] && srcsetMatch[1].startsWith('http')) return srcsetMatch[1];
+
+    // Try og:image in content
+    const ogMatch = rawContent.match(/property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+      ?? rawContent.match(/content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    if (ogMatch?.[1] && ogMatch[1].startsWith('http')) return ogMatch[1];
+  }
+
+  // 7. description field HTML
+  const desc = (item.summary ?? '') as string;
+  if (desc) {
+    const descMatch = desc.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (descMatch?.[1] && descMatch[1].startsWith('http')) return descMatch[1];
+  }
 
   return null;
 }

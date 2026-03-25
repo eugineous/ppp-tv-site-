@@ -2,12 +2,20 @@
 import { useState, useEffect } from 'react';
 
 const mainLinks = [
-  { href: '/shows',   label: 'Shows'   },
-  { href: '/hosts',   label: 'People'  },
-  { href: '/events',  label: 'Events'  },
-  { href: '/video',   label: 'Video'   },
-  { href: '/live',    label: '🔴 Live' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/',             label: 'Home'          },
+  { href: '/shows',        label: 'Shows'         },
+  { href: '/news',         label: 'News'          },
+  { href: '/politics',     label: 'Politics'      },
+  { href: '/entertainment',label: 'Entertainment' },
+  { href: '/sports',       label: 'Sports'        },
+  { href: '/lifestyle',    label: 'Lifestyle'     },
+  { href: '/technology',   label: 'Technology'    },
+  { href: '/trending',     label: '🔥 Trending'   },
+  { href: '/live',         label: '🔴 Live'       },
+  { href: '/video',        label: 'Video'         },
+  { href: '/schedule',     label: 'Schedule'      },
+  { href: '/saved',        label: 'My List'       },
+  { href: '/contact',      label: 'Contact'       },
 ];
 
 export default function MobileMenu() {

@@ -11,11 +11,13 @@ const MobileMenu = dynamic(() => import('./MobileMenu'), { ssr: false });
 const NAV = [
   { label: 'Home',          href: '/' },
   { label: 'Shows',         href: '/shows' },
-  { label: 'News',          href: '/?cat=News' },
-  { label: 'Entertainment', href: '/?cat=Entertainment' },
-  { label: 'Sports',        href: '/?cat=Sports' },
-  { label: 'Music',         href: '/?cat=Music' },
-  { label: 'New & Popular', href: '/?sort=trending' },
+  { label: 'News',          href: '/news' },
+  { label: 'Politics',      href: '/politics' },
+  { label: 'Entertainment', href: '/entertainment' },
+  { label: 'Sports',        href: '/sports' },
+  { label: 'Lifestyle',     href: '/lifestyle' },
+  { label: 'Technology',    href: '/technology' },
+  { label: '🔥 Trending',   href: '/trending' },
   { label: 'My List',       href: '/saved' },
   { label: '🔴 Live',       href: '/live' },
 ];

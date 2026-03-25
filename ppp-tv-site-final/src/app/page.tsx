@@ -12,12 +12,12 @@ const XTrends = dynamic(() => import('@/components/XTrends'), { ssr: false });
 export const revalidate = 300;
 
 const CATEGORIES = [
-  { label: 'Kenya News',    cat: 'News',          href: '/?cat=News',          color: '#FF007A' },
-  { label: 'Entertainment', cat: 'Entertainment',  href: '/?cat=Entertainment', color: '#BF00FF' },
-  { label: 'Sports',        cat: 'Sports',         href: '/?cat=Sports',        color: '#00CFFF' },
-  { label: 'Music',         cat: 'Music',          href: '/?cat=Music',         color: '#FF6B00' },
-  { label: 'Lifestyle',     cat: 'Lifestyle',      href: '/?cat=Lifestyle',     color: '#00FF94' },
-  { label: 'Technology',    cat: 'Technology',     href: '/?cat=Technology',    color: '#FFE600' },
+  { label: 'Kenya News',    cat: 'News',          href: '/news',          color: '#FF007A' },
+  { label: 'Politics',      cat: 'Politics',       href: '/politics',      color: '#FF4500' },
+  { label: 'Entertainment', cat: 'Entertainment',  href: '/entertainment', color: '#BF00FF' },
+  { label: 'Sports',        cat: 'Sports',         href: '/sports',        color: '#00CFFF' },
+  { label: 'Lifestyle',     cat: 'Lifestyle',      href: '/lifestyle',     color: '#00FF94' },
+  { label: 'Technology',    cat: 'Technology',     href: '/technology',    color: '#FFE600' },
 ];
 
 function groupByCategory(articles: Article[]): Record<string, Article[]> {
@@ -72,7 +72,7 @@ export default async function HomePage() {
                 <CategoryRow
                   label="🔥 Trending Now"
                   articles={trending}
-                  seeAllHref="/?sort=trending"
+                  seeAllHref="/trending"
                   accentColor="#FF007A"
                 />
               )}

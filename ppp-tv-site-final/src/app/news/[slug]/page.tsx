@@ -98,7 +98,7 @@ export default async function ArticlePage({ params }: Props) {
         <nav style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '.72rem', color: '#555', marginBottom: '1.5rem', flexWrap: 'wrap' }} aria-label="Breadcrumb">
           <Link href="/" style={{ color: '#555', textDecoration: 'none', transition: 'color .15s' }}>Home</Link>
           <span style={{ color: '#333' }}>/</span>
-          <Link href={`/?cat=${article.category}`} style={{ color: accent, textDecoration: 'none' }}>{article.category}</Link>
+          <Link href={`/${article.category.toLowerCase()}`} style={{ color: accent, textDecoration: 'none' }}>{article.category}</Link>
           <span style={{ color: '#333' }}>/</span>
           <span style={{ color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>{cleanTitle}</span>
         </nav>
