@@ -18,7 +18,7 @@ interface ArticleCardProps {
   accentColor?: string;
   rank?: number;
   ctaIndex?: number;
-  priority?: boolean; // true for above-the-fold cards
+  priority?: boolean;
 }
 
 export default function ArticleCard({ article, accentColor, rank, ctaIndex = 0, priority = false }: ArticleCardProps) {
@@ -34,79 +34,84 @@ export default function ArticleCard({ article, accentColor, rank, ctaIndex = 0, 
       className={`row-card-wrap${rank ? ' top10-wrap' : ''}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      style={{ zIndex: hovered ? 50 : 'auto' }}
     >
       {rank && <span className="top10-num">{rank}</span>}
 
-      <a href={`/news/${article.slug}`} className="row-card">
-        <div className="row-card-img">
-          {article.imageUrl ? (
-            <img
-              src={article.imageUrl}
-              alt={title}
-              loading={priority ? 'eager' : 'lazy'}
-              decoding={priority ? 'sync' : 'async'}
-              fetchPriority={priority ? 'high' : 'low'}
-              referrerPolicy="no-referrer"
-              width={400}
-              height={225}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            />
-          ) : (
-            <div className="row-card-img-fallback">
-              <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '2rem', color: 'rgba(255,255,255,.06)' }}>
-                {article.category[0]}
-              </span>
-            </div>
-          )}
-          <div className="row-card-top-accent" style={{ background: color }} />
-          <span className="row-card-cat-chip" style={{ background: color, color: darkText ? '#000' : '#fff' }}>
-            {article.category}
-          </span>
-        </div>
-
-        <div className="row-card-info-block">
-          <div className="row-card-info-title">{title}</div>
-          {excerpt && (
-            <div className="row-card-info-excerpt">{truncate(excerpt, 75)}</div>
-          )}
-          <div className="row-card-info-footer">
-            <div className="row-card-info-meta">
-              <span className="row-card-info-source">{article.sourceName}</span>
-              <span className="row-card-info-dot">·</span>
-              <span className="row-card-info-time">{timeAgo(article.publishedAt)}</span>
-            </div>
-            <span className="row-card-read-cta" style={{ color }}>{cta}</span>
-          </div>
-        </div>
-      </a>
-
-      {/* Hover preview — only render DOM when actually hovered */}
-      {hovered && (
-        <div className="card-preview">
-          {article.imageUrl && (
-            <div className="card-preview-img">
-              <img src={article.imageUrl} alt={title} loading="lazy" decoding="async" referrerPolicy="no-referrer" />
-              <div className="card-preview-img-gradient" />
-              <div className="card-preview-top-bar" style={{ background: color }} />
-            </div>
-          )}
-          <div className="card-preview-body">
-            <span className="card-preview-cat" style={{ background: color, color: darkText ? '#000' : '#fff' }}>
+      {/* The whole card scales up on hover — Netflix style */}
+      <div className={`row-card-inner${hovered ? ' row-card-inner--hovered' : ''}`}>
+        <a href={`/news/${article.slug}`} className="row-card" tabIndex={-1}>
+          {/* Thumbnail */}
+          <div className="row-card-img">
+            {article.imageUrl ? (
+              <img
+                src={article.imageUrl}
+                alt={title}
+                loading={priority ? 'eager' : 'lazy'}
+                decoding={priority ? 'sync' : 'async'}
+                fetchPriority={priority ? 'high' : 'low'}
+                referrerPolicy="no-referrer"
+                width={400}
+                height={225}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <div className="row-card-img-fallback">
+                <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '2rem', color: 'rgba(255,255,255,.06)' }}>
+                  {article.category[0]}
+                </span>
+              </div>
+            )}
+            <div className="row-card-top-accent" style={{ background: color }} />
+            <span className="row-card-cat-chip" style={{ background: color, color: darkText ? '#000' : '#fff' }}>
               {article.category}
             </span>
-            <div className="card-preview-title">{title}</div>
-            {excerpt && <div className="card-preview-excerpt">{excerpt}</div>}
-            <div className="card-preview-meta">
-              <span>{article.sourceName}</span>
-              <span style={{ margin: '0 4px', color: '#333' }}>·</span>
-              <span>{timeAgo(article.publishedAt)}</span>
-            </div>
-            <a href={`/news/${article.slug}`} className="card-preview-btn" style={{ background: color, color: darkText ? '#000' : '#fff' }}>
-              {cta}
-            </a>
           </div>
-        </div>
-      )}
+
+          {/* Info block — always visible below thumbnail */}
+          <div className="row-card-info-block">
+            <div className="row-card-info-title">{title}</div>
+            {excerpt && (
+              <div className="row-card-info-excerpt">{truncate(excerpt, 75)}</div>
+            )}
+            <div className="row-card-info-footer">
+              <div className="row-card-info-meta">
+                <span className="row-card-info-source">{article.sourceName}</span>
+                <span className="row-card-info-dot">·</span>
+                <span className="row-card-info-time">{timeAgo(article.publishedAt)}</span>
+              </div>
+              <span className="row-card-read-cta" style={{ color }}>{cta}</span>
+            </div>
+          </div>
+        </a>
+
+        {/* Hover expansion panel — slides in below the card, part of the scaled card */}
+        {hovered && (
+          <div className="row-card-hover-panel">
+            <div className="row-card-hover-panel-bar" style={{ background: color }} />
+            <div className="row-card-hover-panel-body">
+              <div className="row-card-hover-panel-title">{title}</div>
+              {excerpt && (
+                <div className="row-card-hover-panel-excerpt">{truncate(excerpt, 120)}</div>
+              )}
+              <div className="row-card-hover-panel-footer">
+                <div className="row-card-hover-panel-meta">
+                  <span style={{ color: '#888', fontWeight: 700 }}>{article.sourceName}</span>
+                  <span style={{ color: '#333' }}>·</span>
+                  <span style={{ color: '#666' }}>{timeAgo(article.publishedAt)}</span>
+                </div>
+                <a
+                  href={`/news/${article.slug}`}
+                  className="row-card-hover-panel-btn"
+                  style={{ background: color, color: darkText ? '#000' : '#fff' }}
+                >
+                  {cta}
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

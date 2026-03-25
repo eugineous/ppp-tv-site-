@@ -331,8 +331,24 @@ body {
 /* ── Row card — fills its grid column, uniform size ── */
 .row-card-wrap { position: relative; width: 100%; }
 
-.row-card { display: block; width: 100%; text-decoration: none; transition: transform .25s ease; transform-origin: center bottom; will-change: transform; }
-.row-card:hover { transform: translateY(-5px); z-index: 20; }
+/* Inner wrapper — this is what scales on hover */
+.row-card-inner {
+  position: relative;
+  width: 100%;
+  border-radius: 10px;
+  transition: transform .3s cubic-bezier(.2,0,.2,1), box-shadow .3s ease;
+  transform-origin: center top;
+  will-change: transform;
+  background: #0d0d0d;
+}
+/* Netflix zoom-out effect — scales up 1.18x from its position */
+.row-card-inner--hovered {
+  transform: scale(1.18);
+  box-shadow: 0 20px 60px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06);
+  z-index: 50;
+}
+
+.row-card { display: block; width: 100%; text-decoration: none; }
 
 /* 16:9 thumbnail */
 .row-card-img {
@@ -340,13 +356,13 @@ body {
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #111;
-  border-radius: 10px;
+  border-radius: 10px 10px 0 0;
   overflow: hidden;
   margin-bottom: 0;
-  contain: layout style paint; /* isolate repaints */
+  contain: layout style paint;
 }
 .row-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; will-change: transform; }
-.row-card:hover .row-card-img img { transform: scale(1.04); }
+.row-card-inner--hovered .row-card-img img { transform: scale(1.04); }
 
 .row-card-img-fallback { width: 100%; height: 100%; background: linear-gradient(135deg,#1a1a1a 0%,#0d0d0d 100%); display: flex; align-items: center; justify-content: center; }
 
@@ -407,12 +423,47 @@ body {
 .row-card-info-dot { color: #333; flex-shrink: 0; }
 .row-card-info-time { color: #666; white-space: nowrap; flex-shrink: 0; }
 
-/* Read CTA */
+/* Read CTA — always visible on mobile, appears on hover desktop */
 .row-card-read-cta { font-size: .68rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; opacity: 0; transition: opacity .2s; }
-.row-card:hover .row-card-read-cta { opacity: 1; }
+.row-card-inner--hovered .row-card-read-cta { opacity: 1; }
 @media (max-width: 767px) { .row-card-read-cta { opacity: 1; } }
 
 .row-card-info { display: none; }
+
+/* ── Netflix hover expansion panel — slides in below the scaled card ── */
+.row-card-hover-panel {
+  background: #141414;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  animation: hoverPanelIn .2s cubic-bezier(.2,0,.2,1) forwards;
+}
+@keyframes hoverPanelIn {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 200px; }
+}
+.row-card-hover-panel-bar { height: 3px; width: 100%; }
+.row-card-hover-panel-body { padding: 10px 12px 12px; }
+.row-card-hover-panel-title {
+  font-family: var(--font-bebas,'Bebas Neue'),Impact,sans-serif;
+  font-size: 1rem; color: #fff; letter-spacing: .03em; text-transform: uppercase;
+  line-height: 1.2; margin-bottom: 5px;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.row-card-hover-panel-excerpt {
+  font-size: .75rem; color: #888; line-height: 1.5; margin-bottom: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.row-card-hover-panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.row-card-hover-panel-meta { display: flex; align-items: center; gap: 4px; font-size: .65rem; font-weight: 600; overflow: hidden; min-width: 0; }
+.row-card-hover-panel-btn {
+  display: inline-flex; align-items: center; padding: 5px 12px;
+  font-size: .62rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
+  text-decoration: none; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+  transition: opacity .15s;
+}
+.row-card-hover-panel-btn:hover { opacity: .85; }
 
 /* ── Top 10 number overlay — Netflix-style huge outlined rank ── */
 .top10-wrap { position: relative; padding-left: 28px; }
