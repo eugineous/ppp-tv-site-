@@ -470,6 +470,41 @@ export default {
       return json({ totalViews: withViews.reduce((s, a) => s + a.views, 0), topArticles, subscriberCount: countRaw ? parseInt(countRaw, 10) : 0 });
     }
 
+    // ── GET /feed — social-media-ready article feed for auto-news-station ─
+    if (path === '/feed' && method === 'GET') {
+      const category = url.searchParams.get('category');
+      const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '20', 10), 50);
+      const since = url.searchParams.get('since'); // ISO date string
+      let articles = await getArticles(env);
+      if (category) articles = articles.filter((a) => a.category.toLowerCase() === category.toLowerCase());
+      if (since) articles = articles.filter((a) => new Date(a.publishedAt) > new Date(since));
+      articles = articles
+        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+        .slice(0, limit);
+
+      const SITE = 'https://ppp-tv-site.vercel.app';
+      const WORKER = 'https://ppp-tv-worker.euginemicah.workers.dev';
+
+      const feed = articles.map((a) => ({
+        slug: a.slug,
+        title: a.title,
+        excerpt: a.excerpt,
+        category: a.category,
+        sourceName: a.sourceName,
+        sourceUrl: a.sourceUrl,
+        publishedAt: a.publishedAt,
+        articleUrl: `${SITE}/news/${a.slug}`,
+        imageUrl: a.imageUrl ? `${WORKER}/img?url=${encodeURIComponent(a.imageUrl)}` : '',
+        imageUrlDirect: a.imageUrl,
+        // Pre-formatted social captions
+        twitterCaption: `${a.title}\n\n${a.excerpt?.slice(0, 120) ?? ''}\n\n${SITE}/news/${a.slug}\n\n#PPPTVKenya #${a.category.replace(/\s+/g, '')}`,
+        facebookCaption: `${a.title}\n\n${a.excerpt ?? ''}\n\nRead more: ${SITE}/news/${a.slug}`,
+        instagramCaption: `${a.title}\n\n${a.excerpt ?? ''}\n\n🔗 Link in bio\n\n#PPPTVKenya #Kenya #${a.category.replace(/\s+/g, '')} #KenyaNews #AfricaNews`,
+      }));
+
+      return json({ articles: feed, total: feed.length, generatedAt: new Date().toISOString() });
+    }
+
     // ── GET /img?url=... — image proxy to bypass hotlink protection ───────
     if (path === '/img' && method === 'GET') {
       const imgUrl = url.searchParams.get('url');
