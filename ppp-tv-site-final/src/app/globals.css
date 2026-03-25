@@ -295,27 +295,45 @@ body {
 .cat-row-scroll::-webkit-scrollbar { display: none; }
 @media (min-width: 640px) { .cat-row-scroll { gap: 8px; } }
 
-/* ══ 6-COLUMN GRID — enforced on every row, no exceptions ══ */
+/* ══ 5-COLUMN GRID — enforced on every row ══ */
 .cat-row-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
   padding: 0 1rem;
 }
-@media (min-width: 640px)  { .cat-row-grid { padding: 0 1.5rem; gap: 12px; } }
-@media (min-width: 1024px) { .cat-row-grid { padding: 0 3rem; gap: 14px; } }
-/* Mobile: 2 columns, tablet: 3, desktop: 6 — always fills the row */
+@media (min-width: 640px)  { .cat-row-grid { padding: 0 1.5rem; gap: 14px; } }
+@media (min-width: 1024px) { .cat-row-grid { padding: 0 3rem; gap: 16px; } }
+/* Responsive breakpoints — always fills the row */
 @media (max-width: 479px)  { .cat-row-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
-@media (min-width: 480px) and (max-width: 767px) { .cat-row-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 480px) and (max-width: 767px)  { .cat-row-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 768px) and (max-width: 1023px) { .cat-row-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (min-width: 1024px) and (max-width: 1279px) { .cat-row-grid { grid-template-columns: repeat(5, 1fr); } }
-@media (min-width: 1280px) { .cat-row-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 1024px) { .cat-row-grid { grid-template-columns: repeat(5, 1fr); } }
 
-/* ── Row card — 16:9 LANDSCAPE — grid item, fills its column ── */
+/* Empty slot placeholder — keeps grid uniform when < 5 articles */
+.cat-row-empty-slot { width: 100%; aspect-ratio: 16/9; border-radius: 8px; background: rgba(255,255,255,.02); border: 1px dashed #1a1a1a; }
+
+/* Progress dots */
+.cat-row-dots { display: flex; align-items: center; gap: 4px; padding: 0 1rem 10px; }
+@media (min-width: 640px) { .cat-row-dots { padding: 0 1.5rem 10px; } }
+@media (min-width: 1024px) { .cat-row-dots { padding: 0 3rem 10px; } }
+.cat-row-dot { height: 4px; border: none; cursor: pointer; padding: 0; border-radius: 999px; transition: all .25s ease; flex-shrink: 0; }
+
+/* Nav arrows */
+.row-nav-arrow {
+  width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid;
+  background: transparent; cursor: pointer; font-size: 1.1rem; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; padding: 0;
+}
+.row-nav-arrow:hover:not(:disabled) { background: rgba(255,255,255,.08); }
+.row-nav-arrow:disabled { opacity: .25; cursor: default; }
+
+/* ── Row card — fills its grid column, uniform size ── */
 .row-card-wrap { position: relative; width: 100%; }
 
 .row-card { display: block; width: 100%; text-decoration: none; transition: transform .25s ease; transform-origin: center bottom; }
-.row-card:hover { transform: translateY(-4px); z-index: 20; }
+.row-card:hover { transform: translateY(-5px); z-index: 20; }
 
 /* 16:9 LANDSCAPE ratio — wide, never portrait */
 .row-card-img {
