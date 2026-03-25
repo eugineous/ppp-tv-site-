@@ -456,7 +456,7 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
   try {
     const res = await fetch(feed.url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PPPTVBot/1.0)' },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(6000), // tighter timeout per feed
     });
     if (!res.ok) return [];
     const text = await res.text();
@@ -473,7 +473,7 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
       const description = item.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/)?.[1] ?? '';
       const contentEncoded = item.match(/<content:encoded>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/)?.[1] ?? '';
 
-      // Try to get image from RSS item directly
+      // Try to get image from RSS item directly (fast path — no scraping needed)
       const mediaUrl =
         item.match(/<media:content[^>]+url=["']([^"']+)["']/i)?.[1] ??
         item.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i)?.[1] ??
@@ -482,26 +482,31 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
         description.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] ?? '';
 
       if (!title || !link) continue;
-
-      // URL-level guardrail: skip known PR/brand content URL patterns
       if (isPromoUrl(link)) continue;
-
-      // Early title check before scraping (saves bandwidth)
       if (isPromotional(title, decodeXML(stripHtml(description)).slice(0, 300))) continue;
 
       items.push({ title, link, pubDate, description, mediaUrl, contentEncoded });
-      if (items.length >= 10) break;
+      if (items.length >= 5) break; // 5 per feed keeps total requests manageable
     }
 
-    // Scrape each article page for og:image + content (in parallel, max 10)
+    // Fast path: if all items have images from RSS, skip page scraping entirely
+    const allHaveImages = items.every(i => i.mediaUrl.length > 10);
+
     const articles = await Promise.all(
       items.map(async (item): Promise<Article> => {
-        const scraped = await scrapeArticlePage(item.link);
-        const imageUrl = scraped.image || item.mediaUrl || '';
-        const excerpt = scraped.excerpt || decodeXML(stripHtml(item.description)).slice(0, 250);
-        // Use content:encoded body if available, else scraped content
-        const rawBody = item.contentEncoded || scraped.content || '';
-        const content = rawBody ? cleanPromotionalContent(rawBody) : `<p>${excerpt}</p>`;
+        let imageUrl = item.mediaUrl;
+        let excerpt = decodeXML(stripHtml(item.description)).slice(0, 250);
+        let content = item.contentEncoded || `<p>${excerpt}</p>`;
+
+        // Only scrape page if we don't have an image from RSS
+        if (!imageUrl) {
+          const scraped = await scrapeArticlePage(item.link);
+          imageUrl = scraped.image || '';
+          if (scraped.excerpt) excerpt = scraped.excerpt;
+          if (scraped.content) content = scraped.content;
+        }
+
+        content = cleanPromotionalContent(content);
         const publishedAt = item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString();
         const slug = slugify(`${item.title}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`);
 
@@ -522,21 +527,30 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
 
     return articles.filter((a) =>
       a.imageUrl &&
-      !isPromotional(a.title, a.excerpt) &&   // Level 1: title/excerpt check
-      !isBodyPromotional(a.content)            // Level 2: body PR density check
+      !isPromotional(a.title, a.excerpt) &&
+      !isBodyPromotional(a.content)
     );
   } catch {
     return [];
   }
 }
 
+/** Run feeds in batches to avoid Cloudflare Worker CPU limits */
+async function fetchFeedsInBatches(feeds: typeof RSS_FEEDS, batchSize = 15): Promise<Article[]> {
+  const all: Article[] = [];
+  for (let i = 0; i < feeds.length; i += batchSize) {
+    const batch = feeds.slice(i, i + batchSize);
+    const results = await Promise.allSettled(batch.map(fetchRSSFeed));
+    for (const r of results) {
+      if (r.status === 'fulfilled') all.push(...r.value);
+    }
+  }
+  return all;
+}
+
 export default {
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
-    const results = await Promise.allSettled(RSS_FEEDS.map(fetchRSSFeed));
-    const incoming: Article[] = [];
-    for (const r of results) {
-      if (r.status === 'fulfilled') incoming.push(...r.value);
-    }
+    const incoming = await fetchFeedsInBatches(RSS_FEEDS, 15);
     if (incoming.length === 0) return;
 
     const existing = await getArticles(env);
@@ -615,11 +629,7 @@ export default {
     // ── POST /refresh — manually trigger RSS fetch ─────────────────────────
     if (path === '/refresh' && method === 'POST') {
       if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
-      const results = await Promise.allSettled(RSS_FEEDS.map(fetchRSSFeed));
-      const incoming: Article[] = [];
-      for (const r of results) {
-        if (r.status === 'fulfilled') incoming.push(...r.value);
-      }
+      const incoming = await fetchFeedsInBatches(RSS_FEEDS, 15);
       const existing = await getArticles(env);
       const existingUrlMap = new Map(existing.map((a) => [a.sourceUrl, a]));
 
@@ -643,6 +653,24 @@ export default {
         .slice(0, 2000);
       await saveArticles(env, merged);
       return json({ fetched: incoming.length, saved: newArticles.length, patched, total: merged.length });
+    }
+
+    // ── POST /refresh-category — refresh a single category ────────────────
+    if (path === '/refresh-category' && method === 'POST') {
+      if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
+      let body: { category?: string };
+      try { body = await req.json() as { category?: string }; } catch { return json({ error: 'Invalid body' }, 400); }
+      const cat = body.category;
+      if (!cat) return json({ error: 'category required' }, 400);
+      const feeds = RSS_FEEDS.filter(f => f.category.toLowerCase() === cat.toLowerCase());
+      if (feeds.length === 0) return json({ error: 'No feeds for category' }, 404);
+      const incoming = await fetchFeedsInBatches(feeds, 10);
+      const existing = await getArticles(env);
+      const existingUrls = new Set(existing.map((a) => a.sourceUrl));
+      const newArticles = incoming.filter((a) => !existingUrls.has(a.sourceUrl));
+      const merged = [...newArticles, ...existing].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()).slice(0, 2000);
+      await saveArticles(env, merged);
+      return json({ category: cat, feeds: feeds.length, fetched: incoming.length, saved: newArticles.length, total: merged.length });
     }
 
     // ── POST /purge-no-image — remove articles without images ──────────────
