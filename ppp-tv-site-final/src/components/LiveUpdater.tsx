@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const POLL_INTERVAL = 120_000; // 2 minutes
+const POLL_INTERVAL = 300_000; // 5 minutes
 
 export default function LiveUpdater() {
   const router = useRouter();

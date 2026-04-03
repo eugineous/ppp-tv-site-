@@ -602,6 +602,137 @@ const RSS_FEEDS: Array<{ url: string; name: string; category: string }> = [
   { url: 'https://www.foodnetwork.com/fn-dish/feed',                 name: 'Food Network',           category: 'Lifestyle' },
   { url: 'https://www.bonappetit.com/feed/rss',                      name: 'Bon Appétit',            category: 'Lifestyle' },
   { url: 'https://www.travelandleisure.com/rss/all.xml',             name: 'Travel + Leisure',       category: 'Lifestyle' },
+
+  // ── MUSIC — Kenya & Africa ─────────────────────────────────────────────────
+  { url: 'https://www.boomplay.com/blog/feed/',                      name: 'Boomplay Blog',          category: 'Music' },
+  { url: 'https://www.capitalfm.co.ke/music/feed/',                  name: 'Capital FM Music',       category: 'Music' },
+  { url: 'https://www.ghafla.com/ke/category/music/feed/',           name: 'Ghafla Music',           category: 'Music' },
+  { url: 'https://www.tuko.co.ke/category/music/rss/',               name: 'Tuko Music',             category: 'Music' },
+  { url: 'https://www.bellanaija.com/category/music/feed/',          name: 'BellaNaija Music',       category: 'Music' },
+  { url: 'https://www.pulse.ng/entertainment/music/rss',             name: 'Pulse Music Nigeria',    category: 'Music' },
+  { url: 'https://www.okayafrica.com/feed/',                         name: 'OkayAfrica',             category: 'Music' },
+  { url: 'https://www.afropop.org/feed',                             name: 'Afropop Worldwide',      category: 'Music' },
+  { url: 'https://www.notjustok.com/feed/',                          name: 'NotJustOk',              category: 'Music' },
+  { url: 'https://www.tooxclusive.com/feed/',                        name: 'TooXclusive',            category: 'Music' },
+  { url: 'https://www.jaguda.com/feed/',                             name: 'Jaguda',                 category: 'Music' },
+  { url: 'https://www.360nobs.com/feed/',                            name: '360Nobs',                category: 'Music' },
+  // ── MUSIC — Global ────────────────────────────────────────────────────────
+  { url: 'https://pitchfork.com/rss/news',                           name: 'Pitchfork',              category: 'Music' },
+  { url: 'https://www.rollingstone.com/music/feed/',                 name: 'Rolling Stone Music',    category: 'Music' },
+  { url: 'https://www.billboard.com/feed/',                          name: 'Billboard',              category: 'Music' },
+  { url: 'https://www.nme.com/feed',                                 name: 'NME',                    category: 'Music' },
+  { url: 'https://www.spin.com/feed/',                               name: 'Spin',                   category: 'Music' },
+  { url: 'https://www.stereogum.com/feed/',                          name: 'Stereogum',              category: 'Music' },
+  { url: 'https://www.consequence.net/feed/',                        name: 'Consequence of Sound',   category: 'Music' },
+  { url: 'https://www.loudwire.com/feed/',                           name: 'Loudwire',               category: 'Music' },
+  { url: 'https://www.xxlmag.com/feed/',                             name: 'XXL Magazine',           category: 'Music' },
+  { url: 'https://www.complex.com/music/rss',                        name: 'Complex Music',          category: 'Music' },
+  { url: 'https://www.hotnewhiphop.com/rss/news.xml',                name: 'HotNewHipHop',           category: 'Music' },
+  { url: 'https://www.rap-up.com/feed/',                             name: 'Rap-Up',                 category: 'Music' },
+  { url: 'https://www.vibe.com/feed/',                               name: 'Vibe Magazine',          category: 'Music' },
+
+  // ── MOVIES — Global ───────────────────────────────────────────────────────
+  { url: 'https://www.rottentomatoes.com/rss/movies_at_home.xml',   name: 'Rotten Tomatoes',        category: 'Movies' },
+  { url: 'https://www.empireonline.com/movies/feed/',               name: 'Empire Magazine',        category: 'Movies' },
+  { url: 'https://www.indiewire.com/feed/',                         name: 'IndieWire',              category: 'Movies' },
+  { url: 'https://collider.com/feed/',                              name: 'Collider',               category: 'Movies' },
+  { url: 'https://screenrant.com/feed/',                            name: 'Screen Rant',            category: 'Movies' },
+  { url: 'https://www.slashfilm.com/feed/',                         name: 'SlashFilm',              category: 'Movies' },
+  { url: 'https://www.cinemablend.com/rss/news',                    name: 'CinemaBlend',            category: 'Movies' },
+  { url: 'https://www.ign.com/articles/rss',                        name: 'IGN',                    category: 'Movies' },
+  { url: 'https://www.polygon.com/rss/index.xml',                   name: 'Polygon',                category: 'Movies' },
+  { url: 'https://www.avclub.com/rss',                              name: 'AV Club',                category: 'Movies' },
+  { url: 'https://www.rogerebert.com/feed',                         name: 'RogerEbert.com',         category: 'Movies' },
+  { url: 'https://www.denofgeek.com/feed/',                         name: 'Den of Geek',            category: 'Movies' },
+  { url: 'https://www.looper.com/feed/',                            name: 'Looper',                 category: 'Movies' },
+  { url: 'https://www.cbr.com/feed/',                               name: 'CBR',                    category: 'Movies' },
+  { url: 'https://www.movieweb.com/feed/',                          name: 'MovieWeb',               category: 'Movies' },
+  { url: 'https://www.joblo.com/feed/',                             name: 'JoBlo',                  category: 'Movies' },
+
+  // ── NEWS — Kenya & Africa ─────────────────────────────────────────────────
+  { url: 'https://www.nation.africa/kenya/rss.xml',                 name: 'Nation Africa',          category: 'News' },
+  { url: 'https://www.standardmedia.co.ke/rss/headlines.php',       name: 'Standard Media',         category: 'News' },
+  { url: 'https://www.the-star.co.ke/rss/',                         name: 'The Star Kenya',         category: 'News' },
+  { url: 'https://www.kbc.co.ke/feed/',                             name: 'KBC Kenya',              category: 'News' },
+  { url: 'https://www.citizen.digital/feed',                        name: 'Citizen Digital',        category: 'News' },
+  { url: 'https://www.capitalfm.co.ke/news/feed/',                  name: 'Capital FM News',        category: 'News' },
+  { url: 'https://www.peopledailykenya.com/feed/',                  name: 'People Daily Kenya',     category: 'News' },
+  { url: 'https://www.theeastafrican.co.ke/tea/rss.xml',            name: 'The East African',       category: 'News' },
+  { url: 'https://www.nairobinews.nation.africa/feed/',             name: 'Nairobi News',           category: 'News' },
+  { url: 'https://www.kenyans.co.ke/feeds/news',                    name: 'Kenyans.co.ke',          category: 'News' },
+  { url: 'https://www.africanews.com/feed/rss2/',                   name: 'Africa News',            category: 'News' },
+  { url: 'https://www.aljazeera.com/xml/rss/all.xml',               name: 'Al Jazeera',             category: 'News' },
+  { url: 'https://www.bbc.co.uk/africa/rss.xml',                    name: 'BBC Africa',             category: 'News' },
+  { url: 'https://www.vanguardngr.com/feed/',                       name: 'Vanguard Nigeria',       category: 'News' },
+  { url: 'https://www.premiumtimesng.com/feed/',                    name: 'Premium Times Nigeria',  category: 'News' },
+  { url: 'https://www.timeslive.co.za/rss/',                        name: 'Times Live SA',          category: 'News' },
+  { url: 'https://www.news24.com/rss',                              name: 'News24 SA',              category: 'News' },
+  { url: 'https://www.monitor.co.ug/feed/',                         name: 'Daily Monitor Uganda',   category: 'News' },
+  { url: 'https://www.thecitizen.co.tz/feed/',                      name: 'The Citizen Tanzania',   category: 'News' },
+  { url: 'https://www.myjoyonline.com/feed/',                       name: 'Joy Online Ghana',       category: 'News' },
+  // ── NEWS — Global ─────────────────────────────────────────────────────────
+  { url: 'https://www.reuters.com/rssFeed/topNews',                 name: 'Reuters',                category: 'News' },
+  { url: 'https://feeds.bbci.co.uk/news/rss.xml',                   name: 'BBC News',               category: 'News' },
+  { url: 'https://rss.cnn.com/rss/edition.rss',                     name: 'CNN',                    category: 'News' },
+  { url: 'https://www.theguardian.com/world/rss',                   name: 'The Guardian World',     category: 'News' },
+  { url: 'https://www.independent.co.uk/news/world/rss',            name: 'The Independent',        category: 'News' },
+  { url: 'https://www.dailymail.co.uk/news/index.rss',              name: 'Daily Mail',             category: 'News' },
+  { url: 'https://www.mirror.co.uk/news/rss.xml',                   name: 'The Mirror',             category: 'News' },
+  { url: 'https://www.telegraph.co.uk/news/rss.xml',                name: 'The Telegraph',          category: 'News' },
+
+  // ── CELEBRITY — Global ────────────────────────────────────────────────────
+  { url: 'https://www.usmagazine.com/feed/',                        name: 'US Magazine',            category: 'Entertainment' },
+  { url: 'https://pagesix.com/feed/',                               name: 'Page Six',               category: 'Entertainment' },
+  { url: 'https://www.tmz.com/rss.xml',                             name: 'TMZ',                    category: 'Entertainment' },
+  { url: 'https://www.etonline.com/rss',                            name: 'ET Online',              category: 'Entertainment' },
+  { url: 'https://www.justjared.com/feed/',                         name: 'Just Jared',             category: 'Entertainment' },
+  { url: 'https://www.people.com/feed/',                            name: 'People Magazine',        category: 'Entertainment' },
+  { url: 'https://www.eonline.com/syndication/feeds/rssfeeds/topstories.xml', name: 'E! Online', category: 'Entertainment' },
+  { url: 'https://www.digitalspy.com/rss/',                         name: 'Digital Spy',            category: 'Entertainment' },
+  { url: 'https://www.hellomagazine.com/rss/',                      name: 'Hello Magazine',         category: 'Entertainment' },
+  { url: 'https://www.ok.co.uk/feed/',                              name: 'OK! Magazine',           category: 'Entertainment' },
+
+  // ── SPORTS — Additional Global ────────────────────────────────────────────
+  { url: 'https://www.90min.com/feed',                              name: '90min',                  category: 'Sports' },
+  { url: 'https://www.givemesport.com/rss',                         name: 'GiveMeSport',            category: 'Sports' },
+  { url: 'https://www.talksport.com/feed/',                         name: 'talkSPORT',              category: 'Sports' },
+  { url: 'https://www.theguardian.com/sport/rss',                   name: 'Guardian Sport',         category: 'Sports' },
+  { url: 'https://www.independent.co.uk/sport/rss',                 name: 'Independent Sport',      category: 'Sports' },
+  { url: 'https://www.mirror.co.uk/sport/rss.xml',                  name: 'Mirror Sport',           category: 'Sports' },
+  { url: 'https://www.dailymail.co.uk/sport/index.rss',             name: 'Daily Mail Sport',       category: 'Sports' },
+  { url: 'https://www.telegraph.co.uk/sport/rss.xml',               name: 'Telegraph Sport',        category: 'Sports' },
+  { url: 'https://www.sportbible.com/rss',                          name: 'SPORTbible',             category: 'Sports' },
+  { url: 'https://www.ladbible.com/sport/rss',                      name: 'LADbible Sport',         category: 'Sports' },
+  { url: 'https://www.transfermarkt.com/rss/news',                  name: 'Transfermarkt',          category: 'Sports' },
+  { url: 'https://www.nfl.com/rss/rsslanding.html',                 name: 'NFL',                    category: 'Sports' },
+
+  // ── TECHNOLOGY — Additional ───────────────────────────────────────────────
+  { url: 'https://www.pcmag.com/rss/news',                          name: 'PCMag',                  category: 'Technology' },
+  { url: 'https://www.tomsguide.com/feeds/all',                     name: 'Tom\'s Guide',           category: 'Technology' },
+  { url: 'https://www.digitaltrends.com/feed/',                     name: 'Digital Trends',         category: 'Technology' },
+  { url: 'https://mashable.com/feeds/rss/all',                      name: 'Mashable',               category: 'Technology' },
+  { url: 'https://venturebeat.com/feed/',                           name: 'VentureBeat',            category: 'Technology' },
+  { url: 'https://www.fastcompany.com/technology/rss',              name: 'Fast Company Tech',      category: 'Technology' },
+  { url: 'https://www.axios.com/technology/rss',                    name: 'Axios Tech',             category: 'Technology' },
+  { url: 'https://www.sciencedaily.com/rss/top/technology.xml',     name: 'ScienceDaily Tech',      category: 'Technology' },
+  { url: 'https://phys.org/rss-feed/technology-news/',              name: 'Phys.org Tech',          category: 'Technology' },
+  { url: 'https://www.newscientist.com/feed/home/',                 name: 'New Scientist',          category: 'Technology' },
+
+  // ── LIFESTYLE — Additional ────────────────────────────────────────────────
+  { url: 'https://www.gq.com/feed/rss',                             name: 'GQ',                     category: 'Lifestyle' },
+  { url: 'https://www.esquire.com/rss/all.xml/',                    name: 'Esquire',                category: 'Lifestyle' },
+  { url: 'https://www.health.com/rss/all.xml/',                     name: 'Health.com',             category: 'Lifestyle' },
+  { url: 'https://www.self.com/feed/rss',                           name: 'Self',                   category: 'Lifestyle' },
+  { url: 'https://www.bustle.com/rss',                              name: 'Bustle',                 category: 'Lifestyle' },
+  { url: 'https://www.popsugar.com/feed/',                          name: 'PopSugar',               category: 'Lifestyle' },
+  { url: 'https://www.instyle.com/rss/all.xml/',                    name: 'InStyle',                category: 'Lifestyle' },
+  { url: 'https://www.allure.com/feed/rss',                         name: 'Allure',                 category: 'Lifestyle' },
+  { url: 'https://www.mindbodygreen.com/rss',                       name: 'MindBodyGreen',          category: 'Lifestyle' },
+  { url: 'https://www.foodandwine.com/rss/all.xml/',                name: 'Food & Wine',            category: 'Lifestyle' },
+  { url: 'https://www.epicurious.com/feed/rss',                     name: 'Epicurious',             category: 'Lifestyle' },
+  { url: 'https://www.seriouseats.com/atom.xml',                    name: 'Serious Eats',           category: 'Lifestyle' },
+  { url: 'https://www.eater.com/rss/index.xml',                     name: 'Eater',                  category: 'Lifestyle' },
+  { url: 'https://www.thekitchn.com/main.rss',                      name: 'The Kitchn',             category: 'Lifestyle' },
 ];
 
 // ─── RSS SCRAPER ──────────────────────────────────────────────────────────────
@@ -922,6 +1053,46 @@ export default {
     }
 
     if (request.method === 'OPTIONS') return cors(new Response(null, { status: 204 }));
+
+    // ── GET /articles/:slug ────────────────────────────────────────────────
+    if (path.startsWith('/articles/') && request.method === 'GET') {
+      const slug = path.slice('/articles/'.length);
+      if (!slug) return json({ error: 'slug required' }, 400);
+      const articles = await getArticlesFromSupabase(env, { search: slug, limit: 1 });
+      // Try exact slug match first
+      const exact = articles.find(a => a.slug === slug);
+      if (exact) return json(exact);
+      // Fallback: query by slug directly
+      if (!env.SUPABASE_URL) return json({ error: 'not found' }, 404);
+      try {
+        const res = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/articles?slug=eq.${encodeURIComponent(slug)}&limit=1`,
+          { headers: supabaseHeaders(env) }
+        );
+        if (!res.ok) return json({ error: 'not found' }, 404);
+        const rows = await res.json() as Array<Record<string, unknown>>;
+        if (!rows.length) return json({ error: 'not found' }, 404);
+        const r = rows[0];
+        return json({
+          slug: r.slug,
+          title: r.original_title,
+          rewrittenTitle: r.rewritten_title,
+          excerpt: r.rewritten_excerpt || r.original_excerpt,
+          content: r.rewritten_body || r.original_body,
+          category: r.category,
+          subcategory: r.subcategory,
+          tags: r.tags,
+          imageUrl: r.image_url,
+          sourceUrl: r.source_url,
+          sourceName: r.source_name,
+          publishedAt: r.published_at,
+          views: r.views,
+          trendingScore: r.trending_score,
+          pptvVerdict: r.pptv_verdict,
+          rewrittenAt: r.rewritten_at,
+        });
+      } catch { return json({ error: 'not found' }, 404); }
+    }
 
     // ── GET /articles ──────────────────────────────────────────────────────
     if (path === '/articles' && request.method === 'GET') {

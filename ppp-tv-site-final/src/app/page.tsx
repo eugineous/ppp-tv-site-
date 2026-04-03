@@ -4,7 +4,7 @@ import CategoryRow from '@/components/CategoryRow';
 import Top10Row from '@/components/Top10Row';
 import type { Article } from '@/types';
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 const CATEGORIES = [
   { label: 'Entertainment', cat: 'Entertainment',  href: '/entertainment', color: '#BF00FF' },
