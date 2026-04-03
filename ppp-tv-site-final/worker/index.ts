@@ -734,8 +734,19 @@ async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number;
 
   const skipped = allRaw.length - newArticles.length;
 
-  // 4. Process up to 10 new articles through AI pipeline
-  const toProcess = newArticles.slice(0, 10);
+  // 4. Process up to 10 new articles through AI pipeline — ensure category diversity
+  // Pick up to 4 from each category so Sports/Technology always get coverage
+  const categoryBuckets: Record<string, RawArticle[]> = {};
+  for (const a of newArticles) {
+    if (!categoryBuckets[a.category]) categoryBuckets[a.category] = [];
+    categoryBuckets[a.category].push(a);
+  }
+  const diverse: RawArticle[] = [];
+  const perCat = Math.max(3, Math.floor(10 / Math.max(Object.keys(categoryBuckets).length, 1)));
+  for (const cat of Object.keys(categoryBuckets)) {
+    diverse.push(...categoryBuckets[cat].slice(0, perCat));
+  }
+  const toProcess = diverse.slice(0, 10);
   const { processed, failed } = await processArticleBatch(toProcess, env);
 
   // 5. Store health metadata in KV
