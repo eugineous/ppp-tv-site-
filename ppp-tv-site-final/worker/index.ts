@@ -969,17 +969,28 @@ async function processArticleBatch(
 async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number; failed: number; skipped: number; durationMs: number }> {
   const start = Date.now();
 
+  // Rotating feed strategy: each cron tick processes a different slice of 20 feeds
+  // This cycles through all feeds every ~10 ticks (150 min) while keeping each tick fast
+  const FEEDS_PER_TICK = 20;
+  const rawOffset = await env.PPP_TV_KV.get('feed:offset');
+  const offset = rawOffset ? parseInt(rawOffset, 10) : 0;
+  const nextOffset = (offset + FEEDS_PER_TICK) % RSS_FEEDS.length;
+  await env.PPP_TV_KV.put('feed:offset', String(nextOffset));
+
+  const feedSlice = RSS_FEEDS.slice(offset, offset + FEEDS_PER_TICK);
+  // If slice wraps around end of array, also grab from start
+  const wrappedFeeds = feedSlice.length < FEEDS_PER_TICK
+    ? [...feedSlice, ...RSS_FEEDS.slice(0, FEEDS_PER_TICK - feedSlice.length)]
+    : feedSlice;
+
   // 1. Get existing slugs to dedup
   const existingSlugs = await getExistingSlugs(env);
 
-  // 2. Fetch all feeds in batches of 10 to avoid CPU timeout
+  // 2. Fetch the feed slice in parallel (all at once — only 20 feeds)
   const allRaw: RawArticle[] = [];
-  for (let i = 0; i < RSS_FEEDS.length; i += 10) {
-    const batch = RSS_FEEDS.slice(i, i + 10);
-    const results = await Promise.allSettled(batch.map(f => fetchRSSFeed(f)));
-    for (const r of results) {
-      if (r.status === 'fulfilled') allRaw.push(...r.value);
-    }
+  const results = await Promise.allSettled(wrappedFeeds.map(f => fetchRSSFeed(f)));
+  for (const r of results) {
+    if (r.status === 'fulfilled') allRaw.push(...r.value);
   }
 
   // 3. Filter: skip duplicates and promo
@@ -991,8 +1002,7 @@ async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number;
 
   const skipped = allRaw.length - newArticles.length;
 
-  // 4. Process up to 12 new articles through AI pipeline — ensure category diversity
-  // Pick up to 3 from each category so all categories always get coverage
+  // 4. Process up to 15 new articles through AI pipeline — ensure category diversity
   const categoryBuckets: Record<string, RawArticle[]> = {};
   for (const a of newArticles) {
     if (!categoryBuckets[a.category]) categoryBuckets[a.category] = [];
@@ -1000,11 +1010,11 @@ async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number;
   }
   const diverse: RawArticle[] = [];
   const numCats = Math.max(Object.keys(categoryBuckets).length, 1);
-  const perCat = Math.max(3, Math.floor(12 / numCats));
+  const perCat = Math.max(3, Math.floor(15 / numCats));
   for (const cat of Object.keys(categoryBuckets)) {
     diverse.push(...categoryBuckets[cat].slice(0, perCat));
   }
-  const toProcess = diverse.slice(0, 12);
+  const toProcess = diverse.slice(0, 15);
   const { processed, failed } = await processArticleBatch(toProcess, env);
 
   // 5. Store health metadata in KV

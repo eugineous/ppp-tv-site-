@@ -9,7 +9,7 @@ id = "fe1b676c46534076a2f0616d53c56315"
 preview_id = "c6a4928680514b57a92bced0ef9468b6"
 
 [triggers]
-crons = ["*/15 * * * *"]
+crons = ["*/5 * * * *"]
 
 [vars]
 WORKER_SECRET = "ppptv-secret-2026"
