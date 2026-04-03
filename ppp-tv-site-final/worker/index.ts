@@ -247,7 +247,6 @@ async function detectAndTranslate(text: string, env: Env): Promise<{ text: strin
 
 // ─── AI REWRITER — GEMINI + NVIDIA FALLBACK ───────────────────────────────────
 function buildRewritePrompt(article: RawArticle, translatedBody: string): string {
-  // Subcategory options per category
   const subcatMap: Record<string, string> = {
     Entertainment: 'celebrity, music, movies-tv, fashion, comedy, awards, events, kenyan-celebs, afrobeats, east-africa-ent',
     Sports:        'football, basketball, athletics, rugby, boxing-mma, kenyan-sports, cricket, tennis, formula1, african-sports',
@@ -255,21 +254,29 @@ function buildRewritePrompt(article: RawArticle, translatedBody: string): string
     Lifestyle:     'fashion, beauty, health, food, travel, relationships, fitness, home, parenting, wellness',
   };
   const subcatOptions = subcatMap[article.category] ?? 'general';
+  const bodyText = translatedBody || article.excerpt || article.title;
 
   return `You are a Gen Z journalist writing for PPP TV Kenya — East Africa's #1 entertainment platform. Your audience is 18-35 year olds across Kenya, Tanzania, Uganda, Nigeria, and globally.
 
-Rewrite the following ${article.category} article in a punchy, engaging Gen Z voice. Be bold, keep it factual but exciting. DO NOT mention the source publication name. DO NOT include any betting, gambling, or brand advertising content.
+TASK: Rewrite the following ${article.category} article into a COMPLETE, FULL-LENGTH story. The rewritten_body MUST be at least 4 paragraphs and at least 300 words. If the source content is thin or incomplete, EXPAND it using your knowledge of the topic — add context, background, quotes (clearly attributed as "according to reports"), and analysis. Make it a complete, satisfying read.
 
-ARTICLE CATEGORY: ${article.category} (KEEP THIS EXACT CATEGORY — do not change it)
+RULES:
+- DO NOT mention the source publication name
+- DO NOT include betting, gambling, or brand advertising content  
+- DO NOT truncate or cut the story short
+- KEEP the exact category: ${article.category}
+- Write in punchy Gen Z voice — bold, factual, exciting
+
+ARTICLE CATEGORY: ${article.category}
 ARTICLE TITLE: ${article.title}
-ARTICLE BODY: ${translatedBody || article.excerpt}
+ARTICLE BODY: ${bodyText}
 
-Return ONLY valid JSON with exactly these fields (no markdown, no code blocks):
+Return ONLY valid JSON (no markdown, no code blocks):
 {
   "rewritten_title": "catchy Gen Z headline under 80 chars",
   "rewritten_excerpt": "2-sentence hook that makes you want to read more, under 160 chars",
-  "rewritten_body": "full rewritten article in HTML paragraphs (<p> tags), 3-6 paragraphs, Gen Z voice, factual, NO betting/gambling/brand ads",
-  "pptv_verdict": "PPP TV's hot take in 1 punchy sentence — our opinion on this story",
+  "rewritten_body": "FULL article in HTML paragraphs (<p> tags), minimum 4 paragraphs, 300+ words, Gen Z voice, complete story with context and analysis",
+  "pptv_verdict": "PPP TV's hot take in 1 punchy sentence",
   "subcategory": "one of: ${subcatOptions}",
   "tags": ["tag1","tag2","tag3","tag4","tag5"]
 }`;
@@ -762,12 +769,17 @@ async function processArticleBatch(
     const rewritten = await rewriteWithAI(article, translatedBody, env);
 
     // 3. Build ProcessedArticle — use AI output if available, else use original content
+    // Ensure body is never empty — build from excerpt if needed
+    const fallbackBody = article.content && article.content.length > 100
+      ? article.content
+      : `<p>${article.excerpt || article.title}</p>`;
+
     const now = new Date().toISOString();
     const pa: ProcessedArticle = {
       ...article,
       rewrittenTitle:   rewritten?.rewritten_title   ?? article.title,
       rewrittenExcerpt: rewritten?.rewritten_excerpt ?? article.excerpt,
-      rewrittenBody:    rewritten?.rewritten_body    ?? article.content,
+      rewrittenBody:    rewritten?.rewritten_body    ?? fallbackBody,
       pptvVerdict:      rewritten?.pptv_verdict      ?? '',
       subcategory:      rewritten?.subcategory       ?? article.category.toLowerCase(),
       tags:             rewritten?.tags              ?? [],
