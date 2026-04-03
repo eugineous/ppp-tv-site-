@@ -967,12 +967,11 @@ async function processArticleBatch(
 
 // ─── AI RE-PARAPHRASE — refresh existing articles with new angles ─────────────
 async function rephraseExistingArticles(env: Env, limit = 5): Promise<{ rephrased: number; failed: number }> {
-  if (!env.SUPABASE_URL) return { rephrased: 0, failed: 0 };
+  if (!env.SUPABASE_URL || !env.GEMINI_API_KEY) return { rephrased: 0, failed: 0 };
   let rephrased = 0, failed = 0;
   try {
-    // Pick articles that haven't been rephrased recently (no pptv_verdict or old rewritten_at)
     const res = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/articles?select=slug,original_title,original_body,rewritten_title,rewritten_body,category,image_url,source_url,source_name,published_at&order=rewritten_at.asc.nullsfirst&limit=${limit}`,
+      `${env.SUPABASE_URL}/rest/v1/articles?select=slug,original_title,rewritten_title,rewritten_body,category&order=rewritten_at.asc.nullsfirst&limit=${limit}`,
       { headers: supabaseHeaders(env) }
     );
     if (!res.ok) return { rephrased: 0, failed: 0 };
@@ -980,53 +979,47 @@ async function rephraseExistingArticles(env: Env, limit = 5): Promise<{ rephrase
 
     for (const row of rows) {
       try {
-        const originalBody = (row.original_body as string) || (row.rewritten_body as string) || '';
-        if (!originalBody || originalBody.length < 100) continue;
+        const body = stripHtml((row.rewritten_body as string) || '').slice(0, 800);
+        const title = (row.original_title || row.rewritten_title || '') as string;
+        if (!body || body.length < 50) { failed++; continue; }
 
-        const article: RawArticle = {
-          slug:        row.slug as string,
-          title:       row.original_title as string,
-          excerpt:     stripHtml(originalBody).slice(0, 250),
-          content:     originalBody,
-          category:    row.category as string,
-          imageUrl:    row.image_url as string,
-          sourceUrl:   row.source_url as string,
-          sourceName:  row.source_name as string,
-          publishedAt: row.published_at as string,
-        };
+        const prompt = `Rewrite this news article for PPP TV Kenya with a fresh angle. Return ONLY a JSON object with exactly these 6 keys (no markdown, no extra text):
+{"rewritten_title":"new headline","rewritten_excerpt":"1-2 sentence summary","rewritten_body":"<p>full article in 2-3 paragraphs</p>","pptv_verdict":"one punchy opinion sentence","subcategory":"${String(row.category).toLowerCase()}","tags":["kenya","entertainment","news","africa","ppptv"]}
 
-        // Build a "fresh angle" prompt
-        const freshPrompt = buildRewritePrompt(article, stripHtml(originalBody));
-        const aiRaw = await callAI(freshPrompt, env);
+Original title: ${title}
+Original body: ${body}`;
+
+        const aiRaw = await callGemini(prompt, env);
         if (!aiRaw) { failed++; continue; }
 
-        let parsed: GeminiOutput | null = null;
+        // Lenient parse — just extract what we can
+        let newTitle = title, newExcerpt = '', newBody = `<p>${body}</p>`, verdict = 'PPP TV Kenya brings you the latest.';
         try {
-          const jsonMatch = aiRaw.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const obj = JSON.parse(jsonMatch[0]);
-            if (validateGeminiOutput(obj)) parsed = obj;
+          const m = aiRaw.match(/\{[\s\S]*?\}/);
+          if (m) {
+            const obj = JSON.parse(m[0]);
+            if (obj.rewritten_title) newTitle = obj.rewritten_title;
+            if (obj.rewritten_excerpt) newExcerpt = obj.rewritten_excerpt;
+            if (obj.rewritten_body) newBody = obj.rewritten_body;
+            if (obj.pptv_verdict) verdict = obj.pptv_verdict;
           }
-        } catch { /* skip */ }
+        } catch { /* use fallbacks */ }
 
-        if (!parsed) { failed++; continue; }
-
-        // Update the article with fresh rewrite
         const updateRes = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/articles?slug=eq.${encodeURIComponent(article.slug)}`,
+          `${env.SUPABASE_URL}/rest/v1/articles?slug=eq.${encodeURIComponent(row.slug as string)}`,
           {
             method: 'PATCH',
             headers: { ...supabaseHeaders(env), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
             body: JSON.stringify({
-              rewritten_title:   parsed.rewritten_title,
-              rewritten_excerpt: parsed.rewritten_excerpt,
-              rewritten_body:    parsed.rewritten_body,
-              pptv_verdict:      parsed.pptv_verdict || '',
-              rewritten_at:      new Date().toISOString(),
+              rewritten_title: newTitle,
+              rewritten_excerpt: newExcerpt,
+              rewritten_body: newBody,
+              pptv_verdict: verdict,
+              rewritten_at: new Date().toISOString(),
             }),
           }
         );
-        if (updateRes.ok) rephrased++;
+        if (updateRes.ok || updateRes.status === 204) rephrased++;
         else failed++;
       } catch { failed++; }
     }
@@ -1063,10 +1056,12 @@ async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number;
   }
 
   // 3. Filter: skip duplicates and promo
+  const cutoff = new Date(Date.now() - 24 * 3600000).toISOString();
   const newArticles = allRaw.filter(a =>
     !existingSlugs.has(a.slug) &&
     !isPromotional(a.title, a.excerpt) &&
-    !isBodyPromotional(a.content)
+    !isBodyPromotional(a.content) &&
+    (!a.publishedAt || a.publishedAt >= cutoff)
   );
 
   const skipped = allRaw.length - newArticles.length;

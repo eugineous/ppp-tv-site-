@@ -1292,3 +1292,113 @@ input[type="text"]:focus { border-color: rgba(255,0,122,.5) !important; box-shad
     grid-template-columns: repeat(5, 1fr) !important;
   }
 }
+
+/* ════════════════════════════════════════════
+   NEWS TICKER — scrolling headline strip
+   ════════════════════════════════════════════ */
+.news-ticker-wrap {
+  display: flex;
+  align-items: center;
+  background: #0a0a0a;
+  border-top: 1px solid #1a1a1a;
+  border-bottom: 2px solid #FF007A;
+  height: 44px;
+  overflow: hidden;
+  position: relative;
+  z-index: 20;
+}
+
+.news-ticker-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  background: #FF007A;
+  height: 100%;
+  flex-shrink: 0;
+  font-size: .65rem;
+  font-weight: 900;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+}
+
+@keyframes tickerDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .3; transform: scale(.7); }
+}
+.news-ticker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  animation: tickerDot 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.news-ticker-outer {
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.news-ticker-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: max-content;
+  will-change: transform;
+}
+
+.news-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px 0 16px;
+  text-decoration: none;
+  white-space: nowrap;
+  height: 44px;
+  border-right: 1px solid #1a1a1a;
+  transition: background .15s;
+}
+.news-ticker-item:hover {
+  background: rgba(255,0,122,.08);
+}
+
+@keyframes tickerNumPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+.news-ticker-num {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+  font-size: 1rem;
+  color: #FF007A;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+  min-width: 22px;
+}
+.news-ticker-item--active .news-ticker-num {
+  animation: tickerNumPulse .8s ease-in-out infinite;
+}
+
+.news-ticker-sep {
+  font-size: .5rem;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.news-ticker-text {
+  font-size: .78rem;
+  font-weight: 600;
+  color: #ccc;
+  letter-spacing: .01em;
+}
+.news-ticker-item--active .news-ticker-text {
+  color: #fff;
+}
+.news-ticker-item:hover .news-ticker-text {
+  color: #FF007A;
+}

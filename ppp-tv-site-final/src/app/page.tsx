@@ -2,7 +2,10 @@ import { fetchArticles, fetchTrending } from '@/lib/worker';
 import HeroBanner from '@/components/HeroBanner';
 import CategoryRow from '@/components/CategoryRow';
 import Top10Row from '@/components/Top10Row';
+import dynamic from 'next/dynamic';
 import type { Article } from '@/types';
+
+const NewsTicker = dynamic(() => import('@/components/NewsTicker'), { ssr: false });
 
 export const revalidate = 300;
 
@@ -50,6 +53,9 @@ export default async function HomePage() {
   return (
     <div style={{ background: '#000', minHeight: '100vh' }}>
       {heroArticles.length > 0 && <HeroBanner articles={heroArticles} />}
+
+      {/* News Ticker — top 10 latest stories scrolling */}
+      <NewsTicker articles={trending.slice(0, 10)} />
 
       <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
         <div className="rows-section" style={{ marginTop: '-80px' }}>

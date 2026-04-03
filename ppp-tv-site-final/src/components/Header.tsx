@@ -19,6 +19,7 @@ const NAV = [
   { label: '🔥 Trending',   href: '/trending' },
   { label: 'People',        href: '/people' },
   { label: '🔴 Live',       href: '/live' },
+  { label: 'Archive',      href: '/archive' },
 ];
 
 export default function Header() {
