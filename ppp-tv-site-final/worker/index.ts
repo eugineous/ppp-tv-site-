@@ -2,13 +2,15 @@
 
 // ─── ENV ─────────────────────────────────────────────────────────────────────
 export interface Env {
-  PPP_TV_KV:           KVNamespace;
-  WORKER_SECRET:       string;
-  VERCEL_URL?:         string;
-  GEMINI_API_KEY?:     string;
-  NVIDIA_API_KEY?:     string;
-  SUPABASE_URL?:       string;
+  PPP_TV_KV:             KVNamespace;
+  WORKER_SECRET:         string;
+  VERCEL_URL?:           string;
+  GEMINI_API_KEY?:       string;
+  NVIDIA_API_KEY?:       string;
+  SUPABASE_URL?:         string;
   SUPABASE_SERVICE_KEY?: string;
+  AUTOMATE_SECRET?:      string; // Bearer token for auto-news-station ingest
+  PUSH_SECRET?:          string;
 }
 
 // ─── SECURITY HEADERS ────────────────────────────────────────────────────────
@@ -674,10 +676,34 @@ async function processArticleBatch(
     }
   }
 
-  // 4. Save all to Supabase
+  // 4. Save all to Supabase and fire push notifications
   for (const pa of processedArticles) {
     const saved = await saveArticleToSupabase(env, pa);
-    if (!saved) { failed++; processed--; }
+    if (!saved) { failed++; processed--; continue; }
+
+    // Fire-and-forget push to Next.js /api/push-article
+    if (env.VERCEL_URL && env.PUSH_SECRET) {
+      const articlePayload = {
+        slug:        pa.slug,
+        title:       pa.rewrittenTitle || pa.title,
+        excerpt:     pa.rewrittenExcerpt || pa.excerpt,
+        content:     pa.rewrittenBody || pa.content,
+        category:    pa.category,
+        tags:        pa.tags,
+        imageUrl:    pa.imageUrl,
+        sourceUrl:   pa.sourceUrl,
+        sourceName:  pa.sourceName,
+        publishedAt: pa.publishedAt,
+      };
+      fetch(`${env.VERCEL_URL}/api/push-article`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${env.PUSH_SECRET}`,
+        },
+        body: JSON.stringify({ article: articlePayload }),
+      }).catch(err => console.error('[push]', err));
+    }
   }
 
   return { processed, failed, skipped };

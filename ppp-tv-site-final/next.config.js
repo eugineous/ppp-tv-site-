@@ -82,6 +82,7 @@ const nextConfig = {
     optimizePackageImports: ['date-fns', 'react', 'react-dom'],
     // Partial prerendering — serve shell instantly, stream content
     ppr: false, // keep off until stable
+    instrumentationHook: true,
   },
 };
 
