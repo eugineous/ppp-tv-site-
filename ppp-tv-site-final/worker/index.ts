@@ -977,52 +977,35 @@ async function rephraseExistingArticles(env: Env, limit = 5): Promise<{ rephrase
     if (!res.ok) return { rephrased: 0, failed: 0 };
     const rows = await res.json() as Array<Record<string, unknown>>;
 
-    for (const row of rows) {
+    // Parallel — all 3 at once, each with its own 20s Gemini timeout
+    const parallelResults = await Promise.allSettled(rows.map(async (row) => {
+      const body = stripHtml((row.rewritten_body as string) || '').slice(0, 350);
+      const title = ((row.original_title || row.rewritten_title || '') as string).slice(0, 90);
+      if (!body || body.length < 20) throw new Error('too short');
+      const cat = String(row.category).toLowerCase();
+      const p = `PPP TV Kenya. Rewrite fresh. JSON only:\n{"rewritten_title":"t","rewritten_excerpt":"e","rewritten_body":"<p>b</p>","pptv_verdict":"v","subcategory":"${cat}","tags":["a","b","c","d","e"]}\nTitle:${title}\nBody:${body}`;
+      const raw = await callAI(p, env);
+      if (!raw) throw new Error('no ai');
+      let t2 = title, ex = '', bd = `<p>${body}</p>`, vd = 'PPP TV Kenya.';
       try {
-        const body = stripHtml((row.rewritten_body as string) || '').slice(0, 800);
-        const title = (row.original_title || row.rewritten_title || '') as string;
-        if (!body || body.length < 50) { failed++; continue; }
-
-        const prompt = `Rewrite this news article for PPP TV Kenya with a fresh angle. Return ONLY a JSON object with exactly these 6 keys (no markdown, no extra text):
-{"rewritten_title":"new headline","rewritten_excerpt":"1-2 sentence summary","rewritten_body":"<p>full article in 2-3 paragraphs</p>","pptv_verdict":"one punchy opinion sentence","subcategory":"${String(row.category).toLowerCase()}","tags":["kenya","entertainment","news","africa","ppptv"]}
-
-Original title: ${title}
-Original body: ${body}`;
-
-        const aiRaw = await callGemini(prompt, env);
-        if (!aiRaw) { failed++; continue; }
-
-        // Lenient parse — just extract what we can
-        let newTitle = title, newExcerpt = '', newBody = `<p>${body}</p>`, verdict = 'PPP TV Kenya brings you the latest.';
-        try {
-          const m = aiRaw.match(/\{[\s\S]*?\}/);
-          if (m) {
-            const obj = JSON.parse(m[0]);
-            if (obj.rewritten_title) newTitle = obj.rewritten_title;
-            if (obj.rewritten_excerpt) newExcerpt = obj.rewritten_excerpt;
-            if (obj.rewritten_body) newBody = obj.rewritten_body;
-            if (obj.pptv_verdict) verdict = obj.pptv_verdict;
-          }
-        } catch { /* use fallbacks */ }
-
-        const updateRes = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/articles?slug=eq.${encodeURIComponent(row.slug as string)}`,
-          {
-            method: 'PATCH',
-            headers: { ...supabaseHeaders(env), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-            body: JSON.stringify({
-              rewritten_title: newTitle,
-              rewritten_excerpt: newExcerpt,
-              rewritten_body: newBody,
-              pptv_verdict: verdict,
-              rewritten_at: new Date().toISOString(),
-            }),
-          }
-        );
-        if (updateRes.ok || updateRes.status === 204) rephrased++;
-        else failed++;
-      } catch { failed++; }
-    }
+        const m = raw.match(/\{[\s\S]*\}/);
+        if (m) {
+          const o = JSON.parse(m[0]);
+          if (o.rewritten_title) t2 = String(o.rewritten_title);
+          if (o.rewritten_excerpt) ex = String(o.rewritten_excerpt);
+          if (o.rewritten_body) bd = String(o.rewritten_body);
+          if (o.pptv_verdict) vd = String(o.pptv_verdict);
+        }
+      } catch { /* fallbacks */ }
+      const up = await fetch(`${env.SUPABASE_URL}/rest/v1/articles?slug=eq.${encodeURIComponent(row.slug as string)}`, {
+        method: 'PATCH',
+        headers: { ...supabaseHeaders(env), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ rewritten_title: t2, rewritten_excerpt: ex, rewritten_body: bd, pptv_verdict: vd, rewritten_at: new Date().toISOString() }),
+      });
+      if (!up.ok && up.status !== 204) throw new Error(`db ${up.status}`);
+    }));
+    rephrased = parallelResults.filter(r => r.status === 'fulfilled').length;
+    failed = parallelResults.filter(r => r.status === 'rejected').length;
   } catch { /* non-fatal */ }
   return { rephrased, failed };
 }
