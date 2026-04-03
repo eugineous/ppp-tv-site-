@@ -119,7 +119,33 @@ function calcTrendingScore(views: number, publishedAt: string): number {
   return views / Math.pow(ageHours + 2, 1.5);
 }
 
-// ─── PROMOTIONAL GUARDRAILS ───────────────────────────────────────────────────
+// ─── PROMOTIONAL & ADVERTISING GUARDRAILS ────────────────────────────────────
+// Betting / gambling companies — hard block
+const BETTING_PATTERNS: RegExp[] = [
+  /\b(sportpesa|betway|bet365|1xbet|betin|mozzartbet|odibets|betika|premiumbets|parimatch|22bet|melbet|betmaster|hollywoodbets|sunbet|supabets|betfred|ladbrokes|william hill|paddy power|coral|unibet|bwin|draftkings|fanduel|pointsbet|betmgm|caesars sportsbook|barstool sportsbook)\b/i,
+  /\b(aviator|jetx|crash game|lucky jet|mines game|plinko|spaceman)\b.{0,60}\b(bet|play|win|earn|deposit|bonus)\b/i,
+  /\b(betting (company|site|platform|app|bonus|odds|tips|prediction)|sports betting|online betting|mobile betting)\b/i,
+  /\b(casino|poker|slots|roulette|blackjack|baccarat|jackpot|free spins|welcome bonus|deposit bonus|no deposit)\b/i,
+  /\b(odds|accumulator|parlay|handicap|over.under|both teams to score|correct score)\b.{0,40}\b(bet|wager|stake|punt)\b/i,
+  /\b(bet (now|today|here)|place (a |your )?bet|sign up (and|to) (bet|win)|claim (your|a) bonus|get (your|a) free bet)\b/i,
+  /\b(gambling|gamble|wager|wagering|bookmaker|bookie|sportsbook)\b/i,
+  /\b(pepeta|betpawa|kwikbet|shabiki|cheza|lotto|lottery|scratch card|instant win)\b/i,
+];
+
+// Unauthorized brand advertising — companies doing free marketing on PPP TV
+const BRAND_AD_PATTERNS: RegExp[] = [
+  /\b(launches?|unveils?|introduces?|announces?|debuts?|rolls? out|now available|on sale now|buy now|shop now|order now)\b.{0,60}\b(product|collection|range|line|model|edition|version|app|service|platform|solution|device|gadget)\b/i,
+  /\b(win a|giveaway|contest|sweepstake|raffle|promo code|discount code|coupon|voucher|free gift|limited offer|exclusive deal|flash sale|special offer|up to \d+% off|save \d+%)\b/i,
+  /\b(partners? with|in partnership with|powered by|brought to you by|supported by|presented by|in association with|sponsored by)\b/i,
+  /\b(press release|media release|official statement|for immediate release|pr newswire|business wire|globe newswire|accesswire|einpresswire)\b/i,
+  /\b(we.re hiring|join our team|career opportunity|job opening|apply now|vacancy|now recruiting)\b/i,
+  /\b(download (our|the) app|available on (app store|google play|play store)|get (it|the app) (now|today|free))\b/i,
+  /\b(subscribe (now|today|for free)|sign up (now|today|for free)|register (now|today|for free)|create (a |an )?account)\b/i,
+  /\b(mikano|changan|toyota|nissan|honda|ford|bmw|mercedes|audi|volkswagen|hyundai|kia|suzuki|mitsubishi)\b.{0,80}\b(launches?|unveils?|introduces?|announces?|new model|new car|price|buy|purchase|test drive)\b/i,
+  /\b(safaricom|airtel|telkom|faiba|zuku|startimes|dstv|gotv)\b.{0,80}\b(offer|deal|promotion|bundle|package|discount|free|bonus|upgrade)\b/i,
+  /\b(equity bank|kcb|co-op bank|absa|stanbic|ncba|family bank|dtb|i&m)\b.{0,80}\b(offer|loan|interest|rate|product|service|account|apply)\b/i,
+];
+
 const PROMO_TITLE_PATTERNS: RegExp[] = [
   /\b(sponsored|advertorial|advertisement|paid post|paid content|partner content|branded content|native ad|promoted|promotion)\b/i,
   /\b(press release|media release|official statement|for immediate release|pr newswire|business wire|globe newswire)\b/i,
@@ -167,12 +193,16 @@ const PROMO_PARA_PATTERNS: RegExp[] = [
 
 function isPromotional(title: string, excerpt: string): boolean {
   const combined = `${title} ${excerpt}`;
-  return PROMO_TITLE_PATTERNS.some(r => r.test(combined));
+  return PROMO_TITLE_PATTERNS.some(r => r.test(combined))
+    || BETTING_PATTERNS.some(r => r.test(combined))
+    || BRAND_AD_PATTERNS.some(r => r.test(combined));
 }
 
 function isBodyPromotional(content: string): boolean {
   if (!content) return false;
   const text = stripHtml(content);
+  // Hard block: any betting/gambling mention in body
+  if (BETTING_PATTERNS.some(r => r.test(text))) return true;
   return PROMO_BODY_SIGNALS.filter(r => r.test(text)).length >= 3;
 }
 
@@ -217,21 +247,30 @@ async function detectAndTranslate(text: string, env: Env): Promise<{ text: strin
 
 // ─── AI REWRITER — GEMINI + NVIDIA FALLBACK ───────────────────────────────────
 function buildRewritePrompt(article: RawArticle, translatedBody: string): string {
-  return `You are a Gen Z entertainment journalist writing for PPP TV Kenya — East Africa's #1 entertainment platform. Your audience is 18-35 year olds across Kenya, Tanzania, Uganda, Nigeria, and globally.
+  // Subcategory options per category
+  const subcatMap: Record<string, string> = {
+    Entertainment: 'celebrity, music, movies-tv, fashion, comedy, awards, events, kenyan-celebs, afrobeats, east-africa-ent',
+    Sports:        'football, basketball, athletics, rugby, boxing-mma, kenyan-sports, cricket, tennis, formula1, african-sports',
+    Technology:    'tech-news, ai-innovation, african-tech, gaming, smartphones, startups, cybersecurity, social-media, fintech, gadgets',
+    Lifestyle:     'fashion, beauty, health, food, travel, relationships, fitness, home, parenting, wellness',
+  };
+  const subcatOptions = subcatMap[article.category] ?? 'general';
 
-Rewrite the following article in a punchy, engaging Gen Z voice. Be bold, use current slang naturally (not forced), keep it factual but make it exciting. DO NOT mention the source publication name anywhere in the output.
+  return `You are a Gen Z journalist writing for PPP TV Kenya — East Africa's #1 entertainment platform. Your audience is 18-35 year olds across Kenya, Tanzania, Uganda, Nigeria, and globally.
 
-ARTICLE TO REWRITE:
-Title: ${article.title}
-Body: ${translatedBody || article.excerpt}
+Rewrite the following ${article.category} article in a punchy, engaging Gen Z voice. Be bold, keep it factual but exciting. DO NOT mention the source publication name. DO NOT include any betting, gambling, or brand advertising content.
+
+ARTICLE CATEGORY: ${article.category} (KEEP THIS EXACT CATEGORY — do not change it)
+ARTICLE TITLE: ${article.title}
+ARTICLE BODY: ${translatedBody || article.excerpt}
 
 Return ONLY valid JSON with exactly these fields (no markdown, no code blocks):
 {
   "rewritten_title": "catchy Gen Z headline under 80 chars",
   "rewritten_excerpt": "2-sentence hook that makes you want to read more, under 160 chars",
-  "rewritten_body": "full rewritten article in HTML paragraphs (<p> tags), 3-6 paragraphs, Gen Z voice, factual",
+  "rewritten_body": "full rewritten article in HTML paragraphs (<p> tags), 3-6 paragraphs, Gen Z voice, factual, NO betting/gambling/brand ads",
   "pptv_verdict": "PPP TV's hot take in 1 punchy sentence — our opinion on this story",
-  "subcategory": "one of: celebrity, music, movies-tv, fashion, football, basketball, athletics, rugby, boxing-mma, kenyan-sports, tech-news, ai-innovation, african-tech, gaming, lifestyle",
+  "subcategory": "one of: ${subcatOptions}",
   "tags": ["tag1","tag2","tag3","tag4","tag5"]
 }`;
 }
@@ -436,51 +475,126 @@ async function incrementViewsKV(env: Env, slug: string): Promise<number> {
   return next;
 }
 
-// ─── RSS FEEDS — Entertainment / Sports / Technology only ────────────────────
+// ─── RSS FEEDS — Entertainment / Sports / Technology / Lifestyle ─────────────
 const RSS_FEEDS: Array<{ url: string; name: string; category: string }> = [
-  // Entertainment — Kenya
-  { url: 'https://www.sde.co.ke/feed/',                          name: 'SDE Kenya',             category: 'Entertainment' },
-  { url: 'https://www.ghafla.com/ke/feed/',                      name: 'Ghafla Kenya',          category: 'Entertainment' },
-  { url: 'https://www.mpasho.co.ke/feed/',                       name: 'Mpasho',                category: 'Entertainment' },
-  { url: 'https://www.pulselive.co.ke/rss',                      name: 'Pulse Live Kenya',      category: 'Entertainment' },
-  { url: 'https://www.tuko.co.ke/rss/',                          name: 'Tuko Kenya',            category: 'Entertainment' },
-  { url: 'https://www.capitalfm.co.ke/entertainment/feed/',      name: 'Capital FM Ent',        category: 'Entertainment' },
-  // Entertainment — Tanzania / Uganda / Nigeria
-  { url: 'https://www.bellanaija.com/feed/',                     name: 'BellaNaija',            category: 'Entertainment' },
-  { url: 'https://www.pulse.ng/rss',                             name: 'Pulse Nigeria',         category: 'Entertainment' },
-  { url: 'https://www.pulse.com.gh/rss',                         name: 'Pulse Ghana',           category: 'Entertainment' },
-  { url: 'https://www.thisisafrica.me/feed/',                    name: 'This Is Africa',        category: 'Entertainment' },
-  // Entertainment — Global
-  { url: 'https://variety.com/feed/',                            name: 'Variety',               category: 'Entertainment' },
-  { url: 'https://deadline.com/feed/',                           name: 'Deadline Hollywood',    category: 'Entertainment' },
-  { url: 'https://ew.com/feed/',                                 name: 'Entertainment Weekly',  category: 'Entertainment' },
-  { url: 'https://www.rollingstone.com/music/feed/',             name: 'Rolling Stone',         category: 'Entertainment' },
-  { url: 'https://www.billboard.com/feed/',                      name: 'Billboard',             category: 'Entertainment' },
-  { url: 'https://pitchfork.com/rss/news',                       name: 'Pitchfork',             category: 'Entertainment' },
-  { url: 'https://www.nme.com/feed',                             name: 'NME',                   category: 'Entertainment' },
-  // Sports — Kenya & Africa
-  { url: 'https://www.standardmedia.co.ke/rss/sports.php',       name: 'Standard Sports',       category: 'Sports' },
-  { url: 'https://www.nation.africa/kenya/sports/rss.xml',       name: 'Nation Sports',         category: 'Sports' },
-  { url: 'https://www.capitalfm.co.ke/sports/feed/',             name: 'Capital FM Sports',     category: 'Sports' },
-  { url: 'https://www.supersport.com/rss/football',              name: 'SuperSport Football',   category: 'Sports' },
-  { url: 'https://www.cafonline.com/rss',                        name: 'CAF Online',            category: 'Sports' },
-  // Sports — Global
-  { url: 'https://www.bbc.co.uk/sport/rss.xml',                  name: 'BBC Sport',             category: 'Sports' },
-  { url: 'https://www.skysports.com/rss/12040',                  name: 'Sky Sports',            category: 'Sports' },
-  { url: 'https://www.espn.com/espn/rss/news',                   name: 'ESPN',                  category: 'Sports' },
-  { url: 'https://www.goal.com/feeds/en/news',                   name: 'Goal.com',              category: 'Sports' },
-  { url: 'https://www.fourfourtwo.com/rss',                      name: 'FourFourTwo',           category: 'Sports' },
-  // Technology — Africa
-  { url: 'https://www.techweez.com/feed/',                       name: 'Techweez',              category: 'Technology' },
-  { url: 'https://techcabal.com/feed/',                          name: 'TechCabal',             category: 'Technology' },
-  { url: 'https://www.humanipo.com/feed/',                       name: 'HumanIPO',              category: 'Technology' },
-  { url: 'https://disrupt-africa.com/feed/',                     name: 'Disrupt Africa',        category: 'Technology' },
-  // Technology — Global
-  { url: 'https://techcrunch.com/feed/',                         name: 'TechCrunch',            category: 'Technology' },
-  { url: 'https://www.theverge.com/rss/index.xml',               name: 'The Verge',             category: 'Technology' },
-  { url: 'https://feeds.arstechnica.com/arstechnica/index',      name: 'Ars Technica',          category: 'Technology' },
-  { url: 'https://www.wired.com/feed/rss',                       name: 'Wired',                 category: 'Technology' },
-  { url: 'https://www.engadget.com/rss.xml',                     name: 'Engadget',              category: 'Technology' },
+  // ── ENTERTAINMENT — Kenya ──────────────────────────────────────────────────
+  { url: 'https://www.sde.co.ke/feed/',                               name: 'SDE Kenya',              category: 'Entertainment' },
+  { url: 'https://www.ghafla.com/ke/feed/',                           name: 'Ghafla Kenya',           category: 'Entertainment' },
+  { url: 'https://www.mpasho.co.ke/feed/',                            name: 'Mpasho',                 category: 'Entertainment' },
+  { url: 'https://www.pulselive.co.ke/rss',                           name: 'Pulse Live Kenya',       category: 'Entertainment' },
+  { url: 'https://www.tuko.co.ke/rss/',                               name: 'Tuko Kenya',             category: 'Entertainment' },
+  { url: 'https://www.capitalfm.co.ke/entertainment/feed/',           name: 'Capital FM Ent',         category: 'Entertainment' },
+  { url: 'https://www.nairobishades.com/feed/',                       name: 'Nairobi Shades',         category: 'Entertainment' },
+  { url: 'https://www.standardmedia.co.ke/rss/entertainment.php',    name: 'Standard Entertainment', category: 'Entertainment' },
+  { url: 'https://www.nation.africa/kenya/entertainment/rss.xml',    name: 'Nation Entertainment',   category: 'Entertainment' },
+  { url: 'https://www.the-star.co.ke/entertainment/rss/',            name: 'The Star Entertainment', category: 'Entertainment' },
+  // ── ENTERTAINMENT — East Africa ────────────────────────────────────────────
+  { url: 'https://www.bellanaija.com/feed/',                          name: 'BellaNaija',             category: 'Entertainment' },
+  { url: 'https://www.pulse.ng/rss',                                  name: 'Pulse Nigeria',          category: 'Entertainment' },
+  { url: 'https://www.pulse.com.gh/rss',                              name: 'Pulse Ghana',            category: 'Entertainment' },
+  { url: 'https://www.thisisafrica.me/feed/',                         name: 'This Is Africa',         category: 'Entertainment' },
+  { url: 'https://www.channel24.co.za/feed/',                         name: 'Channel24 SA',           category: 'Entertainment' },
+  { url: 'https://www.timeslive.co.za/entertainment/rss/',            name: 'Times Live Ent',         category: 'Entertainment' },
+  { url: 'https://www.drum.co.za/feed/',                              name: 'Drum Magazine',          category: 'Entertainment' },
+  // ── ENTERTAINMENT — Global ─────────────────────────────────────────────────
+  { url: 'https://variety.com/feed/',                                 name: 'Variety',                category: 'Entertainment' },
+  { url: 'https://deadline.com/feed/',                                name: 'Deadline Hollywood',     category: 'Entertainment' },
+  { url: 'https://ew.com/feed/',                                      name: 'Entertainment Weekly',   category: 'Entertainment' },
+  { url: 'https://www.hollywoodreporter.com/feed/',                   name: 'Hollywood Reporter',     category: 'Entertainment' },
+  { url: 'https://www.rollingstone.com/music/feed/',                  name: 'Rolling Stone Music',    category: 'Entertainment' },
+  { url: 'https://www.billboard.com/feed/',                           name: 'Billboard',              category: 'Entertainment' },
+  { url: 'https://pitchfork.com/rss/news',                            name: 'Pitchfork',              category: 'Entertainment' },
+  { url: 'https://www.nme.com/feed',                                  name: 'NME',                    category: 'Entertainment' },
+  { url: 'https://www.complex.com/music/rss',                         name: 'Complex Music',          category: 'Entertainment' },
+  { url: 'https://www.hotnewhiphop.com/rss/news.xml',                 name: 'HotNewHipHop',           category: 'Entertainment' },
+  { url: 'https://www.xxlmag.com/feed/',                              name: 'XXL Magazine',           category: 'Entertainment' },
+  { url: 'https://www.vibe.com/feed/',                                name: 'Vibe Magazine',          category: 'Entertainment' },
+  { url: 'https://www.essence.com/feed/',                             name: 'Essence',                category: 'Entertainment' },
+  { url: 'https://www.bet.com/rss/news',                              name: 'BET News',               category: 'Entertainment' },
+
+  // ── SPORTS — Kenya ─────────────────────────────────────────────────────────
+  { url: 'https://www.standardmedia.co.ke/rss/sports.php',           name: 'Standard Sports',        category: 'Sports' },
+  { url: 'https://www.nation.africa/kenya/sports/rss.xml',           name: 'Nation Sports',          category: 'Sports' },
+  { url: 'https://www.capitalfm.co.ke/sports/feed/',                 name: 'Capital FM Sports',      category: 'Sports' },
+  { url: 'https://www.the-star.co.ke/sports/rss/',                   name: 'The Star Sports',        category: 'Sports' },
+  { url: 'https://www.athleticskenya.or.ke/feed/',                   name: 'Athletics Kenya',        category: 'Sports' },
+  { url: 'https://www.kbc.co.ke/category/sports/feed/',              name: 'KBC Sports',             category: 'Sports' },
+  // ── SPORTS — Africa ────────────────────────────────────────────────────────
+  { url: 'https://www.supersport.com/rss/football',                  name: 'SuperSport Football',    category: 'Sports' },
+  { url: 'https://www.cafonline.com/rss',                            name: 'CAF Online',             category: 'Sports' },
+  { url: 'https://www.kickoff.com/rss',                              name: 'Kickoff SA',             category: 'Sports' },
+  { url: 'https://www.timeslive.co.za/sport/rss/',                   name: 'Times Live Sport',       category: 'Sports' },
+  { url: 'https://www.pulse.ng/sports/rss',                          name: 'Pulse Nigeria Sports',   category: 'Sports' },
+  { url: 'https://www.goal.com/feeds/en/news',                       name: 'Goal.com',               category: 'Sports' },
+  // ── SPORTS — Global ────────────────────────────────────────────────────────
+  { url: 'https://www.bbc.co.uk/sport/rss.xml',                      name: 'BBC Sport',              category: 'Sports' },
+  { url: 'https://www.skysports.com/rss/12040',                      name: 'Sky Sports',             category: 'Sports' },
+  { url: 'https://www.espn.com/espn/rss/news',                       name: 'ESPN',                   category: 'Sports' },
+  { url: 'https://www.fourfourtwo.com/rss',                          name: 'FourFourTwo',            category: 'Sports' },
+  { url: 'https://www.sportingnews.com/rss',                         name: 'Sporting News',          category: 'Sports' },
+  { url: 'https://bleacherreport.com/articles/feed',                 name: 'Bleacher Report',        category: 'Sports' },
+  { url: 'https://www.si.com/rss/si_topstories.rss',                 name: 'Sports Illustrated',     category: 'Sports' },
+  { url: 'https://www.cbssports.com/rss/headlines/',                 name: 'CBS Sports',             category: 'Sports' },
+  { url: 'https://www.nba.com/rss/nba_rss.xml',                      name: 'NBA',                    category: 'Sports' },
+  { url: 'https://www.fifa.com/rss-feeds/news',                      name: 'FIFA News',              category: 'Sports' },
+  { url: 'https://www.premierleague.com/news/rss.xml',               name: 'Premier League',         category: 'Sports' },
+  { url: 'https://www.uefa.com/rssfeed/news/',                       name: 'UEFA News',              category: 'Sports' },
+  { url: 'https://www.athletics.com/rss',                            name: 'World Athletics',        category: 'Sports' },
+
+  // ── TECHNOLOGY — Kenya & Africa ────────────────────────────────────────────
+  { url: 'https://www.techweez.com/feed/',                           name: 'Techweez',               category: 'Technology' },
+  { url: 'https://techcabal.com/feed/',                              name: 'TechCabal',              category: 'Technology' },
+  { url: 'https://www.humanipo.com/feed/',                           name: 'HumanIPO',               category: 'Technology' },
+  { url: 'https://disrupt-africa.com/feed/',                         name: 'Disrupt Africa',         category: 'Technology' },
+  { url: 'https://www.itnewsafrica.com/feed/',                       name: 'IT News Africa',         category: 'Technology' },
+  { url: 'https://www.techpoint.africa/feed/',                       name: 'Techpoint Africa',       category: 'Technology' },
+  { url: 'https://www.ventureburn.com/feed/',                        name: 'Ventureburn',            category: 'Technology' },
+  { url: 'https://www.businessdailyafrica.com/bd/technology/rss',   name: 'BD Technology',          category: 'Technology' },
+  // ── TECHNOLOGY — Global ────────────────────────────────────────────────────
+  { url: 'https://techcrunch.com/feed/',                             name: 'TechCrunch',             category: 'Technology' },
+  { url: 'https://www.theverge.com/rss/index.xml',                   name: 'The Verge',              category: 'Technology' },
+  { url: 'https://feeds.arstechnica.com/arstechnica/index',          name: 'Ars Technica',           category: 'Technology' },
+  { url: 'https://www.wired.com/feed/rss',                           name: 'Wired',                  category: 'Technology' },
+  { url: 'https://www.engadget.com/rss.xml',                         name: 'Engadget',               category: 'Technology' },
+  { url: 'https://www.cnet.com/rss/news/',                           name: 'CNET',                   category: 'Technology' },
+  { url: 'https://www.zdnet.com/news/rss.xml',                       name: 'ZDNet',                  category: 'Technology' },
+  { url: 'https://www.technologyreview.com/feed/',                   name: 'MIT Tech Review',        category: 'Technology' },
+  { url: 'https://www.gizmodo.com/rss',                              name: 'Gizmodo',                category: 'Technology' },
+  { url: 'https://mashable.com/feeds/rss/tech',                      name: 'Mashable Tech',          category: 'Technology' },
+  { url: 'https://www.pcmag.com/feeds/rss/latest',                   name: 'PCMag',                  category: 'Technology' },
+  { url: 'https://www.tomshardware.com/feeds/all',                   name: 'Tom\'s Hardware',        category: 'Technology' },
+  { url: 'https://www.androidauthority.com/feed/',                   name: 'Android Authority',      category: 'Technology' },
+  { url: 'https://9to5mac.com/feed/',                                name: '9to5Mac',                category: 'Technology' },
+  { url: 'https://9to5google.com/feed/',                             name: '9to5Google',             category: 'Technology' },
+  { url: 'https://www.macrumors.com/macrumors.xml',                  name: 'MacRumors',              category: 'Technology' },
+
+  // ── LIFESTYLE — Kenya & Africa ─────────────────────────────────────────────
+  { url: 'https://www.standardmedia.co.ke/rss/lifestyle.php',        name: 'Standard Lifestyle',     category: 'Lifestyle' },
+  { url: 'https://www.nation.africa/kenya/lifestyle/rss.xml',        name: 'Nation Lifestyle',       category: 'Lifestyle' },
+  { url: 'https://www.pulselive.co.ke/lifestyle/rss',                name: 'Pulse Lifestyle Kenya',  category: 'Lifestyle' },
+  { url: 'https://www.tuko.co.ke/category/lifestyle/rss/',           name: 'Tuko Lifestyle',         category: 'Lifestyle' },
+  { url: 'https://www.bellanaija.com/category/living/feed/',         name: 'BellaNaija Living',      category: 'Lifestyle' },
+  { url: 'https://www.pulse.ng/lifestyle/rss',                       name: 'Pulse Nigeria Lifestyle',category: 'Lifestyle' },
+  { url: 'https://www.drum.co.za/category/lifestyle/feed/',          name: 'Drum Lifestyle',         category: 'Lifestyle' },
+  { url: 'https://www.truelovemag.co.za/feed/',                      name: 'True Love Magazine',     category: 'Lifestyle' },
+  { url: 'https://www.sde.co.ke/category/lifestyle/feed/',           name: 'SDE Lifestyle',          category: 'Lifestyle' },
+  { url: 'https://www.ghafla.com/ke/category/lifestyle/feed/',       name: 'Ghafla Lifestyle',       category: 'Lifestyle' },
+  // ── LIFESTYLE — Global ─────────────────────────────────────────────────────
+  { url: 'https://www.vogue.com/feed/rss',                           name: 'Vogue',                  category: 'Lifestyle' },
+  { url: 'https://www.elle.com/rss/all.xml/',                        name: 'Elle',                   category: 'Lifestyle' },
+  { url: 'https://www.harpersbazaar.com/rss/all.xml/',               name: 'Harper\'s Bazaar',       category: 'Lifestyle' },
+  { url: 'https://www.cosmopolitan.com/rss/all.xml/',                name: 'Cosmopolitan',           category: 'Lifestyle' },
+  { url: 'https://www.refinery29.com/en-us/rss.xml',                 name: 'Refinery29',             category: 'Lifestyle' },
+  { url: 'https://www.byrdie.com/rss',                               name: 'Byrdie',                 category: 'Lifestyle' },
+  { url: 'https://www.mindbodygreen.com/rss.xml',                    name: 'MindBodyGreen',          category: 'Lifestyle' },
+  { url: 'https://www.wellandgood.com/feed/',                        name: 'Well+Good',              category: 'Lifestyle' },
+  { url: 'https://www.healthline.com/rss/health-news',               name: 'Healthline',             category: 'Lifestyle' },
+  { url: 'https://www.shape.com/rss/all.xml',                        name: 'Shape',                  category: 'Lifestyle' },
+  { url: 'https://www.menshealth.com/rss/all.xml/',                  name: 'Men\'s Health',          category: 'Lifestyle' },
+  { url: 'https://www.womenshealthmag.com/rss/all.xml/',             name: 'Women\'s Health',        category: 'Lifestyle' },
+  { url: 'https://www.foodnetwork.com/fn-dish/feed',                 name: 'Food Network',           category: 'Lifestyle' },
+  { url: 'https://www.bonappetit.com/feed/rss',                      name: 'Bon Appétit',            category: 'Lifestyle' },
+  { url: 'https://www.travelandleisure.com/rss/all.xml',             name: 'Travel + Leisure',       category: 'Lifestyle' },
 ];
 
 // ─── RSS SCRAPER ──────────────────────────────────────────────────────────────
@@ -734,19 +848,20 @@ async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number;
 
   const skipped = allRaw.length - newArticles.length;
 
-  // 4. Process up to 10 new articles through AI pipeline — ensure category diversity
-  // Pick up to 4 from each category so Sports/Technology always get coverage
+  // 4. Process up to 12 new articles through AI pipeline — ensure category diversity
+  // Pick up to 3 from each category so all categories always get coverage
   const categoryBuckets: Record<string, RawArticle[]> = {};
   for (const a of newArticles) {
     if (!categoryBuckets[a.category]) categoryBuckets[a.category] = [];
     categoryBuckets[a.category].push(a);
   }
   const diverse: RawArticle[] = [];
-  const perCat = Math.max(3, Math.floor(10 / Math.max(Object.keys(categoryBuckets).length, 1)));
+  const numCats = Math.max(Object.keys(categoryBuckets).length, 1);
+  const perCat = Math.max(3, Math.floor(12 / numCats));
   for (const cat of Object.keys(categoryBuckets)) {
     diverse.push(...categoryBuckets[cat].slice(0, perCat));
   }
-  const toProcess = diverse.slice(0, 10);
+  const toProcess = diverse.slice(0, 12);
   const { processed, failed } = await processArticleBatch(toProcess, env);
 
   // 5. Store health metadata in KV
