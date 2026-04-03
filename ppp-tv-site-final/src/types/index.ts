@@ -37,6 +37,7 @@ export interface Host {
   name: string;
   title: string;
   bio: string;
+  imageUrl?: string;
   instagramUrl?: string;
   twitterUrl?: string;
   showSlugs: string[];
@@ -60,6 +61,7 @@ export interface Staff {
   name: string;
   role: string;
   bio: string;
+  imageUrl?: string;
   initials: string;
   department: 'on-air' | 'behind-the-scenes';
 }

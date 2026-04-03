@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 
 const CAT_COLORS = ['#FF007A','#BF00FF','#00CFFF','#FF6B00','#00FF94','#FFE600','#FF4500','#E50914'];
 
-function PersonCard({ name, role, bio, initials, slug, isHost, index }: {
+function PersonCard({ name, role, bio, initials, imageUrl, slug, isHost, index }: {
   name: string; role: string; bio: string; initials: string;
-  slug: string; isHost: boolean; index: number;
+  imageUrl?: string; slug: string; isHost: boolean; index: number;
 }) {
   const color = CAT_COLORS[index % CAT_COLORS.length];
   const href = isHost ? `/hosts/${slug}` : '#';
@@ -22,8 +22,12 @@ function PersonCard({ name, role, bio, initials, slug, isHost, index }: {
       <div style={{ height: '4px', background: color }} />
       <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         {/* Avatar circle */}
-        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: `${color}18`, border: `2.5px solid ${color}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', flexShrink: 0 }}>
-          <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.8rem', color: '#fff', letterSpacing: '.02em' }}>{initials}</span>
+        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: `${color}18`, border: `2.5px solid ${color}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', flexShrink: 0, overflow: 'hidden' }}>
+          {imageUrl ? (
+            <img src={imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: '1.8rem', color: '#fff', letterSpacing: '.02em' }}>{initials}</span>
+          )}
         </div>
         <span style={{ display: 'block', fontWeight: 800, color: '#fff', fontSize: '1rem', lineHeight: 1.3, marginBottom: '4px' }}>{name}</span>
         <span style={{ display: 'block', fontSize: '.62rem', fontWeight: 900, letterSpacing: '.1em', textTransform: 'uppercase', color, marginBottom: '.75rem' }}>{role}</span>
@@ -68,7 +72,7 @@ export default function PeoplePage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '14px' }}>
             {hosts.map((h, i) => (
-              <PersonCard key={h.slug} name={h.name} role={h.title} bio={h.bio} initials={h.initials} slug={h.slug} isHost={true} index={i} />
+              <PersonCard key={h.slug} name={h.name} role={h.title} bio={h.bio} initials={h.initials} imageUrl={h.imageUrl} slug={h.slug} isHost={true} index={i} />
             ))}
           </div>
         </div>
@@ -84,7 +88,7 @@ export default function PeoplePage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '14px' }}>
             {bts.map((s, i) => (
-              <PersonCard key={s.slug} name={s.name} role={s.role} bio={s.bio} initials={s.initials} slug={s.slug} isHost={false} index={i + hosts.length} />
+              <PersonCard key={s.slug} name={s.name} role={s.role} bio={s.bio} initials={s.initials} imageUrl={s.imageUrl} slug={s.slug} isHost={false} index={i + hosts.length} />
             ))}
           </div>
         </div>

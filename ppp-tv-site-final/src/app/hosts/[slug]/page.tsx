@@ -37,8 +37,12 @@ export default function HostPage({ params }: Props) {
 
       {/* Profile card */}
       <div className="bg-[#111] rounded-2xl p-8 mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        <div className={`w-24 h-24 rounded-full bg-${host.accentColor ?? 'brand-pink'}/20 flex items-center justify-center flex-shrink-0`}>
-          <span className="font-bebas text-4xl text-white">{host.initials}</span>
+        <div className={`w-24 h-24 rounded-full overflow-hidden bg-${host.accentColor ?? 'brand-pink'}/20 flex items-center justify-center flex-shrink-0`}>
+          {host.imageUrl ? (
+            <img src={host.imageUrl} alt={host.name} className="w-full h-full object-cover" />
+          ) : (
+            <span className="font-bebas text-4xl text-white">{host.initials}</span>
+          )}
         </div>
         <div>
           <h1 className="font-bebas text-4xl text-white tracking-wide">{host.name}</h1>
