@@ -10,25 +10,27 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function MoviesPage() {
-  const [all, moviesTV, celebrity, music, latestAll] = await Promise.all([
-    fetchArticles({ category: 'Entertainment', subcategory: 'movies-tv', limit: 60 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'movies-tv', limit: 10 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'celebrity', limit: 10 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'music',     limit: 10 } as Parameters<typeof fetchArticles>[0]),
+  const [all, entertainment, music, latestAll] = await Promise.all([
+    fetchArticles({ category: 'Movies', limit: 60 }),
+    fetchArticles({ category: 'Entertainment', limit: 20 }),
+    fetchArticles({ category: 'Music', limit: 10 }),
     fetchArticles({ sort: 'recent', limit: 10 }),
   ]);
 
+  // Combine Movies + Entertainment for a full page
+  const combined = [...all, ...entertainment.filter(a => !all.find(m => m.slug === a.slug))];
+
   const rows = [
-    { label: 'Movies & TV',  articles: moviesTV,  accentColor: '#E50914' },
-    { label: 'Celebrity',    articles: celebrity, accentColor: '#FF007A' },
-    { label: 'Music',        articles: music,     accentColor: '#FF6B00' },
+    { label: 'Movies',        articles: all,           accentColor: '#E50914' },
+    { label: 'Entertainment', articles: entertainment,  accentColor: '#BF00FF' },
+    { label: 'Music',         articles: music,          accentColor: '#FF6B00' },
   ].filter(r => r.articles.length > 0);
 
   return (
     <CategoryPageLayout
       title="Movies & TV"
       accentColor="#E50914"
-      articles={all}
+      articles={combined}
       rows={rows}
       latestAll={latestAll}
     />
