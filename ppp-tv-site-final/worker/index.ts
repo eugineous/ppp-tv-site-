@@ -882,6 +882,182 @@ async function fetchRSSFeed(feed: { url: string; name: string; category: string 
   }
 }
 
+// ─── RULE-BASED CONTENT REWRITER — no AI, always works ──────────────────────
+// Cleans titles, expands thin bodies, rewrites headlines using proven formulas
+
+const HEADLINE_PREFIXES: Record<string, string[]> = {
+  Entertainment: ['JUST IN:', 'BREAKING:', 'EXCLUSIVE:', 'HOT:', 'WATCH:', 'SPOTTED:'],
+  Sports:        ['MATCH REPORT:', 'BREAKING:', 'FINAL SCORE:', 'TRANSFER NEWS:', 'INJURY UPDATE:'],
+  Technology:    ['TECH ALERT:', 'NEW RELEASE:', 'BREAKING:', 'INNOVATION:', 'REPORT:'],
+  Lifestyle:     ['TRENDING:', 'MUST READ:', 'STYLE ALERT:', 'WELLNESS:', 'VIRAL:'],
+  Music:         ['NEW MUSIC:', 'CHART NEWS:', 'ARTIST ALERT:', 'RELEASE:', 'LISTEN:'],
+  Movies:        ['BOX OFFICE:', 'REVIEW:', 'TRAILER DROP:', 'CASTING NEWS:', 'PREMIERE:'],
+  News:          ['BREAKING:', 'DEVELOPING:', 'JUST IN:', 'UPDATE:', 'REPORT:'],
+};
+
+const FILLER_PHRASES = [
+  /\b(click here|read more|subscribe|sign up|newsletter|follow us|advertisement|sponsored|related:|tags:|filed under|share this|you might also like)\b/gi,
+  /\b(all rights reserved|copyright|©|\(c\))\b/gi,
+  /\b(photo:|image:|caption:|credit:|source:|via:)\b/gi,
+];
+
+const SYNONYM_MAP: Record<string, string> = {
+  'said': 'revealed', 'told': 'shared with', 'added': 'further noted',
+  'noted': 'pointed out', 'stated': 'confirmed', 'announced': 'officially announced',
+  'showed': 'demonstrated', 'found': 'discovered', 'reported': 'confirmed',
+  'good': 'impressive', 'bad': 'concerning', 'big': 'major', 'small': 'minor',
+  'new': 'latest', 'old': 'previous', 'many': 'numerous', 'few': 'several',
+  'very': 'extremely', 'really': 'truly', 'just': 'recently', 'also': 'additionally',
+  'but': 'however', 'so': 'therefore', 'because': 'given that', 'while': 'as',
+  'got': 'received', 'get': 'obtain', 'make': 'create', 'take': 'capture',
+  'show': 'demonstrate', 'give': 'provide', 'come': 'arrive', 'go': 'proceed',
+  'people': 'individuals', 'things': 'elements', 'place': 'location', 'time': 'period',
+  'way': 'approach', 'part': 'aspect', 'point': 'detail', 'fact': 'reality',
+};
+
+const EXPANSION_TEMPLATES: Record<string, string[]> = {
+  Entertainment: [
+    'This development has sparked significant conversation across Kenyan social media platforms.',
+    'Fans and followers have been reacting strongly to this latest update.',
+    'Industry insiders suggest this could have major implications for the entertainment scene.',
+    'PPP TV Kenya will continue to bring you the latest updates as this story develops.',
+  ],
+  Sports: [
+    'This result has major implications for the standings and upcoming fixtures.',
+    'Fans across Kenya and East Africa are closely following this development.',
+    'Analysts are already weighing in on what this means for the season ahead.',
+    'Stay tuned to PPP TV Kenya for all the latest sports updates.',
+  ],
+  Technology: [
+    'This development is expected to have significant impact on the African tech ecosystem.',
+    'Industry experts are already analyzing the broader implications of this announcement.',
+    'Kenyan tech enthusiasts and entrepreneurs are paying close attention to this story.',
+    'PPP TV Kenya will keep you updated as more details emerge.',
+  ],
+  Lifestyle: [
+    'This trend is rapidly gaining traction among young Kenyans and East Africans.',
+    'Lifestyle experts and influencers have been sharing their thoughts on this development.',
+    'The conversation around this topic continues to grow across social media.',
+    'Follow PPP TV Kenya for more lifestyle news and updates.',
+  ],
+  Music: [
+    'The Kenyan music scene continues to evolve with developments like this.',
+    'Fans across East Africa are buzzing about this latest music news.',
+    'This adds to the growing momentum of African music on the global stage.',
+    'PPP TV Kenya brings you the freshest music news from Kenya and beyond.',
+  ],
+  Movies: [
+    'Film enthusiasts across Kenya and Africa are eagerly following this story.',
+    'This development adds to the growing excitement around African cinema.',
+    'Industry watchers are closely monitoring how this unfolds.',
+    'Stay with PPP TV Kenya for all your movies and entertainment updates.',
+  ],
+  News: [
+    'This story continues to develop and PPP TV Kenya will bring you the latest updates.',
+    'Kenyans across the country are closely following this developing situation.',
+    'Official statements and further details are expected in the coming hours.',
+    'PPP TV Kenya remains committed to bringing you accurate and timely news.',
+  ],
+};
+
+function ruleBasedRewrite(article: RawArticle): { title: string; excerpt: string; body: string; verdict: string; subcategory: string; tags: string[] } {
+  const cat = article.category || 'Entertainment';
+
+  // 1. Clean title — remove filler, fix casing, add category prefix
+  let title = article.title.trim();
+  // Remove source name patterns like "- BBC News" or "| Daily Nation"
+  title = title.replace(/\s*[-|–—]\s*(BBC|CNN|Reuters|AP|AFP|Nation|Standard|Tuko|Pulse|Ghafla|NME|Billboard|Variety|ESPN|Sky Sports|Goal\.com|TechCrunch|Wired|Verge|Guardian|Mirror|Daily Mail|Telegraph|Independent|Times|Star|Monitor|Citizen|KBC|Capital FM)[^$]*/i, '');
+  // Apply synonym swaps to title
+  for (const [word, replacement] of Object.entries(SYNONYM_MAP)) {
+    title = title.replace(new RegExp(`\\b${word}\\b`, 'gi'), (m) => m[0] === m[0].toUpperCase() ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement);
+  }
+  // Add category prefix if title doesn't already start with one
+  const prefixes = HEADLINE_PREFIXES[cat] || HEADLINE_PREFIXES.News;
+  const hasPrefix = prefixes.some(p => title.toUpperCase().startsWith(p.replace(':', '')));
+  if (!hasPrefix && title.length < 80) {
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    title = `${prefix} ${title}`;
+  }
+  // Truncate if too long
+  if (title.length > 100) title = title.slice(0, 97) + '...';
+
+  // 2. Clean and build excerpt
+  let excerpt = article.excerpt || '';
+  for (const pattern of FILLER_PHRASES) excerpt = excerpt.replace(pattern, '');
+  excerpt = excerpt.replace(/\s+/g, ' ').trim();
+  if (!excerpt && article.content) {
+    excerpt = article.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+  }
+  if (!excerpt) excerpt = article.title;
+  if (excerpt.length > 200) excerpt = excerpt.slice(0, 197) + '...';
+
+  // 3. Build/expand body
+  let rawBody = article.content || article.excerpt || '';
+  // Strip HTML tags for processing
+  const plainBody = rawBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  // Remove filler phrases
+  let cleanBody = plainBody;
+  for (const pattern of FILLER_PHRASES) cleanBody = cleanBody.replace(pattern, '');
+  cleanBody = cleanBody.replace(/\s+/g, ' ').trim();
+
+  // Apply synonym swaps to body
+  for (const [word, replacement] of Object.entries(SYNONYM_MAP)) {
+    cleanBody = cleanBody.replace(new RegExp(`\\b${word}\\b`, 'gi'), (m) => m[0] === m[0].toUpperCase() ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement);
+  }
+
+  // Split into sentences and rebuild as paragraphs
+  const sentences = cleanBody.match(/[^.!?]+[.!?]+/g) || [cleanBody];
+  const paragraphs: string[] = [];
+
+  // Group sentences into paragraphs of 2-3 sentences each
+  for (let i = 0; i < sentences.length; i += 3) {
+    const chunk = sentences.slice(i, i + 3).join(' ').trim();
+    if (chunk.length > 20) paragraphs.push(`<p>${chunk}</p>`);
+  }
+
+  // If body is thin (< 3 paragraphs), expand with category-specific context
+  const expansions = EXPANSION_TEMPLATES[cat] || EXPANSION_TEMPLATES.News;
+  while (paragraphs.length < 3) {
+    const exp = expansions[paragraphs.length % expansions.length];
+    paragraphs.push(`<p>${exp}</p>`);
+  }
+
+  // Always add a PPP TV closing paragraph
+  paragraphs.push(`<p>${expansions[expansions.length - 1]}</p>`);
+
+  const body = paragraphs.join('\n');
+
+  // 4. Generate verdict
+  const verdictTemplates = [
+    `PPP TV says: This is one to watch closely.`,
+    `PPP TV verdict: Big moves happening — stay tuned.`,
+    `PPP TV take: This changes things significantly.`,
+    `PPP TV says: Kenya is watching and so are we.`,
+    `PPP TV verdict: The story is just getting started.`,
+  ];
+  const verdict = verdictTemplates[Math.floor(Math.random() * verdictTemplates.length)];
+
+  // 5. Generate subcategory and tags from title/body keywords
+  const text = (title + ' ' + cleanBody).toLowerCase();
+  const subcategory = cat.toLowerCase();
+
+  const tagCandidates = [
+    'kenya', 'nairobi', 'ppptv', cat.toLowerCase(),
+    text.includes('music') ? 'music' : null,
+    text.includes('sport') || text.includes('football') ? 'sports' : null,
+    text.includes('celebrity') || text.includes('star') ? 'celebrity' : null,
+    text.includes('tech') || text.includes('digital') ? 'technology' : null,
+    text.includes('fashion') || text.includes('style') ? 'fashion' : null,
+    text.includes('film') || text.includes('movie') ? 'movies' : null,
+    'eastafrica',
+  ].filter(Boolean) as string[];
+
+  const tags = [...new Set(tagCandidates)].slice(0, 5);
+  while (tags.length < 5) tags.push(['trending', 'viral', 'breaking', 'exclusive', 'latest'][tags.length - 1] || 'ppptv');
+
+  return { title, excerpt, body, verdict, subcategory, tags: tags.slice(0, 5) };
+}
+
 // ─── BATCH PROCESSOR ─────────────────────────────────────────────────────────
 async function processArticleBatch(
   articles: RawArticle[],
@@ -896,11 +1072,11 @@ async function processArticleBatch(
       article.content || article.excerpt, env
     );
 
-    // 2. Rewrite with Gemini → NVIDIA fallback (optional — fall back to original if AI unavailable)
+    // 2. Rewrite with Gemini → NVIDIA fallback, then rule-based as guaranteed fallback
     const rewritten = await rewriteWithAI(article, translatedBody, env);
 
-    // 3. Build ProcessedArticle — use AI output if available, else use original content
-    // Ensure body is never empty — build from excerpt if needed
+    // 3. Build ProcessedArticle — use AI output if available, else rule-based rewrite
+    const ruleRewrite = rewritten ? null : ruleBasedRewrite(article);
     const fallbackBody = article.content && article.content.length > 100
       ? article.content
       : `<p>${article.excerpt || article.title}</p>`;
@@ -908,12 +1084,12 @@ async function processArticleBatch(
     const now = new Date().toISOString();
     const pa: ProcessedArticle = {
       ...article,
-      rewrittenTitle:   rewritten?.rewritten_title   ?? article.title,
-      rewrittenExcerpt: rewritten?.rewritten_excerpt ?? article.excerpt,
-      rewrittenBody:    rewritten?.rewritten_body    ?? fallbackBody,
-      pptvVerdict:      rewritten?.pptv_verdict      ?? '',
-      subcategory:      rewritten?.subcategory       ?? article.category.toLowerCase(),
-      tags:             rewritten?.tags              ?? [],
+      rewrittenTitle:   rewritten?.rewritten_title   ?? ruleRewrite?.title   ?? article.title,
+      rewrittenExcerpt: rewritten?.rewritten_excerpt ?? ruleRewrite?.excerpt  ?? article.excerpt,
+      rewrittenBody:    rewritten?.rewritten_body    ?? ruleRewrite?.body     ?? fallbackBody,
+      pptvVerdict:      rewritten?.pptv_verdict      ?? ruleRewrite?.verdict  ?? '',
+      subcategory:      rewritten?.subcategory       ?? ruleRewrite?.subcategory ?? article.category.toLowerCase(),
+      tags:             rewritten?.tags              ?? ruleRewrite?.tags     ?? [],
       languageDetected: lang,
       rewrittenAt:      now,
       views:            0,
