@@ -92,7 +92,7 @@ export function mapToIngestPayload(article: Article): IngestArticle {
 
   excerpt = excerpt.slice(0, 300);
 
-  const articleUrl = `https://ppp-tv-site.vercel.app/news/${article.slug}`;
+  const articleUrl = `https://ppp-tv-site-final.vercel.app/news/${article.slug}`;
 
   return {
     id:             article.slug,
@@ -203,25 +203,7 @@ export async function pushArticle(
     clearTimeout(timer);
 
     if (ingestRes.ok) {
-      // Mark posted=true
-      if (supabaseUrl && supabaseKey) {
-        try {
-          await fetch(
-            `${supabaseUrl}/rest/v1/ingest_queue?id=eq.${encodeURIComponent(payload.id)}`,
-            {
-              method: 'PATCH',
-              headers: {
-                'Content-Type':  'application/json',
-                'apikey':        supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-              },
-              body: JSON.stringify({ posted: true }),
-            },
-          );
-        } catch (err) {
-          console.error('[pusher] posted=true PATCH error:', err);
-        }
-      }
+      // Do NOT mark posted=true here — auto-news-station sets that after posting to social media
       return { ok: true };
     }
 
@@ -298,7 +280,7 @@ export async function pushBatch(): Promise<{
       return { ok: false, pushed: 0, error: batchRes.statusText };
     }
 
-    // Upsert all as posted=true
+    // Upsert all into ingest_queue as posted=false — auto-news-station sets posted=true after social posting
     if (supabaseUrl && supabaseKey) {
       try {
         const rows = payloads.map((p) => ({
@@ -316,7 +298,7 @@ export async function pushBatch(): Promise<{
           video_url:        p.videoUrl,
           is_breaking:      p.isBreaking,
           tags:             p.tags,
-          posted:           true,
+          posted:           false,
         }));
 
         const upsertRes = await fetch(`${supabaseUrl}/rest/v1/ingest_queue`, {
