@@ -10,14 +10,16 @@ const MobileMenu = dynamic(() => import('./MobileMenu'), { ssr: false });
 const NAV = [
   { label: 'Home',          href: '/',             color: '#FF007A' },
   { label: 'Entertainment', href: '/entertainment', color: '#BF00FF' },
+  { label: 'Music',         href: '/music',         color: '#FF6B00' },
+  { label: 'Celebrity',     href: '/celebrity',     color: '#FF007A' },
   { label: 'Sports',        href: '/sports',        color: '#00CFFF' },
   { label: 'Movies',        href: '/movies',        color: '#E50914' },
   { label: 'Lifestyle',     href: '/lifestyle',     color: '#00FF94' },
   { label: 'Technology',    href: '/technology',    color: '#FFE600' },
   { label: '🔥 Trending',   href: '/trending',      color: '#FF007A' },
+  { label: '🎬 Video',      href: '/video',         color: '#E50914' },
   { label: 'Shows',         href: '/shows',         color: '#BF00FF' },
   { label: 'People',        href: '/people',        color: '#00CFFF' },
-  { label: '🔴 Live',       href: '/live',          color: '#FF007A' },
   { label: 'Archive',       href: '/archive',       color: '#888' },
 ];
 

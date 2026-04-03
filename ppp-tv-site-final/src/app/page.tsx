@@ -9,6 +9,8 @@ export const revalidate = 300;
 
 const CATEGORIES = [
   { label: 'Entertainment', cat: 'Entertainment',  href: '/entertainment', color: '#BF00FF' },
+  { label: 'Music',         cat: 'Music',          href: '/music',         color: '#FF6B00' },
+  { label: 'Celebrity',     cat: 'Entertainment',  href: '/celebrity',     color: '#FF007A' },
   { label: 'Sports',        cat: 'Sports',         href: '/sports',        color: '#00CFFF' },
   { label: 'Movies',        cat: 'Movies',         href: '/movies',        color: '#E50914' },
   { label: 'Lifestyle',     cat: 'Lifestyle',      href: '/lifestyle',     color: '#00FF94' },
