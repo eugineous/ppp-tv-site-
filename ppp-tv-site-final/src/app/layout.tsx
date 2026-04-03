@@ -14,7 +14,7 @@ const RecentlyViewed = dynamic(() => import('@/components/RecentlyViewed'), { ss
 const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--font-bebas', display: 'swap' });
 const dmSans    = DM_Sans({                   subsets: ['latin'], variable: '--font-dm',    display: 'swap' });
 
-const BASE_URL = 'https://ppp-tv-site.vercel.app';
+const BASE_URL = 'https://ppp-tv-site-final.vercel.app';
 const OG_IMAGE  = `${BASE_URL}/icon.png`;
 
 export const metadata: Metadata = {
@@ -39,6 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#FF007A" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="PPP TV Kenya" />
         {/* Preconnect to all external origins we load from */}
         <link rel="preconnect" href="https://ppp-tv-worker.euginemicah.workers.dev" />
         <link rel="preconnect" href="https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev" crossOrigin="anonymous" />
@@ -59,7 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`min-h-screen flex flex-col bg-black ${bebasNeue.variable} ${dmSans.variable}`}>
         <Header />
-        <main className="flex-grow pt-[68px] pb-14 sm:pb-0">{children}</main>
+        <main className="flex-grow pt-[92px] pb-14 sm:pb-0">{children}</main>
         <LiveUpdater />
         <RecentlyViewed />
         <NewsletterBar />

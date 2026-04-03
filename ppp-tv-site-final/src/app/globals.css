@@ -1058,6 +1058,7 @@ input[type="text"]:focus { border-color: rgba(255,0,122,.5) !important; box-shad
 
 /* ── Sidebar ── */
 .cat-page-sidebar {
+  display: none !important;
   width: 100%;
   background: #080808;
   border: 1px solid #141414;

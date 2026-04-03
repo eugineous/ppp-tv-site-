@@ -21,7 +21,7 @@ export async function fetchArticles(options: FetchArticlesOptions = {}): Promise
   try {
     const res = await fetch(url, {
       // ISR: serve cached version instantly, revalidate in background every 5 min
-      next: { revalidate: 300 },
+      next: { revalidate: 60 },
       headers: authHeaders(),
     });
     if (!res.ok) return [];
@@ -32,11 +32,11 @@ export async function fetchArticles(options: FetchArticlesOptions = {}): Promise
   }
 }
 
-/** Fetch a single article by slug — cache for 1 hour */
+/** Fetch a single article by slug — cache for 5 min */
 export async function fetchArticleBySlug(slug: string): Promise<Article | null> {
   try {
     const res = await fetch(`${WORKER_BASE}/articles/${slug}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 300 },
       headers: authHeaders(),
     });
     if (!res.ok) return null;
@@ -46,11 +46,11 @@ export async function fetchArticleBySlug(slug: string): Promise<Article | null> 
   }
 }
 
-/** Fetch top trending articles — cache 5 min */
+/** Fetch top trending articles — cache 1 min */
 export async function fetchTrending(): Promise<Article[]> {
   try {
     const res = await fetch(`${WORKER_BASE}/trending`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 60 },
       headers: authHeaders(),
     });
     if (!res.ok) return [];

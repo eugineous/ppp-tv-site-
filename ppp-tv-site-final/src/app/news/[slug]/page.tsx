@@ -9,7 +9,7 @@ import ViewRecorder from './ViewRecorder';
 
 const CommentSection = dynamic(() => import('@/components/CommentSection'), { ssr: false });
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 interface Props {
   params: { slug: string };
@@ -128,15 +128,26 @@ export default async function ArticlePage({ params }: Props) {
         )}
 
         {/* Article body */}
-        {formattedContent ? (
+        {formattedContent && formattedContent.length > 200 ? (
           <div
             className="article-body"
             dangerouslySetInnerHTML={{ __html: formattedContent }}
           />
         ) : (
-          <p style={{ color: '#555', fontSize: '.9rem', padding: '2rem 0' }}>
-            Full story is being loaded. Check back shortly.
-          </p>
+          <div style={{ padding: '2rem 0' }}>
+            {cleanExcerpt && (
+              <p style={{ color: '#ccc', fontSize: '1rem', lineHeight: 1.8, marginBottom: '2rem' }}>{cleanExcerpt}</p>
+            )}
+            <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '1.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#666', fontSize: '.85rem', marginBottom: '1rem' }}>Full story available at the original source</p>
+              {article.sourceUrl && (
+                <a href={article.sourceUrl} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px', background: accent, color: '#fff', borderRadius: '6px', textDecoration: 'none', fontSize: '.8rem', fontWeight: 900, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  Read Full Story →
+                </a>
+              )}
+            </div>
+          </div>
         )}
 
         {/* PPP TV Verdict */}

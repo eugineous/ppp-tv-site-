@@ -33,6 +33,7 @@ const nextConfig = {
   },
   compress: true,
   poweredByHeader: false,
+  reactStrictMode: false,
 
   typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: true },
@@ -40,21 +41,21 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
-      { protocol: 'http',  hostname: '**' },
     ],
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 604800,   // 7 days — images rarely change
-    deviceSizes: [640, 828, 1080, 1200, 1920],
-    imageSizes: [64, 128, 256, 384],
-    dangerouslyAllowSVG: false,
-    unoptimized: false,
+    minimumCacheTTL: 3600,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
   async headers() {
     return [
       {
         source: '/(.*)',
-        headers: securityHeaders,
+        headers: [
+          ...securityHeaders,
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+        ],
       },
       {
         source: '/_next/static/(.*)',
@@ -69,19 +70,24 @@ const nextConfig = {
         ],
       },
       {
-        // Cache all page HTML for 5 min with stale-while-revalidate
         source: '/((?!api|_next).*)',
         headers: [
           { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=600' },
+        ],
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
         ],
       },
     ];
   },
 
   experimental: {
+    optimizeCss: true,
     optimizePackageImports: ['date-fns', 'react', 'react-dom'],
-    // Partial prerendering — serve shell instantly, stream content
-    ppr: false, // keep off until stable
+    ppr: false,
     instrumentationHook: true,
   },
 };

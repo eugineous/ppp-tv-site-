@@ -1,0 +1,21 @@
+{
+  "name": "PPP TV Kenya",
+  "short_name": "PPP TV",
+  "description": "Kenya's #1 Entertainment Channel — StarTimes 430",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FF007A",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["news", "entertainment"],
+  "lang": "en-KE",
+  "shortcuts": [
+    { "name": "Entertainment", "url": "/entertainment", "description": "Latest entertainment news" },
+    { "name": "Sports", "url": "/sports", "description": "Sports news and updates" },
+    { "name": "Trending", "url": "/trending", "description": "Trending stories" }
+  ]
+}
