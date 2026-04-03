@@ -644,20 +644,19 @@ async function processArticleBatch(
       article.content || article.excerpt, env
     );
 
-    // 2. Rewrite with Gemini → NVIDIA fallback
+    // 2. Rewrite with Gemini → NVIDIA fallback (optional — fall back to original if AI unavailable)
     const rewritten = await rewriteWithAI(article, translatedBody, env);
-    if (!rewritten) throw new Error(`AI rewrite failed for: ${article.slug}`);
 
-    // 3. Build ProcessedArticle
+    // 3. Build ProcessedArticle — use AI output if available, else use original content
     const now = new Date().toISOString();
     const pa: ProcessedArticle = {
       ...article,
-      rewrittenTitle:   rewritten.rewritten_title,
-      rewrittenExcerpt: rewritten.rewritten_excerpt,
-      rewrittenBody:    rewritten.rewritten_body,
-      pptvVerdict:      rewritten.pptv_verdict,
-      subcategory:      rewritten.subcategory,
-      tags:             rewritten.tags,
+      rewrittenTitle:   rewritten?.rewritten_title   ?? article.title,
+      rewrittenExcerpt: rewritten?.rewritten_excerpt ?? article.excerpt,
+      rewrittenBody:    rewritten?.rewritten_body    ?? article.content,
+      pptvVerdict:      rewritten?.pptv_verdict      ?? '',
+      subcategory:      rewritten?.subcategory       ?? article.category.toLowerCase(),
+      tags:             rewritten?.tags              ?? [],
       languageDetected: lang,
       rewrittenAt:      now,
       views:            0,
