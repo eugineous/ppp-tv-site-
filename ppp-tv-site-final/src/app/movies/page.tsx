@@ -11,10 +11,10 @@ export const revalidate = 300;
 
 export default async function MoviesPage() {
   const [all, moviesTV, celebrity, music, latestAll] = await Promise.all([
-    fetchArticles({ category: 'Entertainment', subcategory: 'movies-tv', limit: 40 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'movies-tv', limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'celebrity', limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'music',     limit: 8 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'movies-tv', limit: 60 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'movies-tv', limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'celebrity', limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'music',     limit: 10 } as Parameters<typeof fetchArticles>[0]),
     fetchArticles({ sort: 'recent', limit: 10 }),
   ]);
 

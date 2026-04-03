@@ -11,13 +11,13 @@ export const revalidate = 300;
 
 export default async function SportsPage() {
   const [all, football, basketball, athletics, rugby, boxing, kenyan, latestAll] = await Promise.all([
-    fetchArticles({ category: 'Sports', limit: 40 }),
-    fetchArticles({ category: 'Sports', subcategory: 'football',      limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Sports', subcategory: 'basketball',    limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Sports', subcategory: 'athletics',     limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Sports', subcategory: 'rugby',         limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Sports', subcategory: 'boxing-mma',    limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Sports', subcategory: 'kenyan-sports', limit: 8 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', limit: 60 }),
+    fetchArticles({ category: 'Sports', subcategory: 'football',      limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'basketball',    limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'athletics',     limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'rugby',         limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'boxing-mma',    limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'kenyan-sports', limit: 10 } as Parameters<typeof fetchArticles>[0]),
     fetchArticles({ sort: 'recent', limit: 10 }),
   ]);
 

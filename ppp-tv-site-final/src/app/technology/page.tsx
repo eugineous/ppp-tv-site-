@@ -11,13 +11,13 @@ export const revalidate = 300;
 
 export default async function TechnologyPage() {
   const [all, techNews, ai, africanTech, gaming, smartphones, startups, latestAll] = await Promise.all([
-    fetchArticles({ category: 'Technology', limit: 40 }),
-    fetchArticles({ category: 'Technology', subcategory: 'tech-news',     limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Technology', subcategory: 'ai-innovation', limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Technology', subcategory: 'african-tech',  limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Technology', subcategory: 'gaming',        limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Technology', subcategory: 'smartphones',   limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Technology', subcategory: 'startups',      limit: 8 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Technology', limit: 60 }),
+    fetchArticles({ category: 'Technology', subcategory: 'tech-news',     limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Technology', subcategory: 'ai-innovation', limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Technology', subcategory: 'african-tech',  limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Technology', subcategory: 'gaming',        limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Technology', subcategory: 'smartphones',   limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Technology', subcategory: 'startups',      limit: 10 } as Parameters<typeof fetchArticles>[0]),
     fetchArticles({ sort: 'recent', limit: 10 }),
   ]);
 

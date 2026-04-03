@@ -11,13 +11,13 @@ export const revalidate = 300;
 
 export default async function LifestylePage() {
   const [all, fashion, beauty, health, food, travel, fitness, latestAll] = await Promise.all([
-    fetchArticles({ category: 'Lifestyle', limit: 40 }),
-    fetchArticles({ category: 'Lifestyle', subcategory: 'fashion',       limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Lifestyle', subcategory: 'beauty',        limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Lifestyle', subcategory: 'health',        limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Lifestyle', subcategory: 'food',          limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Lifestyle', subcategory: 'travel',        limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Lifestyle', subcategory: 'fitness',       limit: 8 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Lifestyle', limit: 60 }),
+    fetchArticles({ category: 'Lifestyle', subcategory: 'fashion',       limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Lifestyle', subcategory: 'beauty',        limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Lifestyle', subcategory: 'health',        limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Lifestyle', subcategory: 'food',          limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Lifestyle', subcategory: 'travel',        limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Lifestyle', subcategory: 'fitness',       limit: 10 } as Parameters<typeof fetchArticles>[0]),
     fetchArticles({ sort: 'recent', limit: 10 }),
   ]);
 

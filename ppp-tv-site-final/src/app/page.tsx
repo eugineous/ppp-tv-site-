@@ -25,7 +25,7 @@ function groupByCategory(articles: Article[]): Record<string, Article[]> {
 
 export default async function HomePage() {
   const [allArticles, trendingRaw] = await Promise.all([
-    fetchArticles({ sort: 'recent', limit: 120 }),
+    fetchArticles({ sort: 'recent', limit: 200 }),
     fetchTrending(),
   ]);
 
@@ -34,7 +34,7 @@ export default async function HomePage() {
   const trending = allArticles
     .slice()
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, 12);
+    .slice(0, 24);
 
   const trendingSlugSet = new Set(trending.map(a => a.slug));
   const byViews = (trendingRaw.length >= 5 ? trendingRaw : allArticles)
@@ -62,7 +62,7 @@ export default async function HomePage() {
           {/* Top 10 — large auto-scroll carousel */}
           {top10.length >= 3 && <Top10Row articles={top10} />}
 
-          {/* Category rows */}
+          {/* Category rows — each gets 60 articles for 5 rows of 12 */}
           {CATEGORIES.map(({ label, cat, href, color }) => {
             const articles = grouped[cat] ?? [];
             if (articles.length === 0) return null;
@@ -70,7 +70,7 @@ export default async function HomePage() {
               <CategoryRow
                 key={cat}
                 label={label}
-                articles={articles.slice(0, 20)}
+                articles={articles.slice(0, 60)}
                 seeAllHref={href}
                 accentColor={color}
               />

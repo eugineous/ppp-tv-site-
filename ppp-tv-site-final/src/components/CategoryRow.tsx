@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import ArticleCard from './ArticleCard';
 import type { Article } from '@/types';
 
@@ -21,17 +21,33 @@ export default function CategoryRow({ label, articles, seeAllHref, accentColor }
   if (articles.length === 0) return null;
   const color = accentColor || CAT_COLORS[articles[0]?.category] || '#FF007A';
 
-  // Show 4 per page, paginate through all articles
-  const PAGE = 4;
-  const [page, setPage] = useState(0);
-  const totalPages = Math.ceil(articles.length / PAGE);
-  const canPrev = page > 0;
-  const canNext = page < totalPages - 1;
-  const visible = articles.slice(page * PAGE, page * PAGE + PAGE);
+  // Duplicate articles for seamless infinite scroll (need at least 12 visible)
+  const items = articles.length < 6 ? [...articles, ...articles, ...articles] : [...articles, ...articles];
+  const trackRef = useRef<HTMLDivElement>(null);
+  const animRef  = useRef<number>(0);
+  const posRef   = useRef(0);
+  const pausedRef = useRef(false);
+  // Speed: px per frame at 60fps — slow drift
+  const SPEED = 0.4;
 
-  // Pad to exactly 4 so grid never collapses
-  const padded = [...visible];
-  while (padded.length < PAGE) padded.push(null as unknown as Article);
+  const tick = useCallback(() => {
+    const track = trackRef.current;
+    if (!track || pausedRef.current) {
+      animRef.current = requestAnimationFrame(tick);
+      return;
+    }
+    posRef.current += SPEED;
+    // Reset when we've scrolled one full set of original articles
+    const halfWidth = track.scrollWidth / 2;
+    if (posRef.current >= halfWidth) posRef.current = 0;
+    track.style.transform = `translateX(-${posRef.current}px)`;
+    animRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  useEffect(() => {
+    animRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [tick]);
 
   return (
     <section className="cat-row" aria-label={`${label} articles`}>
@@ -49,68 +65,33 @@ export default function CategoryRow({ label, articles, seeAllHref, accentColor }
             </a>
           )}
         </div>
-
-        {/* Right side: page indicator + nav arrows */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {totalPages > 1 && (
-            <span style={{ fontSize: '.6rem', color: '#444', fontWeight: 700, letterSpacing: '.06em' }}>
-              {page + 1} / {totalPages}
-            </span>
-          )}
-          {seeAllHref && (
-            <a href={seeAllHref} className="cat-row-see-all-btn" style={{ borderColor: color, color }}>
-              View All →
-            </a>
-          )}
-          {totalPages > 1 && (
-            <div style={{ display: 'flex', gap: '4px' }}>
-              <button
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                disabled={!canPrev}
-                className="row-nav-arrow"
-                aria-label="Previous"
-                style={{ borderColor: canPrev ? color : '#222', color: canPrev ? color : '#333' }}
-              >
-                ‹
-              </button>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                disabled={!canNext}
-                className="row-nav-arrow"
-                aria-label="Next"
-                style={{ borderColor: canNext ? color : '#222', color: canNext ? color : '#333' }}
-              >
-                ›
-              </button>
-            </div>
-          )}
-        </div>
+        {seeAllHref && (
+          <a href={seeAllHref} className="cat-row-see-all-btn" style={{ borderColor: color, color }}>
+            View All →
+          </a>
+        )}
       </div>
 
-      {/* Progress dots */}
-      {totalPages > 1 && (
-        <div className="cat-row-dots">
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i)}
-              className="cat-row-dot"
-              aria-label={`Page ${i + 1}`}
-              style={{ background: i === page ? color : '#222', width: i === page ? '20px' : '6px' }}
-            />
+      {/* Auto-scrolling strip — overflow hidden, track translates */}
+      <div
+        className="cat-row-autoscroll-wrap"
+        onMouseEnter={() => { pausedRef.current = true; }}
+        onMouseLeave={() => { pausedRef.current = false; }}
+        onTouchStart={() => { pausedRef.current = true; }}
+        onTouchEnd={() => { pausedRef.current = false; }}
+      >
+        <div ref={trackRef} className="cat-row-autoscroll-track">
+          {items.map((article, i) => (
+            <div key={`${article.slug}-${i}`} className="cat-row-autoscroll-card">
+              <ArticleCard
+                article={article}
+                accentColor={color}
+                ctaIndex={i}
+                priority={i < 5}
+              />
+            </div>
           ))}
         </div>
-      )}
-
-      {/* 5-column grid — always exactly 5 slots */}
-      <div className="cat-row-grid">
-        {padded.map((article, i) =>
-          article ? (
-            <ArticleCard key={article.slug} article={article} accentColor={color} ctaIndex={i} priority={page === 0 && i < 4} />
-          ) : (
-            <div key={`empty-${i}`} className="cat-row-empty-slot" />
-          )
-        )}
       </div>
     </section>
   );

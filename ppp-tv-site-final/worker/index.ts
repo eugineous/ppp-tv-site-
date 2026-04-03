@@ -965,6 +965,75 @@ async function processArticleBatch(
   return { processed, failed, skipped };
 }
 
+// ─── AI RE-PARAPHRASE — refresh existing articles with new angles ─────────────
+async function rephraseExistingArticles(env: Env, limit = 5): Promise<{ rephrased: number; failed: number }> {
+  if (!env.SUPABASE_URL) return { rephrased: 0, failed: 0 };
+  let rephrased = 0, failed = 0;
+  try {
+    // Pick articles that haven't been rephrased recently (no pptv_verdict or old rewritten_at)
+    const res = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/articles?select=slug,original_title,original_body,rewritten_title,rewritten_body,category,image_url,source_url,source_name,published_at&order=rewritten_at.asc.nullsfirst&limit=${limit}`,
+      { headers: supabaseHeaders(env) }
+    );
+    if (!res.ok) return { rephrased: 0, failed: 0 };
+    const rows = await res.json() as Array<Record<string, unknown>>;
+
+    for (const row of rows) {
+      try {
+        const originalBody = (row.original_body as string) || (row.rewritten_body as string) || '';
+        if (!originalBody || originalBody.length < 100) continue;
+
+        const article: RawArticle = {
+          slug:        row.slug as string,
+          title:       row.original_title as string,
+          excerpt:     stripHtml(originalBody).slice(0, 250),
+          content:     originalBody,
+          category:    row.category as string,
+          imageUrl:    row.image_url as string,
+          sourceUrl:   row.source_url as string,
+          sourceName:  row.source_name as string,
+          publishedAt: row.published_at as string,
+        };
+
+        // Build a "fresh angle" prompt
+        const freshPrompt = buildRewritePrompt(article, stripHtml(originalBody));
+        const aiRaw = await callAI(freshPrompt, env);
+        if (!aiRaw) { failed++; continue; }
+
+        let parsed: GeminiOutput | null = null;
+        try {
+          const jsonMatch = aiRaw.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const obj = JSON.parse(jsonMatch[0]);
+            if (validateGeminiOutput(obj)) parsed = obj;
+          }
+        } catch { /* skip */ }
+
+        if (!parsed) { failed++; continue; }
+
+        // Update the article with fresh rewrite
+        const updateRes = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/articles?slug=eq.${encodeURIComponent(article.slug)}`,
+          {
+            method: 'PATCH',
+            headers: { ...supabaseHeaders(env), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({
+              rewritten_title:   parsed.rewritten_title,
+              rewritten_excerpt: parsed.rewritten_excerpt,
+              rewritten_body:    parsed.rewritten_body,
+              pptv_verdict:      parsed.pptv_verdict || '',
+              rewritten_at:      new Date().toISOString(),
+            }),
+          }
+        );
+        if (updateRes.ok) rephrased++;
+        else failed++;
+      } catch { failed++; }
+    }
+  } catch { /* non-fatal */ }
+  return { rephrased, failed };
+}
+
 // ─── CRON HANDLER ─────────────────────────────────────────────────────────────
 async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number; failed: number; skipped: number; durationMs: number }> {
   const start = Date.now();
@@ -1022,6 +1091,13 @@ async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number;
     lastCycleAt: new Date().toISOString(),
     articlesProcessed: processed,
   }));
+
+  // 5b. Every other tick — rephrase 3 existing articles with fresh AI angles
+  const tickCount = parseInt(await env.PPP_TV_KV.get('tick:count') ?? '0', 10) + 1;
+  await env.PPP_TV_KV.put('tick:count', String(tickCount));
+  if (tickCount % 2 === 0) {
+    rephraseExistingArticles(env, 3).catch(() => {});
+  }
 
   // 6. Trigger ISR revalidation on the Next.js site so new articles appear immediately
   const vercelUrl = (env as Env & { VERCEL_URL?: string }).VERCEL_URL ?? 'https://ppp-tv-site-final.vercel.app';
@@ -1229,6 +1305,14 @@ export default {
     if (path === '/refresh' && request.method === 'POST') {
       if (!isAuthed(request, env)) return json({ error: 'Unauthorized' }, 401);
       const stats = await runCycle(env);
+      return json(stats);
+    }
+
+    // ── POST /rephrase (re-paraphrase existing articles) ───────────────────
+    if (path === '/rephrase' && request.method === 'POST') {
+      if (!isAuthed(request, env)) return json({ error: 'Unauthorized' }, 401);
+      const body = await request.json().catch(() => ({})) as { limit?: number };
+      const stats = await rephraseExistingArticles(env, body.limit ?? 5);
       return json(stats);
     }
 

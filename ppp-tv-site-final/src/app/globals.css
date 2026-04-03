@@ -1209,3 +1209,86 @@ input[type="text"]:focus { border-color: rgba(255,0,122,.5) !important; box-shad
   text-transform: uppercase;
   color: var(--pink);
 }
+
+/* ════════════════════════════════════════════
+   AUTO-SCROLLING ROW — continuous drift
+   ════════════════════════════════════════════ */
+
+/* Outer clip container */
+.cat-row-autoscroll-wrap {
+  overflow: hidden;
+  padding: 0 1rem 1.5rem;
+  cursor: grab;
+}
+.cat-row-autoscroll-wrap:active { cursor: grabbing; }
+@media (min-width: 640px)  { .cat-row-autoscroll-wrap { padding: 0 1.5rem 1.5rem; } }
+@media (min-width: 1024px) { .cat-row-autoscroll-wrap { padding: 0 3rem 1.5rem; } }
+
+/* Moving track — will-change for GPU compositing */
+.cat-row-autoscroll-track {
+  display: flex;
+  gap: 14px;
+  width: max-content;
+  will-change: transform;
+}
+@media (min-width: 640px)  { .cat-row-autoscroll-track { gap: 16px; } }
+@media (min-width: 1024px) { .cat-row-autoscroll-track { gap: 18px; } }
+
+/* Each card slot — fixed width so 5 are visible at once */
+.cat-row-autoscroll-card {
+  flex-shrink: 0;
+  /* 5 visible cards: (100% - 4 gaps) / 5 */
+  width: calc((100vw - 2rem - 4 * 14px) / 5);
+}
+@media (min-width: 640px) {
+  .cat-row-autoscroll-card {
+    width: calc((100vw - 3rem - 4 * 16px) / 5);
+  }
+}
+@media (min-width: 1024px) {
+  .cat-row-autoscroll-card {
+    width: calc((min(100vw, 1440px) - 6rem - 4 * 18px) / 5);
+  }
+}
+/* Mobile: show 2 cards */
+@media (max-width: 479px) {
+  .cat-row-autoscroll-card {
+    width: calc((100vw - 2.5rem - 14px) / 2);
+  }
+}
+/* Tablet: show 3 cards */
+@media (min-width: 480px) and (max-width: 767px) {
+  .cat-row-autoscroll-card {
+    width: calc((100vw - 3rem - 2 * 14px) / 3);
+  }
+}
+/* Tablet landscape: show 4 cards */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cat-row-autoscroll-card {
+    width: calc((100vw - 4rem - 3 * 16px) / 4);
+  }
+}
+
+/* ════════════════════════════════════════════
+   CATEGORY PAGE — 5 columns × 5 rows
+   ════════════════════════════════════════════ */
+
+/* Override the 4-col subrow grid to 5 cols on desktop */
+@media (min-width: 1024px) {
+  .cat-subrow-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 16px !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cat-subrow-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+/* Override home page cat-row-grid to 5 cols on desktop */
+@media (min-width: 1024px) {
+  .cat-row-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}

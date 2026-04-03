@@ -105,10 +105,10 @@ function ArticleRow({
 }) {
   if (articles.length === 0) return null;
 
-  // Always show exactly 4 per row — pad with nulls if fewer
-  const slots: (Article | null)[] = [...articles.slice(0, 8)];
-  // Fill to nearest multiple of 4
-  while (slots.length % 4 !== 0) slots.push(null);
+  // Show up to 10 per row (2 rows of 5)
+  const slots: (Article | null)[] = [...articles.slice(0, 10)];
+  // Fill to nearest multiple of 5
+  while (slots.length % 5 !== 0) slots.push(null);
 
   return (
     <section className="cat-subrow">
@@ -119,7 +119,7 @@ function ArticleRow({
         <span className="cat-subrow-count">{articles.length} stories</span>
       </div>
 
-      {/* 4-column grid */}
+      {/* 5-column grid */}
       <div className="cat-subrow-grid">
         {slots.map((a, i) =>
           a ? (
@@ -128,7 +128,7 @@ function ArticleRow({
               article={a}
               accentColor={accentColor}
               ctaIndex={cardOffset + i}
-              priority={i < 4 && cardOffset === 0}
+              priority={i < 5 && cardOffset === 0}
             />
           ) : (
             <div key={`empty-${i}`} className="cat-subrow-empty-slot" />

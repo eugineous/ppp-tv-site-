@@ -11,13 +11,13 @@ export const revalidate = 300;
 
 export default async function EntertainmentPage() {
   const [all, celebrity, music, moviesTV, fashion, comedy, awards, latestAll] = await Promise.all([
-    fetchArticles({ category: 'Entertainment', limit: 40 }),
-    fetchArticles({ category: 'Entertainment', subcategory: 'celebrity',     limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'music',         limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'movies-tv',     limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'fashion',       limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'comedy',        limit: 8 } as Parameters<typeof fetchArticles>[0]),
-    fetchArticles({ category: 'Entertainment', subcategory: 'awards',        limit: 8 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', limit: 60 }),
+    fetchArticles({ category: 'Entertainment', subcategory: 'celebrity',     limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'music',         limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'movies-tv',     limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'fashion',       limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'comedy',        limit: 10 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Entertainment', subcategory: 'awards',        limit: 10 } as Parameters<typeof fetchArticles>[0]),
     fetchArticles({ sort: 'recent', limit: 10 }),
   ]);
 
