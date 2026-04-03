@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:media="http://search.yahoo.com/mrss/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>PPP TV Kenya — Entertainment, Sports &amp; Technology</title>
+    <link>https://ppp-tv-site-final.vercel.app</link>
+    <description>Kenya's #1 entertainment platform — celebrity, music, sports, tech and lifestyle news.</description>
+    <language>en-ke</language>
+    <lastBuildDate>Fri, 03 Apr 2026 10:24:54 GMT</lastBuildDate>
+    <atom:link href="https://ppp-tv-site-final.vercel.app/api/rss" rel="self" type="application/rss+xml"/>
+    <image>
+      <url>https://pub-8244b5f99b024cda91b74e1131378a14.r2.dev/LOGOS/PPPtv Logo-2.png</url>
+      <title>PPP TV Kenya</title>
+      <link>https://ppp-tv-site-final.vercel.app</link>
+    </image>
+
+    <item>
+      <title><![CDATA[Why Africa’s crypto sector is entering its ‘pay the milkman’ era]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/why-africas-crypto-sector-is-entering-its-pay-the-milkman-er-1775207757882-tl5</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/why-africas-crypto-sector-is-entering-its-pay-the-milkman-er-1775207757882-tl5</guid>
+      <description><![CDATA[It is a concession to reality: for monetary policy and control reasons, crypto is unlikely to ever power everyday payments end-to-end.]]></description>
+      <pubDate>Fri, 03 Apr 2026 08:45:29 GMT</pubDate>
+      <category><![CDATA[Technology]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://c76c7bbc41.mjedge.net/wp-content/uploads/tc/2026/04/Tap-to-view-Story-Template-12-1024x576.png" type="image/jpeg" length="0"/>
+      <media:content url="https://c76c7bbc41.mjedge.net/wp-content/uploads/tc/2026/04/Tap-to-view-Story-Template-12-1024x576.png" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Creativity Meets Opportunity as Mikano Crowns Winner of Creators Challenge with a Mikano Changan CS35 Car]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/creativity-meets-opportunity-as-mikano-crowns-winner-of-crea-1775207401348-xsv</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/creativity-meets-opportunity-as-mikano-crowns-winner-of-crea-1775207401348-xsv</guid>
+      <description><![CDATA[In a powerful celebration of creativity, talent, and possibility, Mikano Motors champions the Mikano Changan Creators Challenge, an initiative created to recognize, support, and invest in Nigeria’s growing community of digital creators. Hosted at the Mikano Motors showroom in Victoria Island, Lagos,]]></description>
+      <pubDate>Fri, 03 Apr 2026 07:59:31 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.bellanaija.com/wp-content/uploads/2026/04/DSC07178-scaled.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.bellanaija.com/wp-content/uploads/2026/04/DSC07178-scaled.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Omah Lay Releases Sophomore Album, "Clarity of Mind"]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/omah-lay-releases-sophomore-album-clarity-of-mind-1775207408542-enq</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/omah-lay-releases-sophomore-album-clarity-of-mind-1775207408542-enq</guid>
+      <description><![CDATA[After the success of his debut album, "Boy Alone", Omah Lay took a long break before releasing another project. It's been four years since Omah Lay released his debut album, and now he's back with his second, "Clarity of Mind," a 12-track album. "Clarity of Mind" arrives as a bold, deeply personal b]]></description>
+      <pubDate>Fri, 03 Apr 2026 07:44:26 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.bellanaija.com/wp-content/uploads/2026/04/623099140_18392042044177843_894378157171732908_n.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.bellanaija.com/wp-content/uploads/2026/04/623099140_18392042044177843_894378157171732908_n.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Kenswitch taps Visa as Kenya’s national payments switch race heats up]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/kenswitch-taps-visa-as-kenyas-national-payments-switch-race--1775207758753-a2v</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/kenswitch-taps-visa-as-kenyas-national-payments-switch-race--1775207758753-a2v</guid>
+      <description><![CDATA[The deal brings together Kenswitch’s role as a shared national switch—connecting more than 30 financial institutions—with Visa’s global payments technology.]]></description>
+      <pubDate>Fri, 03 Apr 2026 06:38:56 GMT</pubDate>
+      <category><![CDATA[Technology]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://c76c7bbc41.mjedge.net/wp-content/uploads/tc/2026/04/john-mukhono.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://c76c7bbc41.mjedge.net/wp-content/uploads/tc/2026/04/john-mukhono.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[MTN completes Ghana mobile money spinoff in major fintech push]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/mtn-completes-ghana-mobile-money-spinoff-in-major-fintech-pu-1775207759113-vlv</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/mtn-completes-ghana-mobile-money-spinoff-in-major-fintech-pu-1775207759113-vlv</guid>
+      <description><![CDATA[MTN Group, Africa’s largest telecommunication company, has completed the separation of its mobile money business in Ghana.]]></description>
+      <pubDate>Fri, 03 Apr 2026 06:32:55 GMT</pubDate>
+      <category><![CDATA[Technology]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://c76c7bbc41.mjedge.net/wp-content/uploads/tc/2025/11/MoMo-PSB.png" type="image/jpeg" length="0"/>
+      <media:content url="https://c76c7bbc41.mjedge.net/wp-content/uploads/tc/2025/11/MoMo-PSB.png" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Junior Starlets step up training ahead of Namibia battle]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/junior-starlets-step-up-training-ahead-of-namibia-battle-1775207755877-iy2</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/junior-starlets-step-up-training-ahead-of-namibia-battle-1775207755877-iy2</guid>
+      <description><![CDATA[With just nine days before they face off with Namibia in the first round of the 2026 Fifa Under-17 Womens World Cup qualifier against Namibia]]></description>
+      <pubDate>Fri, 03 Apr 2026 03:00:00 GMT</pubDate>
+      <category><![CDATA[Sports]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://cdn.standardmedia.co.ke/images/articles/thumbnails/qOcffCEipUGd1YdArXzRF8QN1FnwuMJwkP0n02Ok.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://cdn.standardmedia.co.ke/images/articles/thumbnails/qOcffCEipUGd1YdArXzRF8QN1FnwuMJwkP0n02Ok.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Great Rift 10-Aside kicks off in Nakuru today]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/great-rift-10-aside-kicks-off-in-nakuru-today-1775207755965-1j0</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/great-rift-10-aside-kicks-off-in-nakuru-today-1775207755965-1j0</guid>
+      <description><![CDATA[The Great Rift 10-Aside tournament kicks-off with the schools and Age Grade Championships this morning at Nakuru Athletic Club.]]></description>
+      <pubDate>Fri, 03 Apr 2026 03:00:00 GMT</pubDate>
+      <category><![CDATA[Sports]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://cdn.standardmedia.co.ke/images/articles/thumbnails/31wTVQhGm3ZPVRsjvgH046GIf7nEQpn1mP98J0t6.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://cdn.standardmedia.co.ke/images/articles/thumbnails/31wTVQhGm3ZPVRsjvgH046GIf7nEQpn1mP98J0t6.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Saints Yala and Kitale pray for handball victory in Kisumu]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/saints-yala-and-kitale-pray-for-handball-victory-in-kisumu-1775207755782-f3v</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/saints-yala-and-kitale-pray-for-handball-victory-in-kisumu-1775207755782-f3v</guid>
+      <description><![CDATA[Newbies St Marys School Yala will be praying to clinch the vacant handball national throne when the Brookside Secondary Schools national Term One games kick off]]></description>
+      <pubDate>Fri, 03 Apr 2026 03:00:00 GMT</pubDate>
+      <category><![CDATA[Sports]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://cdn.standardmedia.co.ke/images/articles/thumbnails/1ItqNDbknTTOIA1TOq2NMdiIFYUbj01JrwSRk3kd.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://cdn.standardmedia.co.ke/images/articles/thumbnails/1ItqNDbknTTOIA1TOq2NMdiIFYUbj01JrwSRk3kd.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[PS Omollo Assesses Madaraka Day Preparations in Wajir as Stadium Hits 28% Completion]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/ps-omollo-assesses-madaraka-day-preparations-in-wajir-as-sta-1775207403752-4bi</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/ps-omollo-assesses-madaraka-day-preparations-in-wajir-as-sta-1775207403752-4bi</guid>
+      <description><![CDATA[The Principal Secretary for Internal Security and National Administration and Chair of the Steering Committee on National Celebrations, Dr. Raymond Omollo, was this morning in Wajir County for an inspection tour to assess the progress of construction and readiness of key facilities ahead of this yea]]></description>
+      <pubDate>Thu, 02 Apr 2026 16:22:36 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.ghafla.co.ke/ke/wp-content/uploads/sites/4/2026/04/16046605-eeb8-40cf-b0e1-753f77af4e3f.jpeg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.ghafla.co.ke/ke/wp-content/uploads/sites/4/2026/04/16046605-eeb8-40cf-b0e1-753f77af4e3f.jpeg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Pepeta Lowers Aviator Minimum Bet to One Shilling!]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/pepeta-lowers-aviator-minimum-bet-to-one-shilling-1775207405251-y37</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/pepeta-lowers-aviator-minimum-bet-to-one-shilling-1775207405251-y37</guid>
+      <description><![CDATA[Kenya’s fast-growing online gaming platform, Pepeta, has introduced an exciting update for Aviator enthusiasts: Players can now place bets starting from just Ksh 1, down from the previous minimum of Ksh 10. This move is set to make one of the most popular crash games in the country even more accessi]]></description>
+      <pubDate>Thu, 02 Apr 2026 15:44:13 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.ghafla.co.ke/sponsored/wp-content/uploads/sites/16/2026/04/IMG-20260402-WA0010.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.ghafla.co.ke/sponsored/wp-content/uploads/sites/16/2026/04/IMG-20260402-WA0010.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Modupe Ayobami: Why Do Nigerian Marriages Struggle Abroad?]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/modupe-ayobami-why-do-nigerian-marriages-struggle-abroad-1775207408542-wo4</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/modupe-ayobami-why-do-nigerian-marriages-struggle-abroad-1775207408542-wo4</guid>
+      <description><![CDATA[Most couples planning to relocate talk about visas, job prospects, and which city offers the best opportunities. Very few sit down to have the conversation that actually determines whether their marriage survives the move, which is the roles conversation because somewhere between packing up a Lagos]]></description>
+      <pubDate>Thu, 02 Apr 2026 12:30:13 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.bellanaija.com/wp-content/uploads/2026/04/a_nigerian_couple_202604021252-scaled.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.bellanaija.com/wp-content/uploads/2026/04/a_nigerian_couple_202604021252-scaled.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Gemini Empowers Broda Shaggi And Other Creators To Bring Folktales To Life For Nigerian Children]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/gemini-empowers-broda-shaggi-and-other-creators-to-bring-fol-1775207408542-fyu</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/gemini-empowers-broda-shaggi-and-other-creators-to-bring-fol-1775207408542-fyu</guid>
+      <description><![CDATA[Google has partnered with Slum2School Africa and a team of celebrated Nigerian creators to unveil "Stories from Our Home," a first of its kind Nigerian folktale and cultural colouring book for children. The collaborative initiative aims to bridge the shortage of educational materials in Nigeria by p]]></description>
+      <pubDate>Thu, 02 Apr 2026 11:00:00 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.bellanaija.com/wp-content/uploads/2026/04/BLAW8164-scaled.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.bellanaija.com/wp-content/uploads/2026/04/BLAW8164-scaled.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Mike Sonko Set To Sell His Stripper Club After 'Kuokoka']]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/mike-sonko-set-to-sell-his-stripper-club-after-kuokoka-1775207406327-fjz</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/mike-sonko-set-to-sell-his-stripper-club-after-kuokoka-1775207406327-fjz</guid>
+      <description><![CDATA[​In a move that has sent ripples through both the entertainment and political landscapes of Kenya, former Nairobi Governor Mike Mbuvi Sonko has signaled the end of an era. The man once synonymous with the "work hard, play hard" lifestyle of Nairobi’s high-octane nightlife is reportedly looking to se]]></description>
+      <pubDate>Thu, 02 Apr 2026 10:14:27 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.ghafla.co.ke/ke/wp-content/uploads/sites/4/2023/06/Mike-Sonko-cover.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.ghafla.co.ke/ke/wp-content/uploads/sites/4/2023/06/Mike-Sonko-cover.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Britam Posts 8% rise in Pre-tax Profit to Shs 7.9 Billion for FY 2025]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/britam-posts-8-rise-in-pre-tax-profit-to-shs-79-billion-for--1775207407734-fn9</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/britam-posts-8-rise-in-pre-tax-profit-to-shs-79-billion-for--1775207407734-fn9</guid>
+      <description><![CDATA[Britam Holdings plc has reported an 8% increase in pre-tax profit to Shs 7.9 billion for the year ended December 31, 2025, delivering a strong set of results across its diversified business amid a challenging macroeconomic environment in its markets. The performance was lifted by topline growth, imp]]></description>
+      <pubDate>Thu, 02 Apr 2026 08:31:16 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.ghafla.co.ke/sponsored/wp-content/uploads/sites/16/2026/04/britam-tower.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.ghafla.co.ke/sponsored/wp-content/uploads/sites/16/2026/04/britam-tower.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA["I Am Not A Delivery Machine"- Diana Marua Issues Ultimatum To Bahati Over Baby No. 4]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/i-am-not-a-delivery-machine-diana-marua-issues-ultimatum-to--1775207408840-o9o</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/i-am-not-a-delivery-machine-diana-marua-issues-ultimatum-to--1775207408840-o9o</guid>
+      <description><![CDATA[Kenyan power couple Diana Marua and Kevin Bahati have sparked a heated online debate following a raw, emotionally charged sit-down on Diana’s YouTube channel. In the episode aired on Wednesday, April 1, 2026, the two clashed over the timing of their next child, revealing deep-seated differences in t]]></description>
+      <pubDate>Thu, 02 Apr 2026 04:50:08 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.ghafla.co.ke/ke/wp-content/uploads/sites/4/2022/08/diana.png" type="image/jpeg" length="0"/>
+      <media:content url="https://www.ghafla.co.ke/ke/wp-content/uploads/sites/4/2022/08/diana.png" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[She's Back! Céline Dion Announces Paris Return in a Personal Birthday Message to Fans]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/shes-back-cline-dion-announces-paris-return-in-a-personal-bi-1775208681858-ln8</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/shes-back-cline-dion-announces-paris-return-in-a-personal-bi-1775208681858-ln8</guid>
+      <description><![CDATA[Celebrating her 58th birthday with a surprise video message, Céline Dion has confirmed her return to live performance. The legendary singer will headline 10 shows at the Paris La Défense Arena starting this September, marking a major milestone in her recovery journey. The post She's Back! Céline Dio]]></description>
+      <pubDate>Wed, 01 Apr 2026 10:45:59 GMT</pubDate>
+      <category><![CDATA[Lifestyle]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://www.bellanaija.com/wp-content/uploads/2026/04/SaveClip.App_657890696_18551509555064830_5406617193897760899_n.jpg" type="image/jpeg" length="0"/>
+      <media:content url="https://www.bellanaija.com/wp-content/uploads/2026/04/SaveClip.App_657890696_18551509555064830_5406617193897760899_n.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title><![CDATA[Interview – From novelist to publisher: Andrew Chatora on building Friesian Publishing]]></title>
+      <link>https://ppp-tv-site-final.vercel.app/news/interview-from-novelist-to-publisher-andrew-chatora-on-build-1775207409667-abd</link>
+      <guid isPermaLink="true">https://ppp-tv-site-final.vercel.app/news/interview-from-novelist-to-publisher-andrew-chatora-on-build-1775207409667-abd</guid>
+      <description><![CDATA[Award-winning Zimbabwean novelist and cultural critic Andrew Chatora has entered a new chapter in his literary life, not by stepping away from writing, but by building a publishing house designed to widen the literary conversation. Through Friesian Publishing, the London-based independent literary p]]></description>
+      <pubDate>Tue, 31 Mar 2026 10:02:31 GMT</pubDate>
+      <category><![CDATA[Entertainment]]></category>
+      <source url="https://ppp-tv-site-final.vercel.app">PPP TV Kenya</source>
+      <enclosure url="https://i0.wp.com/thisisafrica.me/wp-content/uploads/2026/03/andrew-chatora-unstoppable.jpg?resize=1000%2C600&amp;#038;ssl=1" type="image/jpeg" length="0"/>
+      <media:content url="https://i0.wp.com/thisisafrica.me/wp-content/uploads/2026/03/andrew-chatora-unstoppable.jpg?resize=1000%2C600&amp;#038;ssl=1" medium="image"/>
+    </item>
+  </channel>
+</rss>

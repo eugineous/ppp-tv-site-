@@ -882,6 +882,21 @@ async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number;
     articlesProcessed: processed,
   }));
 
+  // 6. Trigger ISR revalidation on the Next.js site so new articles appear immediately
+  const vercelUrl = (env as Env & { VERCEL_URL?: string }).VERCEL_URL ?? 'https://ppp-tv-site-final.vercel.app';
+  const workerSecret = (env as Env & { WORKER_SECRET?: string }).WORKER_SECRET ?? '';
+  if (processed > 0 && vercelUrl) {
+    const pathsToRevalidate = ['/', '/trending', '/entertainment', '/sports', '/movies', '/lifestyle', '/technology'];
+    await Promise.allSettled(pathsToRevalidate.map(path =>
+      fetch(`${vercelUrl}/api/revalidate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${workerSecret}` },
+        body: JSON.stringify({ path }),
+        signal: AbortSignal.timeout(8000),
+      }).catch(() => {})
+    ));
+  }
+
   return {
     fetched: allRaw.length,
     rewritten: processed,
@@ -1018,7 +1033,7 @@ export default {
         subcategory: a.subcategory,
         tags:        a.tags,
         publishedAt: a.publishedAt,
-        articleUrl:  `https://ppp-tv-site.vercel.app/news/${a.slug}`,
+        articleUrl:  `https://ppp-tv-site-final.vercel.app/news/${a.slug}`,
         sourceName:  a.sourceName,
         captions: {
           twitter:   `${(a.rewrittenTitle || a.title).slice(0, 200)} 🔥\n\nhttps://ppp-tv-site.vercel.app/news/${a.slug}\n\n#PPPTVKenya #${a.category}`,

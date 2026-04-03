@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import LiveUpdater from '@/components/LiveUpdater';
 import './globals.css';
 
 const BackToTop      = dynamic(() => import('@/components/BackToTop'),      { ssr: false });
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`min-h-screen flex flex-col bg-black ${bebasNeue.variable} ${dmSans.variable}`}>
         <Header />
         <main className="flex-grow pt-[68px] pb-14 sm:pb-0">{children}</main>
+        <LiveUpdater />
         <RecentlyViewed />
         <NewsletterBar />
         <Footer />
