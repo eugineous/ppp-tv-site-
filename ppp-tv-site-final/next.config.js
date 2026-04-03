@@ -85,7 +85,6 @@ const nextConfig = {
   },
 
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['date-fns', 'react', 'react-dom'],
     ppr: false,
     instrumentationHook: true,
