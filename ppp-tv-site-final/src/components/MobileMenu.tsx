@@ -4,22 +4,16 @@ import { useState, useEffect } from 'react';
 const mainLinks = [
   { href: '/',             label: 'Home'          },
   { href: '/shows',        label: 'Shows'         },
-  { href: '/news',         label: 'News'          },
-  { href: '/politics',     label: 'Politics'      },
-  { href: '/business',     label: 'Business'      },
   { href: '/entertainment',label: 'Entertainment' },
   { href: '/sports',       label: 'Sports'        },
   { href: '/movies',       label: 'Movies'        },
   { href: '/lifestyle',    label: 'Lifestyle'     },
-  { href: '/health',       label: 'Health'        },
   { href: '/technology',   label: 'Technology'    },
-  { href: '/science',      label: 'Science'       },
-  { href: '/people',      label: 'People'        },
+  { href: '/people',       label: 'People'        },
   { href: '/trending',     label: '🔥 Trending'   },
   { href: '/live',         label: '🔴 Live'       },
   { href: '/video',        label: 'Video'         },
   { href: '/schedule',     label: 'Schedule'      },
-  { href: '/saved',        label: 'My List'       },
   { href: '/contact',      label: 'Contact'       },
 ];
 

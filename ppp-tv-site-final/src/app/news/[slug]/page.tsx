@@ -139,15 +139,33 @@ export default async function ArticlePage({ params }: Props) {
           </p>
         )}
 
+        {/* PPP TV Verdict */}
+        {(article as { pptvVerdict?: string }).pptvVerdict && (
+          <div style={{ margin: '2.5rem 0', padding: '1.25rem 1.5rem', background: `linear-gradient(135deg,${accent}18 0%,rgba(0,0,0,0) 100%)`, border: `1px solid ${accent}40`, borderRadius: '4px' }}>
+            <p style={{ fontSize: '.65rem', fontWeight: 900, letterSpacing: '.15em', textTransform: 'uppercase', color: accent, marginBottom: '.5rem' }}>🔥 PPP TV Verdict</p>
+            <p style={{ fontSize: '1rem', color: '#e0e0e0', lineHeight: 1.7, fontStyle: 'italic' }}>
+              {(article as { pptvVerdict?: string }).pptvVerdict}
+            </p>
+          </div>
+        )}
+
         {/* Tags */}
         {article.tags && article.tags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #1a1a1a' }}>
             {article.tags.map((tag) => (
-              <span key={tag} style={{ padding: '4px 12px', fontSize: '.7rem', color: '#666', background: 'rgba(255,255,255,0.05)', borderRadius: '2px' }}>
+              <Link key={tag} href={`/search?q=${encodeURIComponent(tag)}`}
+                style={{ padding: '4px 12px', fontSize: '.7rem', color: accent, background: `${accent}15`, borderRadius: '999px', textDecoration: 'none', border: `1px solid ${accent}30`, transition: 'background .15s' }}>
                 #{tag}
-              </span>
+              </Link>
             ))}
           </div>
+        )}
+
+        {/* Rewritten timestamp */}
+        {(article as { rewrittenAt?: string }).rewrittenAt && (
+          <p style={{ fontSize: '.65rem', color: '#333', marginTop: '1.5rem' }}>
+            AI-rewritten by PPP TV · {formatDate((article as { rewrittenAt?: string }).rewrittenAt!)}
+          </p>
         )}
 
         {/* View recorder */}

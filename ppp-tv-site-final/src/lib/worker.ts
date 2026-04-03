@@ -14,6 +14,7 @@ export async function fetchArticles(options: FetchArticlesOptions = {}): Promise
   if (options.sort)     params.set('sort', options.sort);
   if (options.limit)    params.set('limit', String(options.limit));
   if (options.offset)   params.set('offset', String(options.offset));
+  if ((options as { subcategory?: string }).subcategory) params.set('subcategory', (options as { subcategory?: string }).subcategory!);
 
   const url = `${WORKER_BASE}/articles${params.toString() ? `?${params}` : ''}`;
 

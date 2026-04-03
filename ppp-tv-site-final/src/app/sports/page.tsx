@@ -3,50 +3,35 @@ import { fetchArticles } from '@/lib/worker';
 import HeroBanner from '@/components/HeroBanner';
 import CategoryRow from '@/components/CategoryRow';
 
-export const revalidate = 300;
-
 export const metadata: Metadata = {
-  title: 'Sports | PPP TV',
-  description: 'Kenya and Africa sports - football, athletics, rugby, cricket and more.',
+  title: 'Sports | PPP TV Kenya',
+  description: 'Football, basketball, athletics, rugby and more — Kenya, Africa & global sports.',
 };
 
-export default async function SportsPage() {
-  const [sports, news, ent] = await Promise.all([
-    fetchArticles({ category: 'Sports', limit: 80 }),
-    fetchArticles({ category: 'News', limit: 10 }),
-    fetchArticles({ category: 'Entertainment', limit: 10 }),
-  ]);
+export const revalidate = 300;
 
-  const hero = sports.slice(0, 5);
-  const latest = sports.slice(0, 20);
-  const football = sports.filter(a => {
-    const t = (a.title + ' ' + a.excerpt).toLowerCase();
-    return t.includes('football') || t.includes('premier league') || t.includes('fifa') || t.includes('soccer') || t.includes('harambee') || t.includes('afcon') || t.includes('champions league') || t.includes('bundesliga') || t.includes('la liga') || t.includes('serie a');
-  }).slice(0, 20);
-  const athletics = sports.filter(a => {
-    const t = (a.title + ' ' + a.excerpt).toLowerCase();
-    return t.includes('athletics') || t.includes('marathon') || t.includes('kipchoge') || t.includes('track') || t.includes('field') || t.includes('world record');
-  }).slice(0, 20);
-  const rugby = sports.filter(a => {
-    const t = (a.title + ' ' + a.excerpt).toLowerCase();
-    return t.includes('rugby') || t.includes('cricket') || t.includes('basketball') || t.includes('volleyball') || t.includes('netball');
-  }).slice(0, 20);
-  const africa = sports.filter(a => a.sourceName?.includes('SuperSport') || a.sourceName?.includes('CAF')).slice(0, 20);
-  const global = sports.filter(a => a.sourceName?.includes('BBC Sport') || a.sourceName?.includes('Sky Sports') || a.sourceName?.includes('ESPN') || a.sourceName?.includes('Goal') || a.sourceName?.includes('FourFourTwo')).slice(0, 20);
+export default async function SportsPage() {
+  const [latest, football, basketball, athletics, rugby, boxing, kenyan] = await Promise.all([
+    fetchArticles({ category: 'Sports', limit: 20 }),
+    fetchArticles({ category: 'Sports', subcategory: 'football',     limit: 20 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'basketball',   limit: 20 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'athletics',    limit: 20 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'rugby',        limit: 20 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'boxing-mma',   limit: 20 } as Parameters<typeof fetchArticles>[0]),
+    fetchArticles({ category: 'Sports', subcategory: 'kenyan-sports', limit: 20 } as Parameters<typeof fetchArticles>[0]),
+  ]);
 
   return (
     <div style={{ background: '#000', minHeight: '100vh' }}>
-      {hero.length > 0 && <HeroBanner articles={hero} />}
-      <div style={{ maxWidth: '1440px', margin: '0 auto', paddingTop: '1rem' }}>
-        {latest.length > 0 && <CategoryRow label="Latest Sports" articles={latest} seeAllHref="/sports" accentColor="#00CFFF" />}
-        {football.length > 0 && <CategoryRow label="Football" articles={football} seeAllHref="/sports" accentColor="#FF007A" />}
-        {athletics.length > 0 && <CategoryRow label="Athletics & Running" articles={athletics} seeAllHref="/sports" accentColor="#FFE600" />}
-        {rugby.length > 0 && <CategoryRow label="Rugby, Cricket & More" articles={rugby} seeAllHref="/sports" accentColor="#00FF94" />}
-        {africa.length > 0 && <CategoryRow label="Africa Sports" articles={africa} seeAllHref="/sports" accentColor="#FF4500" />}
-        {global.length > 0 && <CategoryRow label="Global Sports" articles={global} seeAllHref="/sports" accentColor="#BF00FF" />}
-        {news.length > 0 && <CategoryRow label="Top News" articles={news} seeAllHref="/news" accentColor="#FF007A" />}
-        {ent.length > 0 && <CategoryRow label="Entertainment" articles={ent} seeAllHref="/entertainment" accentColor="#BF00FF" />}
-        {sports.length > 20 && <CategoryRow label="More Sports" articles={sports.slice(20)} seeAllHref="/sports" accentColor="#333" />}
+      <HeroBanner articles={latest.slice(0, 5)} />
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+        <CategoryRow label="Latest Sports"    articles={latest}     accentColor="#00CFFF" seeAllHref="/sports" />
+        {football.length   > 0 && <CategoryRow label="Football"     articles={football}   accentColor="#00CFFF" seeAllHref="/sports" />}
+        {basketball.length > 0 && <CategoryRow label="Basketball"   articles={basketball} accentColor="#FF6B00" seeAllHref="/sports" />}
+        {athletics.length  > 0 && <CategoryRow label="Athletics"    articles={athletics}  accentColor="#00FF94" seeAllHref="/sports" />}
+        {rugby.length      > 0 && <CategoryRow label="Rugby"        articles={rugby}      accentColor="#00CFFF" seeAllHref="/sports" />}
+        {boxing.length     > 0 && <CategoryRow label="Boxing & MMA" articles={boxing}     accentColor="#FF007A" seeAllHref="/sports" />}
+        {kenyan.length     > 0 && <CategoryRow label="Kenyan Sports" articles={kenyan}    accentColor="#FFE600" seeAllHref="/sports" />}
       </div>
     </div>
   );

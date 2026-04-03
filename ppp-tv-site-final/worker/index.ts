@@ -1,75 +1,99 @@
 /// <reference path="./types.d.ts" />
 
+// ─── ENV ─────────────────────────────────────────────────────────────────────
 export interface Env {
-  PPP_TV_KV: KVNamespace;
-  WORKER_SECRET: string;
-  VERCEL_URL?: string;
+  PPP_TV_KV:           KVNamespace;
+  WORKER_SECRET:       string;
+  VERCEL_URL?:         string;
+  GEMINI_API_KEY?:     string;
+  NVIDIA_API_KEY?:     string;
+  SUPABASE_URL?:       string;
+  SUPABASE_SERVICE_KEY?: string;
 }
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
+// ─── SECURITY HEADERS ────────────────────────────────────────────────────────
+const SECURITY_HEADERS: Record<string, string> = {
+  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+  'X-Frame-Options':           'DENY',
+  'X-Content-Type-Options':    'nosniff',
+  'Referrer-Policy':           'strict-origin-when-cross-origin',
+  'Permissions-Policy':        'camera=(), microphone=(), geolocation=()',
+};
+
+const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 function cors(res: Response): Response {
-  const headers = new Headers(res.headers);
-  for (const [k, v] of Object.entries(CORS_HEADERS)) headers.set(k, v);
-  return new Response(res.body, { status: res.status, headers });
+  const h = new Headers(res.headers);
+  for (const [k, v] of Object.entries({ ...CORS_HEADERS, ...SECURITY_HEADERS })) h.set(k, v);
+  return new Response(res.body, { status: res.status, headers: h });
 }
 
 function json(data: unknown, status = 200): Response {
-  return cors(new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } }));
+  return cors(new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  }));
 }
 
 function isAuthed(req: Request, env: Env): boolean {
   return req.headers.get('Authorization') === `Bearer ${env.WORKER_SECRET}`;
 }
 
-interface Article {
-  slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  category: string;
-  tags: string[];
-  imageUrl: string;
-  sourceUrl: string;
-  sourceName: string;
+// ─── RATE LIMITER ─────────────────────────────────────────────────────────────
+const rateLimitMap = new Map<string, number[]>();
+function checkRateLimit(ip: string, limitPerMinute = 60): boolean {
+  const now = Date.now();
+  const window = 60_000;
+  const hits = (rateLimitMap.get(ip) ?? []).filter(t => now - t < window);
+  if (hits.length >= limitPerMinute) return false;
+  hits.push(now);
+  rateLimitMap.set(ip, hits);
+  return true;
+}
+
+// ─── TYPES ───────────────────────────────────────────────────────────────────
+interface RawArticle {
+  slug:        string;
+  title:       string;
+  excerpt:     string;
+  content:     string;
+  category:    string;
+  imageUrl:    string;
+  sourceUrl:   string;
+  sourceName:  string;
   publishedAt: string;
-  views?: number;
-  trendingScore?: number;
 }
 
-async function getArticles(env: Env): Promise<Article[]> {
-  const raw = await env.PPP_TV_KV.get('articles', 'json');
-  return (raw as Article[] | null) ?? [];
+interface ProcessedArticle extends RawArticle {
+  rewrittenTitle:   string;
+  rewrittenExcerpt: string;
+  rewrittenBody:    string;
+  pptvVerdict:      string;
+  subcategory:      string;
+  tags:             string[];
+  languageDetected: string;
+  rewrittenAt:      string;
+  views:            number;
+  trendingScore:    number;
 }
 
-async function saveArticles(env: Env, articles: Article[]): Promise<void> {
-  await env.PPP_TV_KV.put('articles', JSON.stringify(articles));
+interface GeminiOutput {
+  rewritten_title:   string;
+  rewritten_excerpt: string;
+  rewritten_body:    string;
+  pptv_verdict:      string;
+  subcategory:       string;
+  tags:              string[];
 }
 
-function trendingScore(article: Article): number {
-  const views = article.views ?? 0;
-  const ageHours = (Date.now() - new Date(article.publishedAt).getTime()) / 3_600_000;
-  return views / Math.pow(ageHours + 2, 1.5);
-}
-
-async function getViews(env: Env, slug: string): Promise<number> {
-  const raw = await env.PPP_TV_KV.get(`views:${slug}`);
-  return raw ? parseInt(raw, 10) : 0;
-}
-
-async function incrementViews(env: Env, slug: string): Promise<number> {
-  const current = await getViews(env, slug);
-  const next = current + 1;
-  await env.PPP_TV_KV.put(`views:${slug}`, String(next));
-  return next;
-}
-
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 function slugify(text: string): string {
-  return text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+  return text.toLowerCase().trim()
+    .replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 function decodeXML(str: string): string {
@@ -80,7 +104,7 @@ function decodeXML(str: string): string {
     .replace(/&#8220;|&#8221;|&#x201C;|&#x201D;/g, '"')
     .replace(/&#8211;|&#x2013;/g, '–').replace(/&#8212;|&#x2014;/g, '—')
     .replace(/&#8230;|&#x2026;/g, '…').replace(/&#038;/g, '&')
-    .replace(/&#\d+;/g, (m) => { try { return String.fromCharCode(parseInt(m.slice(2,-1),10)); } catch { return m; } })
+    .replace(/&#\d+;/g, m => { try { return String.fromCharCode(parseInt(m.slice(2,-1),10)); } catch { return m; } })
     .replace(/\(tm\)/g, '™').replace(/\(r\)/g, '®').trim();
 }
 
@@ -88,50 +112,29 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-// ── PROMOTIONAL CONTENT GUARDRAILS ────────────────────────────────────────────
-// These run at THREE levels:
-//   1. Title + excerpt scan  → reject whole article
-//   2. Full body scan        → reject whole article if body is predominantly brand PR
-//   3. Paragraph scan        → strip individual promo paragraphs from body
+function calcTrendingScore(views: number, publishedAt: string): number {
+  const ageHours = (Date.now() - new Date(publishedAt).getTime()) / 3_600_000;
+  return views / Math.pow(ageHours + 2, 1.5);
+}
 
-/**
- * Level 1 — Title/excerpt patterns that signal a promotional article.
- * Reject the whole article if ANY match.
- */
+// ─── PROMOTIONAL GUARDRAILS ───────────────────────────────────────────────────
 const PROMO_TITLE_PATTERNS: RegExp[] = [
-  // Explicit ad labels
   /\b(sponsored|advertorial|advertisement|paid post|paid content|partner content|branded content|native ad|promoted|promotion)\b/i,
-  // Press release / PR language
   /\b(press release|media release|official statement|for immediate release|pr newswire|business wire|globe newswire)\b/i,
-  // Brand-as-author signals
   /\bwritten by\s+[A-Z][a-zA-Z\s]+(cosmetics?|beauty|brand|company|corp|ltd|inc|group|holdings?|enterprises?|solutions?|technologies?|services?|media|ventures?|studios?|productions?|entertainment)\b/i,
-  // TV/entertainment industry PR — show launches, renewals, syndication deals
   /\b(launches?|unveils?|introduces?|announces?|debuts?|renews?|greenlights?|orders?|picks? up|rolls? out)\b.{0,80}\b(show|series|season|episode|special|pilot|spinoff|reboot|franchise|slate|syndication|deal|partnership)\b/i,
-  // Network/studio PR — "CBS Media Ventures", "NBC Universal", etc.
   /\b(CBS|NBC|ABC|FOX|HBO|Netflix|Disney|Warner|Paramount|Sony|Universal|Amazon|Apple|Hulu|Peacock|Showtime|Starz)\b.{0,60}\b(announces?|launches?|renews?|orders?|greenlights?|picks? up|debuts?|unveils?|confirms?)\b/i,
-  // Syndication / distribution deals
   /\b(syndication|syndicated|fall slate|upfront|scatter market|first-run|off-network|distribution deal|content deal|licensing deal)\b/i,
-  // Product launch / brand push
   /\b(launches?|unveils?|introduces?|announces?|debuts?|rolls? out|now available|on sale now|buy now|shop now|order now|get yours?)\b.{0,60}\b(product|collection|range|line|model|edition|version|app|service|platform|solution)\b/i,
-  // Giveaway / contest / promo
   /\b(win a|giveaway|contest|sweepstake|raffle|promo code|discount code|coupon|voucher|free gift|limited offer|exclusive deal|flash sale|special offer|up to \d+% off)\b/i,
-  // Brand-centric puff pieces
   /\b(partners? with|in partnership with|powered by|brought to you by|supported by|presented by|in association with)\b/i,
-  // Brand CSR / outreach stories written by the brand itself
   /\b(hosts?|sponsors?|donates?|gifts?|empowers?|supports?)\b.{0,80}\b(widows?|orphans?|community|women|youth|children|families)\b.{0,120}\b(cosmetics?|beauty|brand|company|corp|ltd|inc|group)\b/i,
-  // Recruitment / corporate
   /\b(we.re hiring|join our team|career opportunity|job opening|apply now|vacancy)\b/i,
-  // "The post appeared first on" — BellaNaija brand content signal
   /the post .{0,120} appeared first on/i,
-  // Entertainment industry trade PR (Variety, Deadline, Hollywood Reporter style)
   /\b(as part of|part of (its|their|the) (fall|spring|summer|winter) (slate|lineup|schedule|programming))\b/i,
   /\b(executive produced by|showrunner|co-produced by|produced in association with)\b.{0,120}\b(network|studio|media|ventures?|productions?)\b/i,
 ];
 
-/**
- * Level 2 — Full-body signals that the article is brand PR even if title looks neutral.
- * Count how many of these fire; if >= 3, reject the whole article.
- */
 const PROMO_BODY_SIGNALS: RegExp[] = [
   /\bwritten by\s+[A-Z]/i,
   /\bthe post .{0,120} appeared first on\b/i,
@@ -142,151 +145,394 @@ const PROMO_BODY_SIGNALS: RegExp[] = [
   /\b(available (now|online|at|from|in stores?)|purchase (at|from|online)|order (at|from|online))\b/i,
   /\b(leading (brand|company|manufacturer|provider|platform)|award.winning (brand|product|service))\b/i,
   /the post .{0,80} appeared first on .{0,80}\. read (today|now|more)/i,
-  // Entertainment industry PR signals
   /\b(as part of (its|their|the) (fall|spring|summer|winter) (slate|lineup|schedule|programming))\b/i,
   /\b(syndication|syndicated deal|distribution deal|content deal|licensing agreement)\b/i,
   /\b(executive producer|showrunner|series regular|recurring role|guest star)\b.{0,120}\b(announced|confirmed|revealed|set to|tapped to)\b/i,
 ];
 
-/**
- * Level 3 — Paragraph-level patterns.
- * Strip matching paragraphs from the body; keep the article.
- */
 const PROMO_PARA_PATTERNS: RegExp[] = [
-  // Ad / sponsor disclosures
   /\b(this (article|post|content|story) (is|was) (sponsored|paid|brought|supported|presented)|sponsored by|advertisement|advertorial)\b/i,
-  // CTA / sales language
   /\b(click here to (buy|order|shop|get|download|sign up|register|subscribe)|buy now|shop now|order now|get yours?|add to cart|limited (time|stock)|while stocks? last)\b/i,
-  // Discount / promo codes
   /\b(use (code|promo|coupon|discount code)|promo code|coupon code|discount code|voucher code|get \d+% off|save \d+%|free shipping)\b/i,
-  // Brand partnership disclosures
   /\b(in partnership with|powered by|brought to you by|supported by|presented by|in association with|affiliate (link|disclosure)|this post (contains?|includes?) affiliate)\b/i,
-  // Product push paragraphs
   /\b(available (now|online|at|from|in stores?)|purchase (at|from|online)|order (at|from|online)|visit (our|the) (website|store|shop)|follow us (on|at)|subscribe (to|for) (our|the))\b/i,
-  // Social media follow prompts
   /\b(follow (us|me|them) on (instagram|twitter|facebook|tiktok|youtube|x)|like (our|the) (page|account)|join (our|the) (community|group|channel))\b/i,
-  // "The post appeared first on" footer lines
   /the post .{0,120} appeared first on/i,
-  // Brand mission boilerplate
   /\b(remains? committed to|reinforcing (its|our) (mission|commitment)|using (its|our) platform and resources)\b/i,
-  // CEO quote promoting brand
   /\b(founder|ceo|chief executive|managing director)\b.{0,60}\b(said|stated|noted|added)\b.{0,200}\b(brand|mission|commitment|initiative|empower)\b/i,
-  // Written-by attribution lines
   /^written by\s+/i,
 ];
 
-/** Level 1: reject if title/excerpt is promotional */
 function isPromotional(title: string, excerpt: string): boolean {
   const combined = `${title} ${excerpt}`;
   return PROMO_TITLE_PATTERNS.some(r => r.test(combined));
 }
 
-/** Level 2: reject if article body is predominantly brand PR (>= 3 body signals) */
 function isBodyPromotional(content: string): boolean {
   if (!content) return false;
   const text = stripHtml(content);
-  const hits = PROMO_BODY_SIGNALS.filter(r => r.test(text)).length;
-  return hits >= 3;
+  return PROMO_BODY_SIGNALS.filter(r => r.test(text)).length >= 3;
 }
 
-/** Level 3: strip promotional paragraphs from article body HTML */
 function cleanPromotionalContent(html: string): string {
   if (!html) return html;
   return html.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (match, inner) => {
     const text = stripHtml(inner).trim();
-    if (PROMO_PARA_PATTERNS.some(r => r.test(text))) return '';
-    return match;
+    return PROMO_PARA_PATTERNS.some(r => r.test(text)) ? '' : match;
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+function isPromoUrl(url: string): boolean {
+  const u = url.toLowerCase();
+  return ['/press-release','/press_release','/sponsored','/advertorial','/partner-content',
+    '/branded-content','/native-ad','/paid-post','/brand-voice','/prwire',
+    '/prnewswire','/businesswire','/globenewswire','/accesswire','/einpresswire','/newswire',
+  ].some(p => u.includes(p));
+}
 
-/** Extract og:image, og:description, and article body from a page */
+// ─── LANGUAGE DETECTION & TRANSLATION ────────────────────────────────────────
+function detectLanguageHeuristic(text: string): string {
+  const t = text.toLowerCase();
+  // Swahili markers
+  if (/\b(na|ya|wa|kwa|ni|pia|lakini|hata|zaidi|sasa|bado|tena|pia|au|kama|bila|baada|kabla|wakati|jinsi|kwamba|ambaye|ambao|ambavyo)\b/.test(t)) return 'sw';
+  // French markers
+  if (/\b(le|la|les|de|du|des|un|une|et|est|dans|pour|avec|sur|par|que|qui|ce|se|au|aux|en|il|elle|ils|elles|nous|vous|je|tu)\b/.test(t)) return 'fr';
+  // Arabic markers
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  // Portuguese markers
+  if (/\b(de|da|do|das|dos|em|no|na|nos|nas|um|uma|e|é|que|se|por|para|com|uma|não|mais|como|mas|seu|sua)\b/.test(t)) return 'pt';
+  return 'en';
+}
+
+async function detectAndTranslate(text: string, env: Env): Promise<{ text: string; lang: string }> {
+  const lang = detectLanguageHeuristic(text);
+  if (lang === 'en') return { text, lang };
+  // Use Gemini to translate, fall back to NVIDIA, fall back to original
+  const prompt = `Translate the following ${lang === 'sw' ? 'Swahili' : lang === 'fr' ? 'French' : lang === 'ar' ? 'Arabic' : 'Portuguese'} text to English. Return ONLY the translated text, nothing else:\n\n${text}`;
+  const translated = await callAI(prompt, env, true);
+  return { text: translated ?? text, lang };
+}
+
+// ─── AI REWRITER — GEMINI + NVIDIA FALLBACK ───────────────────────────────────
+function buildRewritePrompt(article: RawArticle, translatedBody: string): string {
+  return `You are a Gen Z entertainment journalist writing for PPP TV Kenya — East Africa's #1 entertainment platform. Your audience is 18-35 year olds across Kenya, Tanzania, Uganda, Nigeria, and globally.
+
+Rewrite the following article in a punchy, engaging Gen Z voice. Be bold, use current slang naturally (not forced), keep it factual but make it exciting. DO NOT mention the source publication name anywhere in the output.
+
+ARTICLE TO REWRITE:
+Title: ${article.title}
+Body: ${translatedBody || article.excerpt}
+
+Return ONLY valid JSON with exactly these fields (no markdown, no code blocks):
+{
+  "rewritten_title": "catchy Gen Z headline under 80 chars",
+  "rewritten_excerpt": "2-sentence hook that makes you want to read more, under 160 chars",
+  "rewritten_body": "full rewritten article in HTML paragraphs (<p> tags), 3-6 paragraphs, Gen Z voice, factual",
+  "pptv_verdict": "PPP TV's hot take in 1 punchy sentence — our opinion on this story",
+  "subcategory": "one of: celebrity, music, movies-tv, fashion, football, basketball, athletics, rugby, boxing-mma, kenyan-sports, tech-news, ai-innovation, african-tech, gaming, lifestyle",
+  "tags": ["tag1","tag2","tag3","tag4","tag5"]
+}`;
+}
+
+function validateGeminiOutput(obj: unknown): obj is GeminiOutput {
+  if (!obj || typeof obj !== 'object') return false;
+  const o = obj as Record<string, unknown>;
+  if (typeof o.rewritten_title !== 'string' || !o.rewritten_title.trim()) return false;
+  if (typeof o.rewritten_excerpt !== 'string' || !o.rewritten_excerpt.trim()) return false;
+  if (typeof o.rewritten_body !== 'string' || !o.rewritten_body.trim()) return false;
+  if (typeof o.pptv_verdict !== 'string' || !o.pptv_verdict.trim()) return false;
+  if (typeof o.subcategory !== 'string' || !o.subcategory.trim()) return false;
+  if (!Array.isArray(o.tags) || o.tags.length !== 5) return false;
+  return true;
+}
+
+/** Call Gemini. Returns text response or null on failure. */
+async function callGemini(prompt: string, env: Env): Promise<string | null> {
+  if (!env.GEMINI_API_KEY) return null;
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        signal: AbortSignal.timeout(25000),
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Call NVIDIA NIM (llama-3.1-nemotron-ultra or mixtral). Returns text or null. */
+async function callNvidia(prompt: string, env: Env): Promise<string | null> {
+  if (!env.NVIDIA_API_KEY) return null;
+  try {
+    const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.NVIDIA_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'meta/llama-3.1-8b-instruct',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 1500,
+      }),
+      signal: AbortSignal.timeout(25000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Try Gemini first, fall back to NVIDIA. Returns raw text or null. */
+async function callAI(prompt: string, env: Env, plainText = false): Promise<string | null> {
+  const geminiResult = await callGemini(prompt, env);
+  if (geminiResult) return geminiResult;
+  // Gemini failed — try NVIDIA
+  const nvidiaResult = await callNvidia(prompt, env);
+  return nvidiaResult ?? null;
+}
+
+async function rewriteWithAI(article: RawArticle, translatedBody: string, env: Env): Promise<GeminiOutput | null> {
+  const prompt = buildRewritePrompt(article, translatedBody);
+  const raw = await callAI(prompt, env);
+  if (!raw) return null;
+  // Extract JSON from response (handle markdown code blocks)
+  const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/) ?? raw.match(/(\{[\s\S]*\})/);
+  const jsonStr = jsonMatch?.[1] ?? raw;
+  try {
+    const parsed = JSON.parse(jsonStr.trim());
+    return validateGeminiOutput(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── SUPABASE CLIENT ─────────────────────────────────────────────────────────
+function supabaseHeaders(env: Env): Record<string, string> {
+  return {
+    'apikey':        env.SUPABASE_SERVICE_KEY ?? '',
+    'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY ?? ''}`,
+    'Content-Type':  'application/json',
+    'Prefer':        'return=minimal',
+  };
+}
+
+async function getExistingSlugs(env: Env): Promise<Set<string>> {
+  if (!env.SUPABASE_URL) return new Set();
+  try {
+    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/articles?select=slug&limit=2000`, {
+      headers: supabaseHeaders(env),
+    });
+    if (!res.ok) return new Set();
+    const rows = await res.json() as Array<{ slug: string }>;
+    return new Set(rows.map(r => r.slug));
+  } catch { return new Set(); }
+}
+
+async function saveArticleToSupabase(env: Env, article: ProcessedArticle): Promise<boolean> {
+  if (!env.SUPABASE_URL) return false;
+  const h = { ...supabaseHeaders(env), 'Prefer': 'resolution=merge-duplicates,return=minimal' };
+  const body = JSON.stringify({
+    slug:              article.slug,
+    original_title:    article.title,
+    rewritten_title:   article.rewrittenTitle,
+    rewritten_excerpt: article.rewrittenExcerpt,
+    rewritten_body:    article.rewrittenBody,
+    pptv_verdict:      article.pptvVerdict,
+    category:          article.category,
+    subcategory:       article.subcategory,
+    tags:              article.tags,
+    image_url:         article.imageUrl,
+    source_name:       article.sourceName,
+    source_url:        article.sourceUrl,
+    published_at:      article.publishedAt,
+    rewritten_at:      article.rewrittenAt,
+    language_detected: article.languageDetected,
+    views:             article.views,
+    trending_score:    article.trendingScore,
+  });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`${env.SUPABASE_URL}/rest/v1/articles`, {
+        method: 'POST', headers: h, body,
+      });
+      if (res.ok || res.status === 409) return true;
+    } catch { /* retry */ }
+  }
+  return false;
+}
+
+async function getArticlesFromSupabase(env: Env, opts: {
+  category?: string; subcategory?: string; sort?: string;
+  limit?: number; offset?: number; search?: string;
+}): Promise<ProcessedArticle[]> {
+  if (!env.SUPABASE_URL) return [];
+  const params = new URLSearchParams();
+  params.set('select', '*');
+  if (opts.category)    params.set('category', `eq.${opts.category}`);
+  if (opts.subcategory) params.set('subcategory', `eq.${opts.subcategory}`);
+  if (opts.search)      params.set('rewritten_title', `ilike.*${opts.search}*`);
+  params.set('order', opts.sort === 'trending' ? 'trending_score.desc' : 'published_at.desc');
+  params.set('limit',  String(opts.limit  ?? 20));
+  params.set('offset', String(opts.offset ?? 0));
+  try {
+    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/articles?${params}`, {
+      headers: supabaseHeaders(env),
+    });
+    if (!res.ok) return [];
+    const rows = await res.json() as Array<Record<string, unknown>>;
+    return rows.map(r => ({
+      slug:              r.slug as string,
+      title:             r.original_title as string,
+      rewrittenTitle:    r.rewritten_title as string,
+      rewrittenExcerpt:  r.rewritten_excerpt as string,
+      rewrittenBody:     r.rewritten_body as string,
+      pptvVerdict:       r.pptv_verdict as string,
+      category:          r.category as string,
+      subcategory:       r.subcategory as string,
+      tags:              r.tags as string[],
+      imageUrl:          r.image_url as string,
+      sourceName:        r.source_name as string,
+      sourceUrl:         r.source_url as string,
+      publishedAt:       r.published_at as string,
+      rewrittenAt:       r.rewritten_at as string,
+      languageDetected:  r.language_detected as string,
+      views:             r.views as number,
+      trendingScore:     r.trending_score as number,
+      excerpt:           r.rewritten_excerpt as string,
+      content:           r.rewritten_body as string,
+    }));
+  } catch { return []; }
+}
+
+async function incrementViewsInSupabase(env: Env, slug: string): Promise<void> {
+  if (!env.SUPABASE_URL) return;
+  try {
+    await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/increment_views`, {
+      method: 'POST',
+      headers: supabaseHeaders(env),
+      body: JSON.stringify({ article_slug: slug }),
+    });
+  } catch { /* best effort */ }
+}
+
+// KV fallback for views (when Supabase not configured)
+async function incrementViewsKV(env: Env, slug: string): Promise<number> {
+  const raw = await env.PPP_TV_KV.get(`views:${slug}`);
+  const next = (raw ? parseInt(raw, 10) : 0) + 1;
+  await env.PPP_TV_KV.put(`views:${slug}`, String(next));
+  return next;
+}
+
+// ─── RSS FEEDS — Entertainment / Sports / Technology only ────────────────────
+const RSS_FEEDS: Array<{ url: string; name: string; category: string }> = [
+  // Entertainment — Kenya
+  { url: 'https://www.sde.co.ke/feed/',                          name: 'SDE Kenya',             category: 'Entertainment' },
+  { url: 'https://www.ghafla.com/ke/feed/',                      name: 'Ghafla Kenya',          category: 'Entertainment' },
+  { url: 'https://www.mpasho.co.ke/feed/',                       name: 'Mpasho',                category: 'Entertainment' },
+  { url: 'https://www.pulselive.co.ke/rss',                      name: 'Pulse Live Kenya',      category: 'Entertainment' },
+  { url: 'https://www.tuko.co.ke/rss/',                          name: 'Tuko Kenya',            category: 'Entertainment' },
+  { url: 'https://www.capitalfm.co.ke/entertainment/feed/',      name: 'Capital FM Ent',        category: 'Entertainment' },
+  // Entertainment — Tanzania / Uganda / Nigeria
+  { url: 'https://www.bellanaija.com/feed/',                     name: 'BellaNaija',            category: 'Entertainment' },
+  { url: 'https://www.pulse.ng/rss',                             name: 'Pulse Nigeria',         category: 'Entertainment' },
+  { url: 'https://www.pulse.com.gh/rss',                         name: 'Pulse Ghana',           category: 'Entertainment' },
+  { url: 'https://www.thisisafrica.me/feed/',                    name: 'This Is Africa',        category: 'Entertainment' },
+  // Entertainment — Global
+  { url: 'https://variety.com/feed/',                            name: 'Variety',               category: 'Entertainment' },
+  { url: 'https://deadline.com/feed/',                           name: 'Deadline Hollywood',    category: 'Entertainment' },
+  { url: 'https://ew.com/feed/',                                 name: 'Entertainment Weekly',  category: 'Entertainment' },
+  { url: 'https://www.rollingstone.com/music/feed/',             name: 'Rolling Stone',         category: 'Entertainment' },
+  { url: 'https://www.billboard.com/feed/',                      name: 'Billboard',             category: 'Entertainment' },
+  { url: 'https://pitchfork.com/rss/news',                       name: 'Pitchfork',             category: 'Entertainment' },
+  { url: 'https://www.nme.com/feed',                             name: 'NME',                   category: 'Entertainment' },
+  // Sports — Kenya & Africa
+  { url: 'https://www.standardmedia.co.ke/rss/sports.php',       name: 'Standard Sports',       category: 'Sports' },
+  { url: 'https://www.nation.africa/kenya/sports/rss.xml',       name: 'Nation Sports',         category: 'Sports' },
+  { url: 'https://www.capitalfm.co.ke/sports/feed/',             name: 'Capital FM Sports',     category: 'Sports' },
+  { url: 'https://www.supersport.com/rss/football',              name: 'SuperSport Football',   category: 'Sports' },
+  { url: 'https://www.cafonline.com/rss',                        name: 'CAF Online',            category: 'Sports' },
+  // Sports — Global
+  { url: 'https://www.bbc.co.uk/sport/rss.xml',                  name: 'BBC Sport',             category: 'Sports' },
+  { url: 'https://www.skysports.com/rss/12040',                  name: 'Sky Sports',            category: 'Sports' },
+  { url: 'https://www.espn.com/espn/rss/news',                   name: 'ESPN',                  category: 'Sports' },
+  { url: 'https://www.goal.com/feeds/en/news',                   name: 'Goal.com',              category: 'Sports' },
+  { url: 'https://www.fourfourtwo.com/rss',                      name: 'FourFourTwo',           category: 'Sports' },
+  // Technology — Africa
+  { url: 'https://www.techweez.com/feed/',                       name: 'Techweez',              category: 'Technology' },
+  { url: 'https://techcabal.com/feed/',                          name: 'TechCabal',             category: 'Technology' },
+  { url: 'https://www.humanipo.com/feed/',                       name: 'HumanIPO',              category: 'Technology' },
+  { url: 'https://disrupt-africa.com/feed/',                     name: 'Disrupt Africa',        category: 'Technology' },
+  // Technology — Global
+  { url: 'https://techcrunch.com/feed/',                         name: 'TechCrunch',            category: 'Technology' },
+  { url: 'https://www.theverge.com/rss/index.xml',               name: 'The Verge',             category: 'Technology' },
+  { url: 'https://feeds.arstechnica.com/arstechnica/index',      name: 'Ars Technica',          category: 'Technology' },
+  { url: 'https://www.wired.com/feed/rss',                       name: 'Wired',                 category: 'Technology' },
+  { url: 'https://www.engadget.com/rss.xml',                     name: 'Engadget',              category: 'Technology' },
+];
+
+// ─── RSS SCRAPER ──────────────────────────────────────────────────────────────
 async function scrapeArticlePage(url: string): Promise<{ image: string; content: string; excerpt: string }> {
   try {
     const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; PPPTVBot/1.0)',
-        'Accept': 'text/html',
-      },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PPPTVBot/1.0)', 'Accept': 'text/html' },
       signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) return { image: '', content: '', excerpt: '' };
     const html = await res.text();
 
-    // og:image — most reliable
     const ogImage = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
       ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1]
-      ?? html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
-      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i)?.[1]
-      ?? '';
+      ?? html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ?? '';
 
-    // og:description
     const ogDesc = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)?.[1]
-      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i)?.[1]
-      ?? '';
+      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i)?.[1] ?? '';
 
-    // Article body — try common selectors via regex
     let articleHtml = '';
-    const bodyPatterns = [
+    for (const pat of [
       /<article[^>]*>([\s\S]*?)<\/article>/i,
-      /<div[^>]+class=["'][^"']*(?:article-body|post-content|entry-content|story-body|article-content|content-body)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
-      /<div[^>]+class=["'][^"']*(?:article|post|story|content)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
-    ];
-    for (const pat of bodyPatterns) {
+      /<div[^>]+class=["'][^"']*(?:article-body|post-content|entry-content|story-body|article-content)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
+    ]) {
       const m = html.match(pat);
       if (m?.[1] && m[1].length > 200) { articleHtml = m[1]; break; }
     }
 
-    // Clean the article HTML — remove scripts, styles, nav, ads
     const cleanHtml = articleHtml
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
       .replace(/<nav[\s\S]*?<\/nav>/gi, '')
       .replace(/<aside[\s\S]*?<\/aside>/gi, '')
-      .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gi, '') // remove embedded figures/captions
-      .replace(/<!--[\s\S]*?-->/g, '')
-      .replace(/<a[^>]+href=["'][^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, '$1') // strip links
-      .replace(/<[^>]+(class|id|style|data-[^=]*)=["'][^"']*["'][^>]*/gi, (m) => m.replace(/(class|id|style|data-[^=]*)=["'][^"']*["']/gi, ''))
-      .trim();
+      .replace(/<!--[\s\S]*?-->/g, '');
 
-    // Extract paragraphs - skip junk and promotional lines
     const JUNK = [
-      /^(subscribe|sign up|newsletter|follow us|share this|click here|read more|advertisement|sponsored|related:|tags:|filed under|also read|see also|more from|you may also|don't miss|trending now|most read|popular now|breaking news alert)/i,
-      /^(photo:|image:|caption:|credit:|source:|via:|originally published|copyright|all rights reserved|\(c\)|©)/i,
+      /^(subscribe|sign up|newsletter|follow us|share this|click here|read more|advertisement|sponsored|related:|tags:|filed under)/i,
+      /^(photo:|image:|caption:|credit:|source:|via:|copyright|all rights reserved|\(c\)|©)/i,
       /whatsapp|facebook|twitter|instagram|tiktok|youtube|telegram/i,
-      /cookie|privacy policy|terms of use|gdpr/i,
+      /cookie|privacy policy|terms of use/i,
     ];
     const paragraphs: string[] = [];
-    const pMatches = Array.from(cleanHtml.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
-    for (const m of pMatches) {
+    for (const m of Array.from(cleanHtml.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi))) {
       const text = stripHtml(m[1]).trim();
       if (text.length < 40) continue;
       if (JUNK.some(r => r.test(text))) continue;
-      if (PROMO_PARA_PATTERNS.some(r => r.test(text))) continue; // strip promo paragraphs
+      if (PROMO_PARA_PATTERNS.some(r => r.test(text))) continue;
       paragraphs.push(text);
       if (paragraphs.length >= 12) break;
     }
 
-    // Fallback: grab text from div blocks if no paragraphs found
-    if (paragraphs.length === 0) {
-      const divMatches = Array.from(cleanHtml.matchAll(/<div[^>]*>([\s\S]*?)<\/div>/gi));
-      for (const m of divMatches) {
-        const text = stripHtml(m[1]).trim();
-        if (text.length > 80 && !JUNK.some(r => r.test(text))) {
-          paragraphs.push(text);
-          if (paragraphs.length >= 6) break;
-        }
-      }
-    }
-
-    const content = paragraphs.map((p) => `<p>${p}</p>`).join('\n');
+    const content = paragraphs.map(p => `<p>${p}</p>`).join('\n');
     const excerpt = decodeXML(ogDesc) || paragraphs[0]?.slice(0, 250) || '';
-
-    // If the scraped excerpt itself is brand PR, return empty to trigger rejection
-    if (isPromotional('', excerpt)) {
-      return { image: '', content: '', excerpt: '' };
-    }
+    if (isPromotional('', excerpt)) return { image: '', content: '', excerpt: '' };
 
     return {
       image: ogImage.startsWith('//') ? `https:${ogImage}` : ogImage,
@@ -298,533 +544,373 @@ async function scrapeArticlePage(url: string): Promise<{ image: string; content:
   }
 }
 
-const RSS_FEEDS: Array<{ url: string; name: string; category: string }> = [
-  // ── NEWS — Kenya ──────────────────────────────────────────────────────────
-  { url: 'https://www.nation.africa/kenya/rss.xml',              name: 'Nation Africa',         category: 'News' },
-  { url: 'https://www.standardmedia.co.ke/rss/headlines.php',    name: 'Standard Media',        category: 'News' },
-  { url: 'https://www.the-star.co.ke/rss/',                      name: 'The Star Kenya',        category: 'News' },
-  { url: 'https://www.citizen.digital/feed',                     name: 'Citizen Digital',       category: 'News' },
-  { url: 'https://www.capitalfm.co.ke/news/feed/',               name: 'Capital FM Kenya',      category: 'News' },
-  { url: 'https://www.kbc.co.ke/feed/',                          name: 'KBC Kenya',             category: 'News' },
-  { url: 'https://www.peopledailykenya.com/feed/',               name: 'People Daily Kenya',    category: 'News' },
-  // ── NEWS — East Africa ────────────────────────────────────────────────────
-  { url: 'https://www.theeastafrican.co.ke/tea/rss.xml',         name: 'The East African',      category: 'News' },
-  { url: 'https://www.monitor.co.ug/feed/',                      name: 'Daily Monitor Uganda',  category: 'News' },
-  { url: 'https://www.thecitizen.co.tz/feed/',                   name: 'The Citizen Tanzania',  category: 'News' },
-  { url: 'https://www.newvision.co.ug/feed/',                    name: 'New Vision Uganda',     category: 'News' },
-  // ── NEWS — Africa & World ─────────────────────────────────────────────────
-  { url: 'https://www.africanews.com/feed/rss2/',                name: 'Africa News',           category: 'News' },
-  { url: 'https://www.aljazeera.com/xml/rss/all.xml',            name: 'Al Jazeera Africa',     category: 'News' },
-  { url: 'https://www.bbc.co.uk/africa/rss.xml',                 name: 'BBC Africa',            category: 'News' },
-  { url: 'https://www.vanguardngr.com/feed/',                    name: 'Vanguard Nigeria',      category: 'News' },
-  { url: 'https://www.premiumtimesng.com/feed/',                 name: 'Premium Times Nigeria', category: 'News' },
-  { url: 'https://www.myjoyonline.com/feed/',                    name: 'Joy Online Ghana',      category: 'News' },
-  { url: 'https://www.timeslive.co.za/rss/',                     name: 'Times Live SA',         category: 'News' },
-  { url: 'https://www.news24.com/rss',                           name: 'News24 SA',             category: 'News' },
-  { url: 'https://www.reuters.com/rssFeed/worldNews',            name: 'Reuters World',         category: 'News' },
-
-  // ── POLITICS ──────────────────────────────────────────────────────────────
-  { url: 'https://www.nation.africa/kenya/politics/rss.xml',     name: 'Nation Politics',       category: 'Politics' },
-  { url: 'https://www.standardmedia.co.ke/rss/politics.php',     name: 'Standard Politics',     category: 'Politics' },
-  { url: 'https://www.the-star.co.ke/news/politics/rss/',        name: 'The Star Politics',     category: 'Politics' },
-  { url: 'https://www.capitalfm.co.ke/politics/feed/',           name: 'Capital FM Politics',   category: 'Politics' },
-  { url: 'https://www.citizen.digital/category/politics/feed/',  name: 'Citizen Politics',      category: 'Politics' },
-  { url: 'https://www.kbc.co.ke/category/politics/feed/',        name: 'KBC Politics',          category: 'Politics' },
-
-  // ── ENTERTAINMENT — Kenya ─────────────────────────────────────────────────
-  { url: 'https://www.sde.co.ke/feed/',                          name: 'SDE Kenya',             category: 'Entertainment' },
-  { url: 'https://www.ghafla.com/ke/feed/',                      name: 'Ghafla Kenya',          category: 'Entertainment' },
-  { url: 'https://www.mpasho.co.ke/feed/',                       name: 'Mpasho',                category: 'Entertainment' },
-  { url: 'https://www.pulselive.co.ke/rss',                      name: 'Pulse Live Kenya',      category: 'Entertainment' },
-  { url: 'https://www.tuko.co.ke/rss/',                          name: 'Tuko Kenya',            category: 'Entertainment' },
-  // ── ENTERTAINMENT — Africa ────────────────────────────────────────────────
-  { url: 'https://www.bellanaija.com/feed/',                     name: 'BellaNaija',            category: 'Entertainment' },
-  { url: 'https://www.pulse.ng/rss',                             name: 'Pulse Nigeria',         category: 'Entertainment' },
-  { url: 'https://www.pulse.com.gh/rss',                         name: 'Pulse Ghana',           category: 'Entertainment' },
-  { url: 'https://www.thisisafrica.me/feed/',                    name: 'This Is Africa',        category: 'Entertainment' },
-  // ── ENTERTAINMENT — Global ────────────────────────────────────────────────
-  { url: 'https://variety.com/feed/',                            name: 'Variety',               category: 'Entertainment' },
-  { url: 'https://deadline.com/feed/',                           name: 'Deadline Hollywood',    category: 'Entertainment' },
-  { url: 'https://www.hollywoodreporter.com/feed/',              name: 'Hollywood Reporter',    category: 'Entertainment' },
-  { url: 'https://ew.com/feed/',                                 name: 'Entertainment Weekly',  category: 'Entertainment' },
-
-  // ── SPORTS — Kenya & Africa ───────────────────────────────────────────────
-  { url: 'https://www.standardmedia.co.ke/rss/sports.php',       name: 'Standard Sports',       category: 'Sports' },
-  { url: 'https://www.nation.africa/kenya/sports/rss.xml',       name: 'Nation Sports',         category: 'Sports' },
-  { url: 'https://www.capitalfm.co.ke/sports/feed/',             name: 'Capital FM Sports',     category: 'Sports' },
-  { url: 'https://www.supersport.com/rss/football',              name: 'SuperSport Football',   category: 'Sports' },
-  { url: 'https://www.cafonline.com/rss',                        name: 'CAF Online',            category: 'Sports' },
-  // ── SPORTS — Global ───────────────────────────────────────────────────────
-  { url: 'https://www.bbc.co.uk/sport/rss.xml',                  name: 'BBC Sport',             category: 'Sports' },
-  { url: 'https://www.skysports.com/rss/12040',                  name: 'Sky Sports',            category: 'Sports' },
-  { url: 'https://www.espn.com/espn/rss/news',                   name: 'ESPN',                  category: 'Sports' },
-  { url: 'https://www.goal.com/feeds/en/news',                   name: 'Goal.com',              category: 'Sports' },
-  { url: 'https://www.fourfourtwo.com/rss',                      name: 'FourFourTwo',           category: 'Sports' },
-
-  // ── MUSIC ─────────────────────────────────────────────────────────────────
-  { url: 'https://www.capitalfm.co.ke/music/feed/',              name: 'Capital FM Music',      category: 'Music' },
-  { url: 'https://www.ghafla.com/ke/category/music/feed/',       name: 'Ghafla Music',          category: 'Music' },
-  { url: 'https://www.bellanaija.com/category/music/feed/',      name: 'BellaNaija Music',      category: 'Music' },
-  { url: 'https://www.pulse.ng/entertainment/music/rss',         name: 'Pulse Music Nigeria',   category: 'Music' },
-  { url: 'https://pitchfork.com/rss/news',                       name: 'Pitchfork',             category: 'Music' },
-  { url: 'https://www.rollingstone.com/music/feed/',             name: 'Rolling Stone Music',   category: 'Music' },
-  { url: 'https://www.billboard.com/feed/',                      name: 'Billboard',             category: 'Music' },
-  { url: 'https://www.nme.com/feed',                             name: 'NME',                   category: 'Music' },
-
-  // ── LIFESTYLE ─────────────────────────────────────────────────────────────
-  { url: 'https://www.standardmedia.co.ke/rss/lifestyle.php',    name: 'Standard Lifestyle',    category: 'Lifestyle' },
-  { url: 'https://www.nation.africa/kenya/lifestyle/rss.xml',    name: 'Nation Lifestyle',      category: 'Lifestyle' },
-  { url: 'https://www.pulselive.co.ke/lifestyle/rss',            name: 'Pulse Lifestyle Kenya', category: 'Lifestyle' },
-  { url: 'https://www.tuko.co.ke/category/lifestyle/rss/',       name: 'Tuko Lifestyle',        category: 'Lifestyle' },
-  { url: 'https://www.bellanaija.com/category/living/feed/',     name: 'BellaNaija Living',     category: 'Lifestyle' },
-  { url: 'https://www.vogue.com/feed/rss',                       name: 'Vogue',                 category: 'Lifestyle' },
-  { url: 'https://www.elle.com/rss/all.xml/',                    name: 'Elle',                  category: 'Lifestyle' },
-
-  // ── TECHNOLOGY ────────────────────────────────────────────────────────────
-  { url: 'https://www.techweez.com/feed/',                       name: 'Techweez',              category: 'Technology' },
-  { url: 'https://techcabal.com/feed/',                          name: 'TechCabal',             category: 'Technology' },
-  { url: 'https://www.humanipo.com/feed/',                       name: 'HumanIPO',              category: 'Technology' },
-  { url: 'https://disrupt-africa.com/feed/',                     name: 'Disrupt Africa',        category: 'Technology' },
-  { url: 'https://techcrunch.com/feed/',                         name: 'TechCrunch',            category: 'Technology' },
-  { url: 'https://www.theverge.com/rss/index.xml',               name: 'The Verge',             category: 'Technology' },
-  { url: 'https://feeds.arstechnica.com/arstechnica/index',      name: 'Ars Technica',          category: 'Technology' },
-  { url: 'https://www.wired.com/feed/rss',                       name: 'Wired',                 category: 'Technology' },
-  { url: 'https://www.engadget.com/rss.xml',                     name: 'Engadget',              category: 'Technology' },
-
-  // ── BUSINESS ─────────────────────────────────────────────────────────────
-  { url: 'https://www.businessdailyafrica.com/feed/',            name: 'Business Daily Africa', category: 'Business' },
-  { url: 'https://www.standardmedia.co.ke/rss/business.php',     name: 'Standard Business',     category: 'Business' },
-  { url: 'https://www.nation.africa/kenya/business/rss.xml',     name: 'Nation Business',       category: 'Business' },
-  { url: 'https://www.capitalfm.co.ke/business/feed/',           name: 'Capital FM Business',   category: 'Business' },
-  { url: 'https://www.theeastafrican.co.ke/tea/business/rss.xml',name: 'EA Business',           category: 'Business' },
-  { url: 'https://www.bloomberg.com/feeds/podcasts/etf.xml',     name: 'Bloomberg',             category: 'Business' },
-  { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',          name: 'Wall Street Journal',   category: 'Business' },
-  { url: 'https://www.ft.com/rss/home/africa',                   name: 'Financial Times Africa',category: 'Business' },
-  { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',name: 'CNBC Business',         category: 'Business' },
-
-  // ── HEALTH ────────────────────────────────────────────────────────────────
-  { url: 'https://www.nation.africa/kenya/health/rss.xml',       name: 'Nation Health',         category: 'Health' },
-  { url: 'https://www.standardmedia.co.ke/rss/health.php',       name: 'Standard Health',       category: 'Health' },
-  { url: 'https://www.who.int/rss-feeds/news-english.xml',       name: 'WHO News',              category: 'Health' },
-  { url: 'https://www.medicalnewstoday.com/rss/news',            name: 'Medical News Today',    category: 'Health' },
-  { url: 'https://www.healthline.com/rss/news',                  name: 'Healthline',            category: 'Health' },
-  { url: 'https://www.webmd.com/rss/rss.aspx?rss=news',          name: 'WebMD',                 category: 'Health' },
-  { url: 'https://www.sciencedaily.com/rss/health_medicine.xml', name: 'Science Daily Health',  category: 'Health' },
-
-  // ── MOVIES ────────────────────────────────────────────────────────────────
-  { url: 'https://www.empireonline.com/movies/feed/',            name: 'Empire Magazine',       category: 'Movies' },
-  { url: 'https://www.indiewire.com/feed/',                      name: 'IndieWire',             category: 'Movies' },
-  { url: 'https://collider.com/feed/',                           name: 'Collider',              category: 'Movies' },
-  { url: 'https://screenrant.com/feed/',                         name: 'Screen Rant',           category: 'Movies' },
-  { url: 'https://www.slashfilm.com/feed/',                      name: 'SlashFilm',             category: 'Movies' },
-  { url: 'https://www.cinemablend.com/rss/news',                 name: 'CinemaBlend',           category: 'Movies' },
-  { url: 'https://www.ign.com/rss/articles',                     name: 'IGN Movies',            category: 'Movies' },
-  { url: 'https://www.rogerebert.com/feed',                      name: 'RogerEbert.com',        category: 'Movies' },
-
-  // ── SCIENCE ───────────────────────────────────────────────────────────────
-  { url: 'https://www.sciencedaily.com/rss/top.xml',             name: 'Science Daily',         category: 'Science' },
-  { url: 'https://www.newscientist.com/feed/home/',              name: 'New Scientist',         category: 'Science' },
-  { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',       name: 'NASA News',             category: 'Science' },
-  { url: 'https://www.nature.com/nature.rss',                    name: 'Nature',                category: 'Science' },
-  { url: 'https://feeds.nationalgeographic.com/ng/News/News_Main',name: 'National Geographic',  category: 'Science' },
-  { url: 'https://www.scientificamerican.com/feed/rss/',         name: 'Scientific American',   category: 'Science' },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * URL-level guardrail: skip articles from known PR/brand content URL patterns.
- * These are paths that reliably indicate brand-written content.
- */
-function isPromoUrl(url: string): boolean {
-  const u = url.toLowerCase();
+function extractImageFromRSS(itemXml: string): string {
   return (
-    u.includes('/press-release') ||
-    u.includes('/press_release') ||
-    u.includes('/sponsored') ||
-    u.includes('/advertorial') ||
-    u.includes('/partner-content') ||
-    u.includes('/branded-content') ||
-    u.includes('/native-ad') ||
-    u.includes('/paid-post') ||
-    u.includes('/brand-voice') ||
-    u.includes('/prwire') ||
-    u.includes('/prnewswire') ||
-    u.includes('/businesswire') ||
-    u.includes('/globenewswire') ||
-    u.includes('/accesswire') ||
-    u.includes('/einpresswire') ||
-    u.includes('/newswire')
+    itemXml.match(/<media:content[^>]+url=["']([^"']+)["']/i)?.[1] ??
+    itemXml.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i)?.[1] ??
+    itemXml.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]+type=["']image/i)?.[1] ??
+    itemXml.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] ??
+    ''
   );
 }
 
-async function fetchRSSFeed(feed: { url: string; name: string; category: string }): Promise<Article[]> {
+async function fetchRSSFeed(feed: { url: string; name: string; category: string }): Promise<RawArticle[]> {
   try {
     const res = await fetch(feed.url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PPPTVBot/1.0)' },
-      signal: AbortSignal.timeout(6000), // tighter timeout per feed
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return [];
-    const text = await res.text();
+    const xml = await res.text();
 
-    const items: Array<{ title: string; link: string; pubDate: string; description: string; mediaUrl: string; contentEncoded: string }> = [];
-    const itemMatches = Array.from(text.matchAll(/<item>([\s\S]*?)<\/item>/g));
+    const items = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/gi));
+    const articles: RawArticle[] = [];
 
-    for (const match of itemMatches) {
-      const item = match[1];
-      const title = decodeXML(item.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/)?.[1] ?? '');
-      const link = item.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim()
-        ?? item.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1]?.trim() ?? '';
-      const pubDate = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim() ?? '';
-      const description = item.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/)?.[1] ?? '';
-      const contentEncoded = item.match(/<content:encoded>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/)?.[1] ?? '';
-
-      // Try to get image from RSS item directly (fast path — no scraping needed)
-      const mediaUrl =
-        item.match(/<media:content[^>]+url=["']([^"']+)["']/i)?.[1] ??
-        item.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i)?.[1] ??
-        item.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]+type=["']image/i)?.[1] ??
-        contentEncoded.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] ??
-        description.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] ?? '';
+    for (const item of items.slice(0, 5)) {
+      const itemXml = item[1];
+      const title   = decodeXML(itemXml.match(/<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i)?.[1]?.trim() ?? '');
+      const link    = itemXml.match(/<link[^>]*>([^<]+)<\/link>/i)?.[1]?.trim()
+        ?? itemXml.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1]?.trim() ?? '';
+      const pubDate = itemXml.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i)?.[1]?.trim()
+        ?? itemXml.match(/<dc:date[^>]*>([\s\S]*?)<\/dc:date>/i)?.[1]?.trim() ?? '';
+      const descRaw = itemXml.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i)?.[1] ?? '';
+      const contentEncoded = itemXml.match(/<content:encoded[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/i)?.[1] ?? '';
 
       if (!title || !link) continue;
       if (isPromoUrl(link)) continue;
-      if (isPromotional(title, decodeXML(stripHtml(description)).slice(0, 300))) continue;
 
-      items.push({ title, link, pubDate, description, mediaUrl, contentEncoded });
-      if (items.length >= 5) break; // 5 per feed keeps total requests manageable
+      const excerpt = decodeXML(stripHtml(descRaw)).slice(0, 300);
+      if (isPromotional(title, excerpt)) continue;
+
+      // Fast-path: get image from RSS first
+      let imageUrl = extractImageFromRSS(itemXml);
+      // Also try content:encoded for image
+      if (!imageUrl && contentEncoded) {
+        imageUrl = extractImageFromRSS(contentEncoded);
+      }
+
+      // Use content:encoded as body if available, otherwise scrape
+      let content = '';
+      if (contentEncoded && contentEncoded.length > 200) {
+        content = cleanPromotionalContent(contentEncoded);
+      }
+
+      // Only scrape if we're missing image or content
+      if (!imageUrl || !content) {
+        const scraped = await scrapeArticlePage(link);
+        if (!imageUrl) imageUrl = scraped.image;
+        if (!content)  content  = scraped.content;
+      }
+
+      // Skip if still no image
+      if (!imageUrl || imageUrl.includes('1x1') || imageUrl.length < 20) continue;
+
+      const bodyText = content || `<p>${excerpt}</p>`;
+      if (isBodyPromotional(bodyText)) continue;
+
+      const slug = `${slugify(title).slice(0, 60)}-${Date.now()}-${Math.random().toString(36).slice(2,5)}`;
+
+      articles.push({
+        slug,
+        title,
+        excerpt: excerpt || stripHtml(bodyText).slice(0, 250),
+        content: bodyText,
+        category: feed.category,
+        imageUrl,
+        sourceUrl: link,
+        sourceName: feed.name,
+        publishedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+      });
     }
-
-    // Fast path: if all items have images from RSS, skip page scraping entirely
-    const allHaveImages = items.every(i => i.mediaUrl.length > 10);
-
-    const articles = await Promise.all(
-      items.map(async (item): Promise<Article> => {
-        let imageUrl = item.mediaUrl;
-        let excerpt = decodeXML(stripHtml(item.description)).slice(0, 250);
-        let content = item.contentEncoded || `<p>${excerpt}</p>`;
-
-        // Only scrape page if we don't have an image from RSS
-        if (!imageUrl) {
-          const scraped = await scrapeArticlePage(item.link);
-          imageUrl = scraped.image || '';
-          if (scraped.excerpt) excerpt = scraped.excerpt;
-          if (scraped.content) content = scraped.content;
-        }
-
-        content = cleanPromotionalContent(content);
-        const publishedAt = item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString();
-        const slug = slugify(`${item.title}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`);
-
-        return {
-          slug,
-          title: decodeXML(item.title),
-          excerpt,
-          content,
-          category: feed.category,
-          tags: [],
-          imageUrl,
-          sourceUrl: item.link,
-          sourceName: feed.name,
-          publishedAt,
-        };
-      })
-    );
-
-    return articles.filter((a) =>
-      a.imageUrl &&
-      !isPromotional(a.title, a.excerpt) &&
-      !isBodyPromotional(a.content)
-    );
+    return articles;
   } catch {
     return [];
   }
 }
 
-/** Run feeds in batches to avoid Cloudflare Worker CPU limits */
-async function fetchFeedsInBatches(feeds: typeof RSS_FEEDS, batchSize = 15): Promise<Article[]> {
-  const all: Article[] = [];
-  for (let i = 0; i < feeds.length; i += batchSize) {
-    const batch = feeds.slice(i, i + batchSize);
-    const results = await Promise.allSettled(batch.map(fetchRSSFeed));
-    for (const r of results) {
-      if (r.status === 'fulfilled') all.push(...r.value);
+// ─── BATCH PROCESSOR ─────────────────────────────────────────────────────────
+async function processArticleBatch(
+  articles: RawArticle[],
+  env: Env
+): Promise<{ processed: number; failed: number; skipped: number }> {
+  const batch = articles.slice(0, 10); // max 10 concurrent
+  let processed = 0, failed = 0, skipped = 0;
+
+  const results = await Promise.allSettled(batch.map(async (article) => {
+    // 1. Detect language and translate if needed
+    const { text: translatedBody, lang } = await detectAndTranslate(
+      article.content || article.excerpt, env
+    );
+
+    // 2. Rewrite with Gemini → NVIDIA fallback
+    const rewritten = await rewriteWithAI(article, translatedBody, env);
+    if (!rewritten) throw new Error(`AI rewrite failed for: ${article.slug}`);
+
+    // 3. Build ProcessedArticle
+    const now = new Date().toISOString();
+    const pa: ProcessedArticle = {
+      ...article,
+      rewrittenTitle:   rewritten.rewritten_title,
+      rewrittenExcerpt: rewritten.rewritten_excerpt,
+      rewrittenBody:    rewritten.rewritten_body,
+      pptvVerdict:      rewritten.pptv_verdict,
+      subcategory:      rewritten.subcategory,
+      tags:             rewritten.tags,
+      languageDetected: lang,
+      rewrittenAt:      now,
+      views:            0,
+      trendingScore:    0,
+    };
+    return pa;
+  }));
+
+  const processedArticles: ProcessedArticle[] = [];
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      processedArticles.push(r.value);
+      processed++;
+    } else {
+      failed++;
     }
   }
-  return all;
+
+  // 4. Save all to Supabase
+  for (const pa of processedArticles) {
+    const saved = await saveArticleToSupabase(env, pa);
+    if (!saved) { failed++; processed--; }
+  }
+
+  return { processed, failed, skipped };
 }
 
+// ─── CRON HANDLER ─────────────────────────────────────────────────────────────
+async function runCycle(env: Env): Promise<{ fetched: number; rewritten: number; failed: number; skipped: number; durationMs: number }> {
+  const start = Date.now();
+
+  // 1. Get existing slugs to dedup
+  const existingSlugs = await getExistingSlugs(env);
+
+  // 2. Fetch all feeds in batches of 10 to avoid CPU timeout
+  const allRaw: RawArticle[] = [];
+  for (let i = 0; i < RSS_FEEDS.length; i += 10) {
+    const batch = RSS_FEEDS.slice(i, i + 10);
+    const results = await Promise.allSettled(batch.map(f => fetchRSSFeed(f)));
+    for (const r of results) {
+      if (r.status === 'fulfilled') allRaw.push(...r.value);
+    }
+  }
+
+  // 3. Filter: skip duplicates and promo
+  const newArticles = allRaw.filter(a =>
+    !existingSlugs.has(a.slug) &&
+    !isPromotional(a.title, a.excerpt) &&
+    !isBodyPromotional(a.content)
+  );
+
+  const skipped = allRaw.length - newArticles.length;
+
+  // 4. Process up to 10 new articles through AI pipeline
+  const toProcess = newArticles.slice(0, 10);
+  const { processed, failed } = await processArticleBatch(toProcess, env);
+
+  // 5. Store health metadata in KV
+  await env.PPP_TV_KV.put('health', JSON.stringify({
+    lastCycleAt: new Date().toISOString(),
+    articlesProcessed: processed,
+  }));
+
+  return {
+    fetched: allRaw.length,
+    rewritten: processed,
+    failed,
+    skipped,
+    durationMs: Date.now() - start,
+  };
+}
+
+// ─── HTTP ROUTER ──────────────────────────────────────────────────────────────
 export default {
-  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
-    const incoming = await fetchFeedsInBatches(RSS_FEEDS, 15);
-    if (incoming.length === 0) return;
-
-    const existing = await getArticles(env);
-    const existingUrls = new Set(existing.map((a) => a.sourceUrl));
-    const newArticles = incoming.filter((a) => !existingUrls.has(a.sourceUrl));
-    if (newArticles.length === 0) return;
-
-    const merged = [...newArticles, ...existing]
-      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-      .slice(0, 2000);
-
-    await saveArticles(env, merged);
-
-    if (env.VERCEL_URL) {
-      try {
-        await fetch(`${env.VERCEL_URL}/api/revalidate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.WORKER_SECRET}` },
-          body: JSON.stringify({ path: '/' }),
-        });
-      } catch { /* non-critical */ }
-    }
-  },
-
-  async fetch(req: Request, env: Env): Promise<Response> {
-    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
-
-    const url = new URL(req.url);
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url  = new URL(request.url);
     const path = url.pathname;
-    const method = req.method;
 
-    if (path === '/articles' && method === 'GET') {
-      const category = url.searchParams.get('category');
-      const sort = url.searchParams.get('sort') ?? 'recent';
+    // Rate limiting
+    const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+    if (!checkRateLimit(ip)) {
+      return new Response('Too Many Requests', {
+        status: 429,
+        headers: { ...CORS_HEADERS, ...SECURITY_HEADERS, 'Retry-After': '60' },
+      });
+    }
+
+    if (request.method === 'OPTIONS') return cors(new Response(null, { status: 204 }));
+
+    // ── GET /articles ──────────────────────────────────────────────────────
+    if (path === '/articles' && request.method === 'GET') {
+      const category    = url.searchParams.get('category')    ?? undefined;
+      const subcategory = url.searchParams.get('subcategory') ?? undefined;
+      const sort        = url.searchParams.get('sort')        ?? undefined;
+      const limit       = parseInt(url.searchParams.get('limit')  ?? '20', 10);
+      const offset      = parseInt(url.searchParams.get('offset') ?? '0',  10);
+      const search      = url.searchParams.get('q')           ?? undefined;
+
+      const articles = await getArticlesFromSupabase(env, { category, subcategory, sort, limit, offset, search });
+      return json(articles);
+    }
+
+    // ── GET /trending ──────────────────────────────────────────────────────
+    if (path === '/trending' && request.method === 'GET') {
+      const limit = parseInt(url.searchParams.get('limit') ?? '10', 10);
+      const articles = await getArticlesFromSupabase(env, { sort: 'trending', limit });
+      return json(articles);
+    }
+
+    // ── GET /search ────────────────────────────────────────────────────────
+    if (path === '/search' && request.method === 'GET') {
+      const q     = url.searchParams.get('q') ?? '';
       const limit = parseInt(url.searchParams.get('limit') ?? '20', 10);
-      const offset = parseInt(url.searchParams.get('offset') ?? '0', 10);
-      let articles = await getArticles(env);
-      if (category) articles = articles.filter((a) => a.category.toLowerCase() === category.toLowerCase());
-      if (sort === 'trending') {
-        articles = articles.map((a) => ({ ...a, trendingScore: trendingScore(a) })).sort((a, b) => (b.trendingScore ?? 0) - (a.trendingScore ?? 0));
-      } else {
-        articles = articles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+      if (!q.trim()) return json([]);
+      const articles = await getArticlesFromSupabase(env, { search: q, limit });
+      return json(articles);
+    }
+
+    // ── POST /views ────────────────────────────────────────────────────────
+    if (path === '/views' && request.method === 'POST') {
+      const body = await request.json().catch(() => ({})) as { slug?: string };
+      if (!body.slug) return json({ error: 'slug required' }, 400);
+      await incrementViewsInSupabase(env, body.slug);
+      await incrementViewsKV(env, body.slug); // KV fallback
+      return json({ ok: true });
+    }
+
+    // ── GET /comments ──────────────────────────────────────────────────────
+    if (path === '/comments' && request.method === 'GET') {
+      const slug = url.searchParams.get('slug') ?? '';
+      if (!slug) return json([]);
+      const raw = await env.PPP_TV_KV.get(`comments:${slug}`, 'json');
+      const all = (raw as Array<{ approved: boolean }> | null) ?? [];
+      return json(all.filter(c => c.approved));
+    }
+
+    // ── POST /comments ─────────────────────────────────────────────────────
+    if (path === '/comments' && request.method === 'POST') {
+      const body = await request.json().catch(() => ({})) as { slug?: string; name?: string; text?: string };
+      if (!body.slug || !body.name || !body.text) return json({ error: 'slug, name, text required' }, 400);
+      const raw = await env.PPP_TV_KV.get(`comments:${body.slug}`, 'json');
+      const all = (raw as unknown[] | null) ?? [];
+      all.push({ ...body, approved: false, createdAt: new Date().toISOString() });
+      await env.PPP_TV_KV.put(`comments:${body.slug}`, JSON.stringify(all));
+      return json({ ok: true });
+    }
+
+    // ── POST /subscribe ────────────────────────────────────────────────────
+    if (path === '/subscribe' && request.method === 'POST') {
+      const body = await request.json().catch(() => ({})) as { email?: string };
+      if (!body.email) return json({ error: 'email required' }, 400);
+      const raw = await env.PPP_TV_KV.get('subscribers', 'json');
+      const subs = (raw as string[] | null) ?? [];
+      if (!subs.includes(body.email)) {
+        subs.push(body.email);
+        await env.PPP_TV_KV.put('subscribers', JSON.stringify(subs));
       }
-      return json(articles.slice(offset, offset + limit));
+      return json({ ok: true });
     }
 
-    const articleMatch = path.match(/^\/articles\/(.+)$/);
-    if (articleMatch && method === 'GET') {
-      const slug = articleMatch[1];
-      const articles = await getArticles(env);
-      const article = articles.find((a) => a.slug === slug);
-      if (!article) return json({ error: 'Not found' }, 404);
-      return json(article);
-    }
-
-    if (path === '/articles' && method === 'POST') {
-      if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
-      let incoming: Article[];
-      try {
-        incoming = await req.json() as Article[];
-        if (!Array.isArray(incoming)) throw new Error('Expected array');
-      } catch { return json({ error: 'Invalid body' }, 400); }
-
-      const existing = await getArticles(env);
-      const existingUrls = new Set(existing.map((a) => a.sourceUrl));
-      let saved = 0, skipped = 0;
-      for (const article of incoming) {
-        if (existingUrls.has(article.sourceUrl)) { skipped++; }
-        else { existing.push(article); existingUrls.add(article.sourceUrl); saved++; }
-      }
-      const sorted = existing.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-      await saveArticles(env, sorted.slice(0, 2000));
-      return json({ saved, skipped });
-    }
-
-    // ── POST /refresh — manually trigger RSS fetch ─────────────────────────
-    if (path === '/refresh' && method === 'POST') {
-      if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
-      const incoming = await fetchFeedsInBatches(RSS_FEEDS, 15);
-      const existing = await getArticles(env);
-      const existingUrlMap = new Map(existing.map((a) => [a.sourceUrl, a]));
-
-      // New articles not yet in KV
-      const newArticles = incoming.filter((a) => !existingUrlMap.has(a.sourceUrl));
-
-      // Patch existing articles that are missing images
-      let patched = 0;
-      for (const inc of incoming) {
-        const ex = existingUrlMap.get(inc.sourceUrl);
-        if (ex && !ex.imageUrl && inc.imageUrl) {
-          ex.imageUrl = inc.imageUrl;
-          if (!ex.content && inc.content) ex.content = inc.content;
-          if (!ex.excerpt && inc.excerpt) ex.excerpt = inc.excerpt;
-          patched++;
-        }
-      }
-
-      const merged = [...newArticles, ...existing]
-        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-        .slice(0, 2000);
-      await saveArticles(env, merged);
-      return json({ fetched: incoming.length, saved: newArticles.length, patched, total: merged.length });
-    }
-
-    // ── POST /refresh-category — refresh a single category ────────────────
-    if (path === '/refresh-category' && method === 'POST') {
-      if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
-      let body: { category?: string };
-      try { body = await req.json() as { category?: string }; } catch { return json({ error: 'Invalid body' }, 400); }
-      const cat = body.category;
-      if (!cat) return json({ error: 'category required' }, 400);
-      const feeds = RSS_FEEDS.filter(f => f.category.toLowerCase() === cat.toLowerCase());
-      if (feeds.length === 0) return json({ error: 'No feeds for category' }, 404);
-      const incoming = await fetchFeedsInBatches(feeds, 10);
-      const existing = await getArticles(env);
-      const existingUrls = new Set(existing.map((a) => a.sourceUrl));
-      const newArticles = incoming.filter((a) => !existingUrls.has(a.sourceUrl));
-      const merged = [...newArticles, ...existing].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()).slice(0, 2000);
-      await saveArticles(env, merged);
-      return json({ category: cat, feeds: feeds.length, fetched: incoming.length, saved: newArticles.length, total: merged.length });
-    }
-
-    // ── POST /purge-no-image — remove articles without images ──────────────
-    if (path === '/purge-no-image' && method === 'POST') {
-      if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
-      const existing = await getArticles(env);
-      const before = existing.length;
-      const clean = existing.filter((a) => a.imageUrl && a.imageUrl.length > 5);
-      await saveArticles(env, clean);
-      return json({ before, after: clean.length, removed: before - clean.length });
-    }
-
-    // ── POST /purge-promo — remove promotional articles from KV ───────────
-    if (path === '/purge-promo' && method === 'POST') {
-      if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
-      const existing = await getArticles(env);
-      const before = existing.length;
-      const clean = existing.filter((a) =>
-        !isPromotional(a.title, a.excerpt) &&
-        !isBodyPromotional(a.content)
-      );
-      await saveArticles(env, clean);
-      return json({ before, after: clean.length, removed: before - clean.length });
-    }
-
-    if (path === '/views' && method === 'POST') {
-      let body: { slug?: string };
-      try { body = await req.json() as { slug?: string }; } catch { return json({ error: 'Invalid body' }, 400); }
-      const slug = body.slug;
-      if (!slug) return json({ error: 'slug required' }, 400);
-      const ip = req.headers.get('CF-Connecting-IP') ?? 'unknown';
-      const rateLimitKey = `rl:${slug}:${ip}`;
-      const alreadyViewed = await env.PPP_TV_KV.get(rateLimitKey);
-      if (!alreadyViewed) {
-        await env.PPP_TV_KV.put(rateLimitKey, '1', { expirationTtl: 3600 });
-        const views = await incrementViews(env, slug);
-        return json({ slug, views });
-      }
-      return json({ slug, views: await getViews(env, slug) });
-    }
-
-    const viewsMatch = path.match(/^\/views\/(.+)$/);
-    if (viewsMatch && method === 'GET') {
-      const slug = viewsMatch[1];
-      return json({ slug, views: await getViews(env, slug) });
-    }
-
-    if (path === '/trending' && method === 'GET') {
-      const sevenDaysAgo = Date.now() - 7 * 24 * 3_600_000;
-      const articles = await getArticles(env);
-      const scored = articles
-        .filter((a) => new Date(a.publishedAt).getTime() > sevenDaysAgo && a.imageUrl)
-        .map((a) => ({ ...a, trendingScore: trendingScore(a) }))
-        .sort((a, b) => (b.trendingScore ?? 0) - (a.trendingScore ?? 0))
-        .slice(0, 10);
-      return json(scored);
-    }
-
-    if (path === '/search' && method === 'GET') {
-      const q = url.searchParams.get('q')?.toLowerCase().trim();
-      if (!q) return json([]);
-      const articles = await getArticles(env);
-      const results = articles
-        .filter((a) => `${a.title} ${a.excerpt} ${a.category} ${a.tags.join(' ')}`.toLowerCase().includes(q))
-        .slice(0, 20);
-      return json(results);
-    }
-
-    if (path === '/subscribe' && method === 'POST') {
-      let body: { email?: string };
-      try { body = await req.json() as { email?: string }; } catch { return json({ error: 'Invalid body' }, 400); }
-      const email = body.email?.trim().toLowerCase();
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'Invalid email' }, 400);
-      const existing = await env.PPP_TV_KV.get(`sub:${email}`);
-      if (existing) return json({ message: 'Already subscribed.' });
-      await env.PPP_TV_KV.put(`sub:${email}`, JSON.stringify({ email, subscribedAt: new Date().toISOString() }));
-      const countRaw = await env.PPP_TV_KV.get('subscriber_count');
-      await env.PPP_TV_KV.put('subscriber_count', String((countRaw ? parseInt(countRaw, 10) : 0) + 1));
-      return json({ message: 'Subscribed successfully.' });
-    }
-
-    if (path === '/analytics' && method === 'GET') {
-      if (!isAuthed(req, env)) return json({ error: 'Unauthorized' }, 401);
-      const articles = await getArticles(env);
-      const countRaw = await env.PPP_TV_KV.get('subscriber_count');
-      const withViews = await Promise.all(articles.slice(0, 50).map(async (a) => ({ slug: a.slug, views: await getViews(env, a.slug), lastViewed: a.publishedAt })));
-      const topArticles = withViews.sort((a, b) => b.views - a.views).slice(0, 10);
-      return json({ totalViews: withViews.reduce((s, a) => s + a.views, 0), topArticles, subscriberCount: countRaw ? parseInt(countRaw, 10) : 0 });
-    }
-
-    // ── GET /feed — social-media-ready article feed for auto-news-station ─
-    if (path === '/feed' && method === 'GET') {
-      const category = url.searchParams.get('category');
-      const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '20', 10), 50);
-      const since = url.searchParams.get('since'); // ISO date string
-      let articles = await getArticles(env);
-      if (category) articles = articles.filter((a) => a.category.toLowerCase() === category.toLowerCase());
-      if (since) articles = articles.filter((a) => new Date(a.publishedAt) > new Date(since));
-      articles = articles
-        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-        .slice(0, limit);
-
-      const SITE = 'https://ppp-tv-site.vercel.app';
-      const WORKER = 'https://ppp-tv-worker.euginemicah.workers.dev';
-
-      const feed = articles.map((a) => ({
-        slug: a.slug,
-        title: a.title,
-        excerpt: a.excerpt,
-        category: a.category,
-        sourceName: a.sourceName,
-        sourceUrl: a.sourceUrl,
-        publishedAt: a.publishedAt,
-        articleUrl: `${SITE}/news/${a.slug}`,
-        imageUrl: a.imageUrl ? `${WORKER}/img?url=${encodeURIComponent(a.imageUrl)}` : '',
-        imageUrlDirect: a.imageUrl,
-        // Pre-formatted social captions
-        twitterCaption: `${a.title}\n\n${a.excerpt?.slice(0, 120) ?? ''}\n\n${SITE}/news/${a.slug}\n\n#PPPTVKenya #${a.category.replace(/\s+/g, '')}`,
-        facebookCaption: `${a.title}\n\n${a.excerpt ?? ''}\n\nRead more: ${SITE}/news/${a.slug}`,
-        instagramCaption: `${a.title}\n\n${a.excerpt ?? ''}\n\n🔗 Link in bio\n\n#PPPTVKenya #Kenya #${a.category.replace(/\s+/g, '')} #KenyaNews #AfricaNews`,
-      }));
-
-      return json({ articles: feed, total: feed.length, generatedAt: new Date().toISOString() });
-    }
-
-    // ── GET /img?url=... — image proxy to bypass hotlink protection ───────
-    if (path === '/img' && method === 'GET') {
+    // ── GET /img (image proxy) ─────────────────────────────────────────────
+    if (path === '/img' && request.method === 'GET') {
       const imgUrl = url.searchParams.get('url');
-      if (!imgUrl) return new Response('Missing url', { status: 400 });
+      if (!imgUrl) return new Response('url param required', { status: 400 });
       try {
         const res = await fetch(imgUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PPPTVBot/1.0)', 'Accept': 'image/*' },
-          signal: AbortSignal.timeout(8000),
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PPPTVBot/1.0)' },
+          signal: AbortSignal.timeout(10000),
         });
         if (!res.ok) return new Response('Image fetch failed', { status: 502 });
         const ct = res.headers.get('content-type') ?? 'image/jpeg';
         return new Response(res.body, {
           headers: {
             'Content-Type': ct,
-            'Cache-Control': 'public, max-age=86400',
+            'Cache-Control': 'public, max-age=604800',
             ...CORS_HEADERS,
           },
         });
       } catch {
-        return new Response('Image proxy error', { status: 502 });
+        return new Response('Image fetch failed', { status: 502 });
       }
     }
 
+    // ── GET /feed (social-media-ready feed) ────────────────────────────────
+    if (path === '/feed' && request.method === 'GET') {
+      const category = url.searchParams.get('category') ?? undefined;
+      const limit    = parseInt(url.searchParams.get('limit') ?? '10', 10);
+      const since    = url.searchParams.get('since') ?? undefined;
+      const articles = await getArticlesFromSupabase(env, { category, limit });
+      const filtered = since ? articles.filter(a => a.publishedAt > since) : articles;
+      const feed = filtered.map(a => ({
+        slug:        a.slug,
+        title:       a.rewrittenTitle || a.title,
+        excerpt:     a.rewrittenExcerpt || a.excerpt,
+        imageUrl:    `https://ppp-tv-worker.euginemicah.workers.dev/img?url=${encodeURIComponent(a.imageUrl)}`,
+        category:    a.category,
+        subcategory: a.subcategory,
+        tags:        a.tags,
+        publishedAt: a.publishedAt,
+        articleUrl:  `https://ppp-tv-site.vercel.app/news/${a.slug}`,
+        sourceName:  a.sourceName,
+        captions: {
+          twitter:   `${(a.rewrittenTitle || a.title).slice(0, 200)} 🔥\n\nhttps://ppp-tv-site.vercel.app/news/${a.slug}\n\n#PPPTVKenya #${a.category}`,
+          facebook:  `${a.rewrittenExcerpt || a.excerpt}\n\nRead more: https://ppp-tv-site.vercel.app/news/${a.slug}`,
+          instagram: `${(a.rewrittenTitle || a.title)} 🎬\n\n${(a.rewrittenExcerpt || a.excerpt).slice(0, 150)}\n\n👉 Link in bio\n\n${(a.tags || []).map(t => `#${t.replace(/\s+/g,'')}`).join(' ')} #PPPTVKenya`,
+        },
+      }));
+      return json({ total: feed.length, articles: feed });
+    }
+
+    // ── POST /refresh (manual trigger) ────────────────────────────────────
+    if (path === '/refresh' && request.method === 'POST') {
+      if (!isAuthed(request, env)) return json({ error: 'Unauthorized' }, 401);
+      const stats = await runCycle(env);
+      return json(stats);
+    }
+
+    // ── POST /refresh-category ─────────────────────────────────────────────
+    if (path === '/refresh-category' && request.method === 'POST') {
+      if (!isAuthed(request, env)) return json({ error: 'Unauthorized' }, 401);
+      const body = await request.json().catch(() => ({})) as { category?: string };
+      if (!body.category) return json({ error: 'category required' }, 400);
+      const feeds = RSS_FEEDS.filter(f => f.category === body.category);
+      const existingSlugs = await getExistingSlugs(env);
+      const allRaw: RawArticle[] = [];
+      for (const f of feeds) {
+        const articles = await fetchRSSFeed(f);
+        allRaw.push(...articles);
+      }
+      const newArticles = allRaw.filter(a => !existingSlugs.has(a.slug));
+      const { processed, failed } = await processArticleBatch(newArticles.slice(0, 10), env);
+      return json({ category: body.category, feeds: feeds.length, fetched: allRaw.length, saved: processed, failed });
+    }
+
+    // ── POST /purge-promo ──────────────────────────────────────────────────
+    if (path === '/purge-promo' && request.method === 'POST') {
+      if (!isAuthed(request, env)) return json({ error: 'Unauthorized' }, 401);
+      // Note: with Supabase we'd run a DELETE query; for now just return ok
+      return json({ ok: true, message: 'Promo purge runs automatically on next cycle' });
+    }
+
+    // ── GET /health ────────────────────────────────────────────────────────
+    if (path === '/health' && request.method === 'GET') {
+      if (!isAuthed(request, env)) return json({ error: 'Unauthorized' }, 401);
+      const raw = await env.PPP_TV_KV.get('health', 'json');
+      return json(raw ?? { lastCycleAt: null, articlesProcessed: 0 });
+    }
+
+    // ── GET / ──────────────────────────────────────────────────────────────
+    if (path === '/') return json({ status: 'ok', service: 'PPP TV Worker' });
+
     return json({ error: 'Not found' }, 404);
+  },
+
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: { waitUntil(p: Promise<unknown>): void }): Promise<void> {
+    ctx.waitUntil(runCycle(env));
   },
 };

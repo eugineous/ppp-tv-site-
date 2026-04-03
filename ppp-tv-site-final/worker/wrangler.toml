@@ -14,3 +14,8 @@ crons = ["*/15 * * * *"]
 [vars]
 WORKER_SECRET = "ppptv-secret-2026"
 VERCEL_URL = "https://ppp-tv-site-final.vercel.app"
+# Secrets (set via wrangler secret put — values not stored here):
+# GEMINI_API_KEY
+# NVIDIA_API_KEY
+# SUPABASE_URL
+# SUPABASE_SERVICE_KEY

@@ -18,7 +18,7 @@ const COLS = [
   },
   {
     heading: 'Browse',
-    links: [['Kenya News','/news'],['Politics','/politics'],['Business','/business'],['Entertainment','/entertainment'],['Sports','/sports'],['Movies','/movies'],['Lifestyle','/lifestyle'],['Health','/health'],['Technology','/technology'],['Science','/science'],['Schedule','/schedule'],['Video','/video']] as [string,string][],
+    links: [['Entertainment','/entertainment'],['Sports','/sports'],['Movies','/movies'],['Lifestyle','/lifestyle'],['Technology','/technology'],['Trending','/trending'],['Schedule','/schedule'],['Video','/video']] as [string,string][],
   },
   {
     heading: 'PPP TV',
