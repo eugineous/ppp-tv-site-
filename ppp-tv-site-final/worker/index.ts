@@ -1052,7 +1052,7 @@ function ruleBasedRewrite(article: RawArticle): { title: string; excerpt: string
     'eastafrica',
   ].filter(Boolean) as string[];
 
-  const tags = [...new Set(tagCandidates)].slice(0, 5);
+  const tags = Array.from(new Set(tagCandidates)).slice(0, 5);
   while (tags.length < 5) tags.push(['trending', 'viral', 'breaking', 'exclusive', 'latest'][tags.length - 1] || 'ppptv');
 
   return { title, excerpt, body, verdict, subcategory, tags: tags.slice(0, 5) };
