@@ -11,7 +11,8 @@ export function slugify(text: string): string {
 }
 
 /** Return a human-readable relative time string, e.g. "3 hours ago" */
-export function timeAgo(dateString: string): string {
+export function timeAgo(dateString: string | null | undefined): string {
+  if (!dateString) return 'recently';
   try {
     const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
     return formatDistanceToNow(date, { addSuffix: true });
@@ -21,12 +22,13 @@ export function timeAgo(dateString: string): string {
 }
 
 /** Format a date string to a readable format, e.g. "24 Mar 2026" */
-export function formatDate(dateString: string, pattern = 'd MMM yyyy'): string {
+export function formatDate(dateString: string | null | undefined, pattern = 'd MMM yyyy'): string {
+  if (!dateString) return '';
   try {
     const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
     return format(date, pattern);
   } catch {
-    return dateString;
+    return dateString ?? '';
   }
 }
 
@@ -42,7 +44,8 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 /** Decode HTML entities like &#038; &amp; &apos; &quot; etc. */
-export function decodeEntities(html: string): string {
+export function decodeEntities(html: string | null | undefined): string {
+  if (!html) return '';
   return html
     .replace(/&#0*38;|&amp;/g, '&')
     .replace(/&#0*39;|&apos;/g, "'")
@@ -64,7 +67,7 @@ export function decodeEntities(html: string): string {
  * - Detects and styles blockquotes
  * - Ensures paragraph spacing
  */
-export function formatArticleContent(raw: string): string {
+export function formatArticleContent(raw: string | null | undefined): string {
   if (!raw) return '';
 
   let html = raw;

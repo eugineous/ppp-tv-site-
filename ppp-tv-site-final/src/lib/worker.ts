@@ -9,6 +9,7 @@ function authHeaders(): HeadersInit {
 
 /** Fetch articles from the Cloudflare Worker with optional filters */
 export async function fetchArticles(options: FetchArticlesOptions = {}): Promise<Article[]> {
+  if (!WORKER_BASE) return [];
   const params = new URLSearchParams();
   if (options.category) params.set('category', options.category);
   if (options.sort)     params.set('sort', options.sort);
@@ -20,13 +21,23 @@ export async function fetchArticles(options: FetchArticlesOptions = {}): Promise
 
   try {
     const res = await fetch(url, {
-      // ISR: serve cached version instantly, revalidate in background every 5 min
       next: { revalidate: 60 },
       headers: authHeaders(),
     });
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) ? data : data.articles ?? [];
+    const raw: Article[] = Array.isArray(data) ? data : data.articles ?? [];
+    // Normalise each article — worker returns snake_case from Supabase
+    return raw.map(a => ({
+      ...a,
+      title:      (a as any).rewritten_title || (a as any).rewrittenTitle || a.title || '',
+      excerpt:    (a as any).rewritten_excerpt || (a as any).rewrittenExcerpt || a.excerpt || '',
+      content:    (a as any).rewritten_body || (a as any).rewrittenBody || a.content || '',
+      imageUrl:   (a as any).image_url || a.imageUrl || '',
+      sourceUrl:  (a as any).source_url || a.sourceUrl || '',
+      sourceName: (a as any).source_name || a.sourceName || 'PPP TV Kenya',
+      tags:       Array.isArray(a.tags) ? a.tags : [],
+    }));
   } catch {
     return [];
   }
@@ -34,13 +45,26 @@ export async function fetchArticles(options: FetchArticlesOptions = {}): Promise
 
 /** Fetch a single article by slug — cache for 5 min */
 export async function fetchArticleBySlug(slug: string): Promise<Article | null> {
+  if (!slug || !WORKER_BASE) return null;
   try {
-    const res = await fetch(`${WORKER_BASE}/articles/${slug}`, {
+    const res = await fetch(`${WORKER_BASE}/articles/${encodeURIComponent(slug)}`, {
       next: { revalidate: 300 },
       headers: authHeaders(),
     });
     if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+    if (!data || typeof data !== 'object' || data.error) return null;
+    // Normalise — worker may return rewrittenTitle or title
+    return {
+      ...data,
+      title: data.rewrittenTitle || data.title || data.original_title || '',
+      excerpt: data.excerpt || data.rewrittenExcerpt || '',
+      content: data.content || data.rewrittenBody || '',
+      imageUrl: data.imageUrl || data.image_url || '',
+      sourceUrl: data.sourceUrl || data.source_url || '',
+      sourceName: data.sourceName || data.source_name || 'PPP TV Kenya',
+      tags: Array.isArray(data.tags) ? data.tags : [],
+    } as Article;
   } catch {
     return null;
   }

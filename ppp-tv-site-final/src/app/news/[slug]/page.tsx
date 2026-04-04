@@ -39,13 +39,13 @@ const CAT_GRADIENTS: Record<string, string> = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = await fetchArticleBySlug(params.slug);
   if (!article) return { title: 'Article Not Found' };
-  const title = decodeEntities(article.title);
-  const desc = truncate(decodeEntities(article.excerpt), 160);
+  const title = decodeEntities(article.title ?? '');
+  const desc = truncate(decodeEntities(article.excerpt ?? ''), 160);
   return {
-    title,
+    title: title || 'PPP TV Kenya',
     description: desc,
     openGraph: {
-      title,
+      title: title || 'PPP TV Kenya',
       description: desc,
       images: article.imageUrl ? [{ url: article.imageUrl }] : [],
       type: 'article',
@@ -61,10 +61,10 @@ export default async function ArticlePage({ params }: Props) {
   ]);
   if (!article) notFound();
 
-  const accent = CAT_COLORS[article.category] ?? '#FF007A';
-  const fallbackGradient = CAT_GRADIENTS[article.category] ?? 'linear-gradient(135deg,#111 0%,#000 100%)';
-  const cleanTitle = decodeEntities(article.title);
-  const cleanExcerpt = decodeEntities(article.excerpt);
+  const accent = CAT_COLORS[article.category ?? ''] ?? '#FF007A';
+  const fallbackGradient = CAT_GRADIENTS[article.category ?? ''] ?? 'linear-gradient(135deg,#111 0%,#000 100%)';
+  const cleanTitle = decodeEntities(article.title ?? '');
+  const cleanExcerpt = decodeEntities(article.excerpt ?? '');
   const formattedContent = formatArticleContent(article.content ?? '');
 
   return (
