@@ -17,6 +17,7 @@ const NAV = [
   { label: 'Lifestyle',     href: '/lifestyle',     color: '#00FF94' },
   { label: 'Technology',    href: '/technology',    color: '#FFE600' },
   { label: '🔥 Trending',   href: '/trending',      color: '#FF007A' },
+  { label: '🌍 Swahili',    href: '/swahili',       color: '#006600' },
   { label: '🎬 Video',      href: '/video',         color: '#E50914' },
   { label: 'Shows',         href: '/shows',         color: '#BF00FF' },
   { label: 'People',        href: '/people',        color: '#00CFFF' },

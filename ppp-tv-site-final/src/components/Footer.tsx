@@ -18,7 +18,7 @@ const COLS = [
   },
   {
     heading: 'Browse',
-    links: [['Entertainment','/entertainment'],['Sports','/sports'],['Movies','/movies'],['Lifestyle','/lifestyle'],['Technology','/technology'],['Trending','/trending'],['Archive','/archive'],['Schedule','/schedule'],['Video','/video']] as [string,string][],
+    links: [['Entertainment','/entertainment'],['Sports','/sports'],['Movies','/movies'],['Lifestyle','/lifestyle'],['Technology','/technology'],['Trending','/trending'],['Swahili','/swahili'],['Archive','/archive'],['Schedule','/schedule'],['Video','/video']] as [string,string][],
   },
   {
     heading: 'PPP TV',
